@@ -8,13 +8,14 @@ import { listActivePromotions } from "@/lib/data/promotions";
 import { getFavoriteIds } from "@/lib/data/favorites";
 import { getSessionUser } from "@/lib/auth/session";
 import { ProductGrid } from "@/components/store/product-grid";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = resolveLocaleParam((await params).locale) ?? "pt-BR";
   const t = await getTranslations({ locale, namespace: "deals" });
-  return { title: t("title"), description: t("subtitle") };
+  return buildMetadata({ locale, href: "/ofertas", title: t("title"), description: t("subtitle") });
 }
 
 export default async function DealsPage({ params }: Props) {

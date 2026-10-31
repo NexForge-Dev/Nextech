@@ -10,6 +10,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { recordEvent } from "@/lib/tracking/events";
 import { listProducts } from "@/lib/data/catalog";
 import { CatalogView } from "@/components/store/catalog-view";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const t = await getTranslations({ locale, namespace: "catalog" });
   const sp = await searchParams;
   const filtered = Object.keys(sp).some((k) => k !== "page");
-  return { title: t("title"), robots: filtered ? { index: false, follow: true } : undefined };
+  return buildMetadata({ locale, href: "/produtos", title: t("title"), noindex: filtered });
 }
 
 export default async function ProductsPage({ params, searchParams }: Props) {

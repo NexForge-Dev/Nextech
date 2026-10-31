@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -10,6 +11,23 @@ import { Header } from "@/components/store/header";
 import { Footer } from "@/components/store/footer";
 import { CookieBanner } from "@/components/store/cookie-banner";
 import { Toaster } from "@/components/ui/sonner";
+import { siteUrl } from "@/lib/seo/metadata";
+import { storagePublicUrl } from "@/lib/supabase/env";
+import { AnalyticsScripts } from "@/components/store/analytics-scripts";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const locale = resolveLocaleParam((await params).locale) ?? "pt-BR";
+  const s = await getPublicSettings();
+  const seo = s.seo[locale] ?? s.seo["pt-BR"] ?? {};
+  const icon = storagePublicUrl("site", s.faviconPath);
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: { default: seo.title || s.storeName, template: `%s | ${s.storeName}` },
+    description: seo.description,
+    applicationName: s.storeName,
+    ...(icon ? { icons: { icon } } : {}),
+  };
+}
 
 export default async function LocaleLayout({ children, params }: { children: ReactNode; params: Promise<{ locale: string }> }) {
   const locale = resolveLocaleParam((await params).locale);
@@ -33,6 +51,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           <Footer ctx={ctx} storeName={settings.storeName} />
           <CookieBanner decided={!!ctx.consent} initial={{ analytics: ctx.consent?.analytics ?? false }} texts={settings.cookieTexts[locale]} />
           <Toaster />
+          <AnalyticsScripts consented={ctx.consent?.analytics === true} ga4={settings.analytics.ga4} plausible={settings.analytics.plausible} />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -16,6 +16,7 @@ import { formatMoney } from "@/lib/domain/money";
 import { renderMarkdownSafe, stripTags } from "@/lib/security/sanitize";
 import { jsonLdScript, productJsonLd } from "@/lib/seo/json-ld";
 import { recordEvent } from "@/lib/tracking/events";
+import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata";
 import { Gallery } from "@/components/store/gallery";
 import { PriceView } from "@/components/store/price";
 import { FavoriteButton } from "@/components/store/favorite-button";
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(p.slug, locale);
   if (!product) return {};
   const description = stripTags(product.shortDescription ?? product.descriptionMd ?? "").slice(0, 160) || undefined;
-  return { title: product.name, description };
+  return buildMetadata({ locale, href: { pathname: "/produto/[slug]", params: { slug: product.slug } }, title: product.name, description, type: "article" });
 }
 
 export default async function ProductPage({ params }: Props) {
@@ -69,7 +70,7 @@ export default async function ProductPage({ params }: Props) {
     await sb.from("browsing_history").insert({ user_id: user.id, product_id: product.id });
   }
   const related = await getRelated(product, locale, market);
-  const url = `${SITE}/${locale.toLowerCase()}/produto/${product.slug}`;
+  const url = absoluteUrl(locale, { pathname: "/produto/[slug]", params: { slug: product.slug } });
   const ld = productJsonLd(
     {
       name: product.name,

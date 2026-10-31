@@ -11,6 +11,19 @@ import { getFavoriteIds } from "@/lib/data/favorites";
 import { storagePublicUrl } from "@/lib/supabase/env";
 import { recordEvent } from "@/lib/tracking/events";
 import { CategoryIcon } from "@/components/category-icon";
+import type { Metadata } from "next";
+import { resolveLocaleParam } from "@/i18n/routing";
+import { absoluteUrl, buildMetadata, siteUrl } from "@/lib/seo/metadata";
+import { jsonLdScript } from "@/lib/seo/json-ld";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const locale = resolveLocaleParam((await params).locale) ?? "pt-BR";
+  const s = await getPublicSettings();
+  const seo = s.seo[locale] ?? s.seo["pt-BR"] ?? {};
+  const t = await getTranslations({ locale, namespace: "home" });
+  const meta = buildMetadata({ locale, href: "/", title: seo.title || s.storeName, description: seo.description || t("heroSubtitle") });
+  return { ...meta, title: { absolute: seo.title || s.storeName } };
+}
 import { ProductGrid, Section } from "@/components/store/product-grid";
 import { BannerCarousel } from "@/components/store/banner-carousel";
 
@@ -22,8 +35,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const heroSrc = storagePublicUrl("site", settings.heroImage);
   const signedIn = !!user;
 
+  const searchTarget = `${absoluteUrl(locale, "/produtos")}?q={search_term_string}`;
+  const ld = [
+    { "@context": "https://schema.org", "@type": "Organization", name: settings.storeName, url: siteUrl(), ...(settings.logoPath ? { logo: storagePublicUrl("site", settings.logoPath) } : {}) },
+    { "@context": "https://schema.org", "@type": "WebSite", name: settings.storeName, url: absoluteUrl(locale, "/"), inLanguage: locale, potentialAction: { "@type": "SearchAction", target: searchTarget, "query-input": "required name=search_term_string" } },
+  ];
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
       <section className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 pb-12 pt-14 md:grid-cols-12 md:px-6 md:pb-20 md:pt-24">
         <div className={heroSrc ? "md:col-span-7" : "md:col-span-10"}>
           <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.035em] text-black md:text-6xl lg:text-7xl">{t("heroTitle")}</h1>
