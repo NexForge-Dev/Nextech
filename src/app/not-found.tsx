@@ -1,3 +1,4 @@
+import NextLink from "next/link";
 import { fontVariables } from "@/lib/fonts";
 
 export default function RootNotFound() {
@@ -7,7 +8,7 @@ export default function RootNotFound() {
         <main className="text-center">
           <p className="text-sm tracking-widest text-mute">404</p>
           <h1 className="mt-2 text-2xl font-semibold">Página não encontrada</h1>
-          <a href="/" className="mt-6 inline-block underline">NEXTECH</a>
+          <NextLink href="/" className="mt-6 inline-block underline">NEXTECH</NextLink>
         </main>
       </body>
     </html>
