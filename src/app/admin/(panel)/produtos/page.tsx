@@ -65,7 +65,6 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
         actions={
           <>
             {canImport && <ButtonLink href="/admin/produtos/importar" variant="secondary"><Upload className="size-4" /> Importar CSV</ButtonLink>}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download from a route handler */}
             {canImport && <a href="/admin/produtos/exportar" download className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><Download className="size-4" /> Exportar CSV</a>}
             <ButtonLink href="/admin/produtos/novo"><Plus className="size-4" /> Novo produto</ButtonLink>
           </>

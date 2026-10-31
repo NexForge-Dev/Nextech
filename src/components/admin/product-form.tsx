@@ -7,6 +7,7 @@ import { discountPercent } from "@/lib/domain/pricing";
 import { toMinor } from "@/lib/domain/money";
 import { saveProduct } from "@/actions/admin/products";
 import { addStoreDomain } from "@/actions/admin/taxonomy";
+import { generateAffiliateUrl } from "@/actions/admin/networks";
 import { btnPrimary, btnSecondary, Field, FormSection, inputCls, LocaleTabs, textareaCls, Toggle, useAdminAction, type LocaleCode } from "./form";
 import { ImageUploader, type ImageItem } from "./image-uploader";
 
@@ -186,6 +187,11 @@ export function ProductForm({ initial, categories, brands, stores, markets, canA
               <Field label="Link de afiliado" htmlFor={`o-aff-${i}`} error={err(`offers.${i}.affiliateUrl`)} hint="Se vazio, o /go usa o link original.">
                 <input id={`o-aff-${i}`} className={inputCls} value={o.affiliateUrl} onChange={(e) => setOffer(i, { affiliateUrl: e.target.value })} placeholder="https://…" />
               </Field>
+              {o.networkId && o.originalUrl.startsWith("https://") && (
+                <button type="button" disabled={pending} className={btnSecondary} onClick={() => run(() => generateAffiliateUrl({ networkId: o.networkId, originalUrl: o.originalUrl, market: o.market }), { success: "Link de afiliado gerado.", onSuccess: (d) => setOffer(i, { affiliateUrl: d.url }) })}>
+                  Gerar link de afiliado pela rede
+                </button>
+              )}
               {host && canAddDomain && store && (
                 <button type="button" onClick={() => run(() => addStoreDomain({ storeId: store.id, domain: host }), { success: `Domínio ${host} adicionado à loja ${store.name}. Salve novamente.`, onSuccess: () => setErrors({}) })} className={btnSecondary}>
                   Adicionar domínio “{host}” à loja

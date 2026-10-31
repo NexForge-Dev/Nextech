@@ -25,7 +25,6 @@ export function CsvImport({ columns }: { columns: readonly string[] }) {
         <p className="font-medium">Formato</p>
         <p className="mt-1 text-mute">CSV com cabeçalho, uma linha por oferta. Linhas com o mesmo <code className="font-mono">slug</code> formam um produto. Preços com ponto decimal (199.90). Tags e imagens separadas por “|”. Categorias, marcas e lojas devem existir (use o slug).</p>
         <p className="mt-3 break-all font-mono text-xs">{columns.join(",")}</p>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download from a route handler */}
         <a href="/admin/produtos/exportar" download className="mt-3 inline-block text-sm font-medium underline">Baixar exportação atual como modelo</a>
       </div>
       <label className="flex cursor-pointer items-center gap-3 rounded-md border border-dashed border-mute p-6 hover:bg-soft">
