@@ -44,7 +44,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           >
             {t("skipToContent")}
           </a>
-          <Header locale={locale} storeName={settings.storeName} />
+          <Header locale={locale} storeName={settings.storeName} logoUrl={storagePublicUrl("site", settings.logoPath)} />
           <div id="main" className="flex flex-1 flex-col">
             {children}
           </div>

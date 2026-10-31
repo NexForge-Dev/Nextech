@@ -11,7 +11,7 @@ import { CategoriesMenu } from "./categories-menu";
 import { MobileMenu, MobileSearch } from "./mobile-menu";
 import { FavoritesLink } from "./favorites-link";
 
-export async function Header({ locale, storeName }: { locale: Locale; storeName: string }) {
+export async function Header({ locale, storeName, logoUrl }: { locale: Locale; storeName: string; logoUrl?: string | null }) {
   const [t, categories, user] = await Promise.all([getTranslations("header"), getCategories(locale), getSessionUser()]);
   let favCount = 0;
   if (user) {
@@ -39,7 +39,7 @@ export async function Header({ locale, storeName }: { locale: Locale; storeName:
           categories={cats}
           accountHref={accountHref}
         />
-        <Logo name={storeName} />
+        <Logo name={storeName} logoUrl={logoUrl} />
         <nav className="hidden items-center gap-6 md:flex">
           <CategoriesMenu label={t("categories")} allLabel={t("allProducts")} categories={cats} />
           <Link href="/ofertas" className={navLink}>

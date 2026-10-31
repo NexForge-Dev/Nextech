@@ -52,7 +52,7 @@ export function adminActionWith<I, O>(deps: Deps, opts: Opts<I>, fn: (input: I, 
       if (code === "23505") return { ok: false, error: "conflict", message: "Já existe um registro com esses dados (slug ou identificador duplicado)." };
       if (code === "23503") return { ok: false, error: "conflict", message: "Este registro está em uso por outros itens." };
       if (code === "42501") return { ok: false, error: "forbidden" };
-      console.error(JSON.stringify({ level: "error", event: "admin.action_failed", action: opts.audit?.action, message: e instanceof Error ? e.message : String(e) }));
+      console.error(JSON.stringify({ level: "error", event: "admin.action_failed", action: opts.audit?.action, message: e instanceof Error ? e.message : typeof e === "object" ? JSON.stringify(e) : String(e) }));
       return { ok: false, error: "server" };
     }
   };

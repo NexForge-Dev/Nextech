@@ -11,6 +11,7 @@ export async function LegalPageView({ page, locale, title, showUpdated = false, 
     <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-14 md:px-6">
       <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{title}</h1>
       {showUpdated && <p className="mt-3 text-sm text-mute">{t("lastUpdated", { date: format.dateTime(new Date(LEGAL_UPDATED_AT), { dateStyle: "long" }) })}</p>}
+      {page === "about" && settings.institutional[locale] && <p className="mt-8 whitespace-pre-line text-lg text-ink">{settings.institutional[locale]}</p>}
       <div className="prose-nx prose-legal mt-10 space-y-4 text-[15px] leading-relaxed text-ink" dangerouslySetInnerHTML={{ __html: html }} />
       {children}
     </main>
