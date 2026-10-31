@@ -906,6 +906,24 @@ isOneToOne: false
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"metrics_clicks":
+{ Args: { "p_campaign"?: string,"p_category"?: string,"p_from": string,"p_group": string,"p_network"?: string,"p_product"?: string,"p_to": string }; Returns: {
+              "key": string,"label": string,"value": number
+            }[]
+                           },
+"metrics_commissions":
+{ Args: { "p_by_day"?: boolean,"p_campaign"?: string,"p_category"?: string,"p_from": string,"p_network"?: string,"p_product"?: string,"p_to": string }; Returns: {
+              "amount_minor": number,"conversions": number,"currency": string,"day": string,"status": string
+            }[]
+                           },
+"metrics_conversions_count":
+{ Args: { "p_campaign"?: string,"p_category"?: string,"p_from": string,"p_network"?: string,"p_product"?: string,"p_to": string }; Returns: number
+                           },
+"metrics_views":
+{ Args: { "p_category"?: string,"p_from": string,"p_group": string,"p_product"?: string,"p_to": string }; Returns: {
+              "key": string,"label": string,"value": number
+            }[]
+                           },
 "my_admin_context":
 { Args: Record<PropertyKey, never>; Returns: {
               "active": boolean,"permissions": (string)[],"role_key": string
