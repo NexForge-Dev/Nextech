@@ -925,6 +925,11 @@ isOneToOne: false
               "currency": string,"discount": number,"link_id": string,"previous_minor": number,"price_minor": number
             }[]
                            },
+"product_offers":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "currency": string,"history": Json,"id": string,"market": string,"network_adapter": string,"network_id": string,"policy": string,"previous_price_minor": number,"previous_verified": boolean,"price_minor": number,"price_source": Database["public"]['Enums']["source_kind"],"price_updated_at": string,"product_id": string,"requires_fresh": boolean,"store_id": string,"store_logo": string,"store_name": string,"store_slug": string
+            }[]
+                           },
 "product_popularity":
 { Args: { "p_product": string }; Returns: number
                            },
