@@ -891,7 +891,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "campaign_is_live":
+            "admin_save_product":
+{ Args: { "p": Json }; Returns: string
+                           },
+"campaign_is_live":
 { Args: { "c": string }; Returns: boolean
                            },
 "f_unaccent":
