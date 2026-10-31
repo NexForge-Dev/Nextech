@@ -19,6 +19,8 @@ export async function clientIp(): Promise<string> {
 /** Fixed-window limit in Postgres (works across serverless instances). Fails open on DB errors. */
 export async function rateLimit(bucket: LimitBucket, ip?: string): Promise<boolean> {
   const addr = ip ?? (await clientIp());
+  // local development / automated tests on loopback are not throttled; production always is
+  if (process.env.NODE_ENV !== "production" && ["::1", "127.0.0.1", "::ffff:127.0.0.1", "unknown"].includes(addr)) return true;
   const key = createHash("sha256").update(`${addr}|${bucket}`).digest("hex").slice(0, 40);
   const { windowSeconds, max } = LIMITS[bucket];
   try {
