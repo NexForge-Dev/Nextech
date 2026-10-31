@@ -8,7 +8,7 @@ import { storagePublicUrl } from "@/lib/supabase/env";
 import { PriceView } from "./price";
 import { FavoriteButton } from "./favorite-button";
 
-export async function ProductCard({ product, locale, signedIn, favorite = false, priority = false }: { product: ProductCardData; locale: Locale; signedIn: boolean; favorite?: boolean; priority?: boolean }) {
+export async function ProductCard({ product, locale, signedIn, favorite = false, priority = false, note, cta }: { product: ProductCardData; locale: Locale; signedIn: boolean; favorite?: boolean; priority?: boolean; note?: string | null; cta?: { href: string; label: string } }) {
   const t = await getTranslations("product");
   const src = storagePublicUrl("products", product.mainImage?.path);
   return (
@@ -40,11 +40,17 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
               <span className="sr-only">{t("ratingSource", { source: product.rating.source })}</span>
             </p>
           )}
+          {note && <p className="text-xs font-medium text-black">{note}</p>}
           <div className="mt-auto pt-2">
             <PriceView price={product.price} locale={locale} />
           </div>
         </div>
       </Link>
+      {cta && (
+        <a href={cta.href} rel="nofollow sponsored noopener" target="_blank" className="mt-3 inline-flex h-9 items-center justify-center rounded-md bg-black px-3 text-xs font-semibold tracking-wide text-white transition-colors duration-150 hover:bg-ink">
+          {cta.label}
+        </a>
+      )}
       <FavoriteButton productId={product.id} signedIn={signedIn} initial={favorite} className="absolute right-2 top-2 size-9 rounded-full bg-white/90 text-black hover:bg-white" />
     </article>
   );

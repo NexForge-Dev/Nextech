@@ -3,11 +3,11 @@ import type { Locale } from "@/i18n/routing";
 import type { ProductCardData } from "@/lib/data/catalog";
 import { ProductCard } from "./product-card";
 
-export function ProductGrid({ products, locale, signedIn, favorites, priorityCount = 0 }: { products: ProductCardData[]; locale: Locale; signedIn: boolean; favorites?: Set<string>; priorityCount?: number }) {
+export function ProductGrid({ products, locale, signedIn, favorites, priorityCount = 0, notes, ctas }: { products: ProductCardData[]; locale: Locale; signedIn: boolean; favorites?: Set<string>; priorityCount?: number; notes?: Map<string, string>; ctas?: Map<string, { href: string; label: string }> }) {
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
       {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} locale={locale} signedIn={signedIn} favorite={favorites?.has(p.id)} priority={i < priorityCount} />
+        <ProductCard key={p.id} product={p} locale={locale} signedIn={signedIn} favorite={favorites?.has(p.id)} priority={i < priorityCount} note={notes?.get(p.id)} cta={ctas?.get(p.id)} />
       ))}
     </div>
   );
