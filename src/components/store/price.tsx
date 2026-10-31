@@ -17,7 +17,7 @@ export async function PriceView({ price, locale, size = "md" }: { price: PriceSu
           <span className="rounded-sm bg-black px-1.5 py-0.5 text-[11px] font-semibold text-white">{t("discount", { percent: price.discount })}</span>
         </p>
       )}
-      <p className={`tabular font-semibold tracking-tight text-black ${main}`}>
+      <p data-testid="price-main" className={`tabular font-semibold tracking-tight text-black ${main}`}>
         {price.multiple && <span className="mr-1 text-xs font-normal text-mute">{t("from")}</span>}
         {formatMoney(price.fromMinor, price.currency, locale)}
       </p>
