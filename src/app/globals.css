@@ -136,3 +136,7 @@
 .prose-nx table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .prose-nx th, .prose-nx td { border-bottom: 1px solid #e5e5e5; padding: 0.5rem 0; text-align: left; }
 .prose-nx blockquote { border-left: 2px solid #000000; padding-left: 1rem; color: #777777; }
+.prose-legal h2 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; color: #000000; }
+.prose-legal strong { color: #000000; }
+.prose-legal code { font-family: var(--font-geist-mono); font-size: 0.85em; background: #f7f7f7; padding: 0.1rem 0.3rem; border-radius: 4px; }
+.prose-legal li { margin-top: 0.35rem; }

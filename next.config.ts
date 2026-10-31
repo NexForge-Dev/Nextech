@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
   // Classic caching model (unstable_cache + tags); pages read cookies (market, consent) per request.
   cacheComponents: false,
   poweredByHeader: false,
+  // institutional Markdown is read from disk at request time
+  outputFileTracingIncludes: { "/[locale]/**": ["./src/content/legal/**/*.md"] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders() }];
   },
