@@ -891,7 +891,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "f_unaccent":
+            "campaign_is_live":
+{ Args: { "c": string }; Returns: boolean
+                           },
+"f_unaccent":
 { Args: { "": string }; Returns: string
                            },
 "has_admin_permission":
@@ -905,11 +908,44 @@ isOneToOne: false
               "active": boolean,"permissions": (string)[],"role_key": string
             }[]
                            },
+"offer_display_price":
+{ Args: { "p_link": string }; Returns: number
+                           },
+"offer_proven_previous":
+{ Args: { "p_link": string }; Returns: number
+                           },
+"prefix_tsquery":
+{ Args: { "q": string }; Returns: unknown
+                           },
+"product_is_public":
+{ Args: { "p": string }; Returns: boolean
+                           },
+"product_market_price":
+{ Args: { "p_market": string,"p_product": string }; Returns: {
+              "currency": string,"discount": number,"link_id": string,"previous_minor": number,"price_minor": number
+            }[]
+                           },
+"product_popularity":
+{ Args: { "p_product": string }; Returns: number
+                           },
 "rate_limit_hit":
 { Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
                            },
 "refresh_product_search":
 { Args: { "p_product": string }; Returns: undefined
+                           },
+"search_products":
+{ Args: { "p_brand"?: string,"p_category"?: string,"p_limit"?: number,"p_locale": string,"p_market": string,"p_max_minor"?: number,"p_min_minor"?: number,"p_min_rating"?: number,"p_offset"?: number,"p_proven_discount"?: boolean,"p_sort"?: string,"p_store"?: string,"q": string }; Returns: {
+              "best_price_minor": number,"brand_name": string,"category_id": string,"discount": number,"id": string,"name": string,"popularity": number,"published_at": string,"rank": number,"rating": number,"rating_count": number,"rating_source": string,"slug": string,"total_count": number
+            }[]
+                           },
+"storage_bucket_permission":
+{ Args: { "bucket": string }; Returns: string
+                           },
+"suggest":
+{ Args: { "p_limit"?: number,"p_locale": string,"q": string }; Returns: {
+              "kind": string,"label": string,"slug": string
+            }[]
                            }
           }
           Enums: {
