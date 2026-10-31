@@ -126,3 +126,13 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* Product descriptions (sanitized Markdown) */
+.prose-nx h2 { font-size: 1.125rem; font-weight: 600; margin-top: 1.25rem; }
+.prose-nx h3, .prose-nx h4 { font-size: 1rem; font-weight: 600; margin-top: 1rem; }
+.prose-nx ul { list-style: disc; padding-left: 1.25rem; }
+.prose-nx ol { list-style: decimal; padding-left: 1.25rem; }
+.prose-nx a { text-decoration: underline; text-underline-offset: 2px; }
+.prose-nx table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.prose-nx th, .prose-nx td { border-bottom: 1px solid #e5e5e5; padding: 0.5rem 0; text-align: left; }
+.prose-nx blockquote { border-left: 2px solid #000000; padding-left: 1rem; color: #777777; }

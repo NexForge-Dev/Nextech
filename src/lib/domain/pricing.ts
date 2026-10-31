@@ -68,7 +68,7 @@ function updatedAt(o: OfferForPricing): number {
   return o.priceUpdatedAt ? new Date(o.priceUpdatedAt).getTime() : 0;
 }
 
-export function bestOffer(offers: OfferForPricing[], market: MarketCode, now: Date): OfferForPricing | null {
+export function bestOffer<T extends OfferForPricing>(offers: T[], market: MarketCode, now: Date): T | null {
   const inMarket = offers.filter((o) => o.active && o.market === market);
   const priced = inMarket
     .filter((o) => displayPrice(o, now) != null)
