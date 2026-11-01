@@ -960,6 +960,9 @@ isOneToOne: false
 "refresh_product_search":
 { Args: { "p_product": string }; Returns: undefined
                            },
+"run_retention":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "search_products":
 { Args: { "p_brand"?: string,"p_category"?: string,"p_limit"?: number,"p_locale": string,"p_market": string,"p_max_minor"?: number,"p_min_minor"?: number,"p_min_rating"?: number,"p_offset"?: number,"p_proven_discount"?: boolean,"p_sort"?: string,"p_store"?: string,"q": string }; Returns: {
               "best_price_minor": number,"brand_name": string,"category_id": string,"discount": number,"id": string,"name": string,"popularity": number,"published_at": string,"rank": number,"rating": number,"rating_count": number,"rating_source": string,"slug": string,"total_count": number
