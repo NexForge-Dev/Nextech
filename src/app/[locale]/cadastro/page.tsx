@@ -8,11 +8,14 @@ import { AuthShell } from "@/components/store/auth-shell";
 
 export const metadata = { robots: { index: false } };
 
-export default async function SignUpPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function SignUpPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ email?: string; motivo?: string }> }) {
   const locale = await pageLocale(params);
   if (await getSessionUser()) redirect({ href: "/minha-conta", locale });
   const t = await getTranslations("auth");
   const tf = await getTranslations("footer");
+  const sp = await searchParams;
+  const email = typeof sp.email === "string" ? sp.email.slice(0, 254) : undefined;
+  const noAccount = sp.motivo === "sem-conta";
   return (
     <AuthShell
       title={t("signUpTitle")}
@@ -23,13 +26,18 @@ export default async function SignUpPage({ params }: { params: Promise<{ locale:
         </>
       }
     >
+      {noAccount && (
+        <p role="status" className="mb-5 rounded-md bg-soft px-3 py-2 text-sm">
+          {t("noAccountFound")}
+        </p>
+      )}
       <AuthForm
         action={signUp}
         locale={locale}
         submit={t("signUp")}
         fields={[
           { name: "fullName", label: t("fullName"), autoComplete: "name" },
-          { name: "email", label: t("email"), type: "email", autoComplete: "email" },
+          { name: "email", label: t("email"), type: "email", autoComplete: "email", defaultValue: email },
           { name: "password", label: t("password"), type: "password", autoComplete: "new-password" },
         ]}
         footer={
