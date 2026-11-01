@@ -1,0 +1,5 @@
+[
+  { "id": 900001, "transactionDate": "2026-10-20T14:03:00", "commissionStatus": "approved", "saleAmount": { "amount": 199.9, "currency": "EUR" }, "commissionAmount": { "amount": 9.99, "currency": "EUR" }, "clickRefs": { "clickRef": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" } },
+  { "id": 900002, "transactionDate": "2026-10-21T09:00:00", "commissionStatus": "pending", "saleAmount": { "amount": 50, "currency": "EUR" }, "commissionAmount": { "amount": 2.5, "currency": "EUR" }, "clickRefs": {} },
+  { "id": 900003, "transactionDate": "2026-10-22T09:00:00", "commissionStatus": "declined", "saleAmount": { "amount": 10, "currency": "EUR" }, "commissionAmount": { "amount": 0.5, "currency": "EUR" }, "clickRefs": null }
+]

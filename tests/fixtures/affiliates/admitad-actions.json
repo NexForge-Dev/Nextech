@@ -1,0 +1,9 @@
+{
+  "results": [
+    { "action_id": 7001, "action_date": "2026-10-20 10:00:00", "status": "approved", "cart": 1299.9, "payment": 65.0, "currency": "BRL", "subid": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" },
+    { "action_id": 7002, "action_date": "2026-10-21 10:00:00", "status": "pending", "cart": 100, "payment": 5, "currency": "BRL", "subid": "" },
+    { "action_id": 7003, "action_date": "2026-10-22 10:00:00", "status": "declined", "cart": 80, "payment": 4, "currency": "BRL", "subid": null },
+    { "action_id": 7004, "action_date": "2026-10-23 10:00:00", "status": "approved_but_stalled", "cart": 80, "payment": 4, "currency": "BRL", "subid": null }
+  ],
+  "_meta": { "count": 4, "limit": 500, "offset": 0 }
+}
