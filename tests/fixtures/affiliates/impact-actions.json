@@ -1,0 +1,9 @@
+{
+  "@page": "1",
+  "@nextpageuri": "",
+  "Actions": [
+    { "Id": "1000.2000.3000", "State": "APPROVED", "Amount": "59.99", "Payout": "3.00", "Currency": "USD", "EventDate": "2026-10-20T12:00:00-07:00", "SubId1": "cccccccc-cccc-4ccc-8ccc-cccccccccccc" },
+    { "Id": "1000.2000.3001", "State": "PENDING", "Amount": "20.00", "Payout": "1.00", "Currency": "USD", "EventDate": "2026-10-21T12:00:00-07:00", "SubId1": "" },
+    { "Id": "1000.2000.3002", "State": "REVERSED", "Amount": "20.00", "Payout": "1.00", "Currency": "USD", "EventDate": "2026-10-22T12:00:00-07:00", "SubId1": "" }
+  ]
+}
