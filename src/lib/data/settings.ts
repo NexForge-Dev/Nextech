@@ -9,7 +9,7 @@ export type PublicSettings = {
   socials: Record<string, string>;
   seo: Partial<Record<Locale, { title?: string; description?: string }>>;
   legal: { company_name: string; tax_id: string; address: string };
-  analytics: { ga4: string; plausible: string };
+  analytics: { ga4: string; plausible: string; googleAds: string; googleAdsConversion: string; metaPixel: string };
   cookieTexts: Partial<Record<Locale, { title?: string; text?: string }>>;
   institutional: Partial<Record<Locale, string>>;
   logoPath: string | null;
@@ -23,7 +23,7 @@ const DEFAULTS: PublicSettings = {
   socials: {},
   seo: {},
   legal: { company_name: "", tax_id: "", address: "" },
-  analytics: { ga4: "", plausible: "" },
+  analytics: { ga4: "", plausible: "", googleAds: "", googleAdsConversion: "", metaPixel: "" },
   cookieTexts: {},
   institutional: {},
   logoPath: null,

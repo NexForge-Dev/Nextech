@@ -1,21 +1,50 @@
 import Script from "next/script";
+import { GOOGLE_ADS_ID, GOOGLE_ADS_LABEL, META_PIXEL_ID } from "@/lib/admin/schemas/settings";
+import { MarketingTracker } from "./marketing-tracker";
 
-/** Third-party analytics load only after the visitor accepted analytics cookies. */
-export function AnalyticsScripts({ consented, ga4, plausible }: { consented: boolean; ga4: string; plausible: string }) {
-  if (!consented) return null;
-  const gaId = /^G-[A-Z0-9]+$/.test(ga4) ? ga4 : null;
-  const plausibleDomain = /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(plausible) ? plausible : null;
+type Props = {
+  /** Visitor accepted analytics cookies (GA4, Plausible). */
+  consented: boolean;
+  /** Visitor accepted marketing cookies (Google Ads, Meta Pixel). */
+  marketing: boolean;
+  ga4: string;
+  plausible: string;
+  googleAds?: string;
+  googleAdsConversion?: string;
+  metaPixel?: string;
+};
+
+/** Third-party tags load only after the visitor accepted the matching cookie category. */
+export function AnalyticsScripts({ consented, marketing, ga4, plausible, googleAds = "", googleAdsConversion = "", metaPixel = "" }: Props) {
+  const gaId = consented && /^G-[A-Z0-9]+$/.test(ga4) ? ga4 : null;
+  const plausibleDomain = consented && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(plausible) ? plausible : null;
+  const awId = marketing && GOOGLE_ADS_ID.test(googleAds) ? googleAds : null;
+  const awSendTo = awId && GOOGLE_ADS_LABEL.test(googleAdsConversion) ? `${awId}/${googleAdsConversion}` : null;
+  const pixelId = marketing && META_PIXEL_ID.test(metaPixel) ? metaPixel : null;
+  const gtagId = gaId ?? awId;
+
+  const gtagConfig = [
+    gaId ? `gtag('config','${gaId}',{anonymize_ip:true});` : "",
+    awId ? `gtag('config','${awId}');` : "",
+  ].join("");
+
   return (
     <>
-      {gaId && (
+      {gtagId && (
         <>
-          <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
-          <Script id="ga4" strategy="afterInteractive">
-            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}',{anonymize_ip:true});`}
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${gtagId}`} strategy="afterInteractive" />
+          <Script id="gtag-init" strategy="afterInteractive">
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());${gtagConfig}`}
           </Script>
         </>
       )}
       {plausibleDomain && <Script src="https://plausible.io/js/script.js" data-domain={plausibleDomain} strategy="afterInteractive" />}
+      {pixelId && (
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixelId}');fbq('track','PageView');`}
+        </Script>
+      )}
+      {(awId || pixelId) && <MarketingTracker pixel={!!pixelId} googleAdsSendTo={awSendTo} />}
     </>
   );
 }
