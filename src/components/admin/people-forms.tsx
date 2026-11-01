@@ -16,7 +16,7 @@ export type SettingsValue = {
   institutional: PerLocale<string>;
   socials: Partial<Record<(typeof SOCIAL_KEYS)[number], string>>;
   seo: PerLocale<{ title: string; description: string }>;
-  analytics: { ga4: string; plausible: string };
+  analytics: { ga4: string; plausible: string; googleAds: string; googleAdsConversion: string; metaPixel: string };
   cookieTexts: PerLocale<{ title: string; text: string }>;
   legal: { company_name: string; tax_id: string; address: string };
   priceStaleDays: number;
@@ -111,6 +111,20 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
           </Field>
           <Field label="Plausible — domínio" htmlFor="an-pl" error={e("analytics.plausible")}>
             <input id="an-pl" className={`${inputCls} font-mono`} placeholder="nextech.com" value={v.analytics.plausible} onChange={(x) => setV({ ...v, analytics: { ...v.analytics, plausible: x.target.value.trim() } })} />
+          </Field>
+        </FormSection>
+      )}
+
+      {tab === "analytics" && (
+        <FormSection title="Anúncios e conversões" description="Carregados somente para visitantes que aceitarem cookies de marketing. O clique em “Comprar” é enviado como conversão.">
+          <Field label="Google Ads — ID da tag" htmlFor="an-aw" error={e("analytics.googleAds")} hint="Google Ads → Ferramentas → Conversões → Configurar tag.">
+            <input id="an-aw" className={`${inputCls} font-mono`} placeholder="AW-123456789" value={v.analytics.googleAds} onChange={(x) => setV({ ...v, analytics: { ...v.analytics, googleAds: x.target.value.trim() } })} />
+          </Field>
+          <Field label="Google Ads — rótulo da conversão “Comprar”" htmlFor="an-awl" error={e("analytics.googleAdsConversion")} hint="Parte depois da barra em send_to: 'AW-123456789/AbC-dEfG'. Opcional.">
+            <input id="an-awl" className={`${inputCls} font-mono`} placeholder="AbC-dEfGhIj" value={v.analytics.googleAdsConversion} onChange={(x) => setV({ ...v, analytics: { ...v.analytics, googleAdsConversion: x.target.value.trim() } })} />
+          </Field>
+          <Field label="Meta Pixel — ID" htmlFor="an-fb" error={e("analytics.metaPixel")} hint="Gerenciador de Eventos da Meta → Fontes de dados → ID do pixel.">
+            <input id="an-fb" className={`${inputCls} font-mono`} placeholder="1234567890123456" value={v.analytics.metaPixel} onChange={(x) => setV({ ...v, analytics: { ...v.analytics, metaPixel: x.target.value.trim() } })} />
           </Field>
         </FormSection>
       )}

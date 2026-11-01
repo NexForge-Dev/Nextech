@@ -21,12 +21,13 @@ export function CookiePreferencesButton({ label, className }: { label: string; c
   );
 }
 
-export function CookieBanner({ decided, initial, texts }: { decided: boolean; initial: { analytics: boolean }; texts?: { title?: string; text?: string } }) {
+export function CookieBanner({ decided, initial, texts }: { decided: boolean; initial: { analytics: boolean; marketing?: boolean }; texts?: { title?: string; text?: string } }) {
   const t = useTranslations("cookies");
   const router = useRouter();
   const [visible, setVisible] = useState(!decided);
   const [dialog, setDialog] = useState(false);
   const [analytics, setAnalytics] = useState(initial.analytics);
+  const [marketing, setMarketing] = useState(initial.marketing ?? false);
   const [pending, start] = useTransition();
 
   useEffect(() => {
@@ -35,9 +36,9 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
     return () => window.removeEventListener(OPEN_COOKIE_PREFERENCES, open);
   }, []);
 
-  function save(a: boolean) {
+  function save(a: boolean, m: boolean) {
     start(async () => {
-      await saveConsent({ analytics: a, marketing: false });
+      await saveConsent({ analytics: a, marketing: m });
       setVisible(false);
       setDialog(false);
       router.refresh();
@@ -63,10 +64,10 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
               <button type="button" disabled={pending} onClick={() => setDialog(true)} className={`${btn} border border-line bg-white text-black hover:bg-soft`}>
                 {t("customize")}
               </button>
-              <button type="button" disabled={pending} onClick={() => save(false)} className={`${btn} border border-black bg-white text-black hover:bg-soft`}>
+              <button type="button" disabled={pending} onClick={() => save(false, false)} className={`${btn} border border-black bg-white text-black hover:bg-soft`}>
                 {t("rejectOptional")}
               </button>
-              <button type="button" disabled={pending} onClick={() => save(true)} className={`${btn} bg-black text-white hover:bg-ink`}>
+              <button type="button" disabled={pending} onClick={() => save(true, true)} className={`${btn} bg-black text-white hover:bg-ink`}>
                 {t("acceptAll")}
               </button>
             </div>
@@ -85,11 +86,11 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
               <Switch checked={analytics} onCheckedChange={setAnalytics} aria-label={t("analytics")} />
             </Row>
             <Row title={t("marketing")} text={t("marketingText")}>
-              <Switch checked={false} disabled aria-label={t("marketing")} />
+              <Switch checked={marketing} onCheckedChange={setMarketing} aria-label={t("marketing")} />
             </Row>
           </div>
           <div className="mt-2 flex justify-end">
-            <button type="button" disabled={pending} onClick={() => save(analytics)} className={`${btn} bg-black text-white hover:bg-ink`}>
+            <button type="button" disabled={pending} onClick={() => save(analytics, marketing)} className={`${btn} bg-black text-white hover:bg-ink`}>
               {t("save")}
             </button>
           </div>

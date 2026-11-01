@@ -49,9 +49,17 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             {children}
           </div>
           <Footer ctx={ctx} storeName={settings.storeName} />
-          <CookieBanner decided={!!ctx.consent} initial={{ analytics: ctx.consent?.analytics ?? false }} texts={settings.cookieTexts[locale]} />
+          <CookieBanner decided={!!ctx.consent} initial={{ analytics: ctx.consent?.analytics ?? false, marketing: ctx.consent?.marketing ?? false }} texts={settings.cookieTexts[locale]} />
           <Toaster />
-          <AnalyticsScripts consented={ctx.consent?.analytics === true} ga4={settings.analytics.ga4} plausible={settings.analytics.plausible} />
+          <AnalyticsScripts
+            consented={ctx.consent?.analytics === true}
+            marketing={ctx.consent?.marketing === true}
+            ga4={settings.analytics.ga4}
+            plausible={settings.analytics.plausible}
+            googleAds={settings.analytics.googleAds}
+            googleAdsConversion={settings.analytics.googleAdsConversion}
+            metaPixel={settings.analytics.metaPixel}
+          />
         </NextIntlClientProvider>
       </body>
     </html>

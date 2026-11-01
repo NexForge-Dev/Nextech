@@ -254,7 +254,7 @@
   },
   "cookies": {
     "bannerTitle": "Your privacy",
-    "bannerText": "We use essential cookies to run the store. With your permission, we also use analytics cookies to understand how NEXTECH is used.",
+    "bannerText": "We use essential cookies to run the store. With your permission, we also use analytics cookies to understand how NEXTECH is used and marketing cookies to measure our ads.",
     "acceptAll": "Accept all",
     "rejectOptional": "Reject optional",
     "customize": "Customize",
@@ -264,7 +264,7 @@
     "analytics": "Analytics",
     "analyticsText": "Help us understand which pages and products people find most interesting, using an anonymous session ID.",
     "marketing": "Marketing",
-    "marketingText": "We don't use marketing cookies at the moment.",
+    "marketingText": "Used by Google Ads and Meta (Facebook/Instagram) to measure our ads and show you relevant ads on other sites.",
     "alwaysOn": "Always on",
     "policy": "Cookie policy"
   },

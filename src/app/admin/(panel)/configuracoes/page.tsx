@@ -37,7 +37,7 @@ export default async function SettingsPage() {
     institutional: obj("public.institutional", {}),
     socials: obj("public.socials", {}),
     seo: obj("public.seo", {}),
-    analytics: obj("public.analytics", { ga4: "", plausible: "" }),
+    analytics: obj("public.analytics", { ga4: "", plausible: "", googleAds: "", googleAdsConversion: "", metaPixel: "" }),
     cookieTexts: obj("public.cookie_texts", {}),
     legal: obj("public.legal", { company_name: "", tax_id: "", address: "" }),
     priceStaleDays: Number(m.get("ops.price_stale_days") ?? 14) || 14,

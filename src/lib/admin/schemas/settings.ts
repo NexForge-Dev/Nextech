@@ -9,6 +9,10 @@ const httpsOrEmpty = z
 
 const perLocale = <T extends z.ZodTypeAny>(entry: T) => z.object({ "pt-BR": entry.optional(), "pt-PT": entry.optional(), en: entry.optional(), es: entry.optional() });
 
+export const GOOGLE_ADS_ID = /^AW-\d{6,15}$/;
+export const GOOGLE_ADS_LABEL = /^[A-Za-z0-9_-]{4,40}$/;
+export const META_PIXEL_ID = /^\d{8,20}$/;
+
 export const SOCIAL_KEYS = ["instagram", "facebook", "x", "tiktok", "youtube", "linkedin", "pinterest"] as const;
 
 export const settingsSchema = z.object({
@@ -23,6 +27,9 @@ export const settingsSchema = z.object({
   analytics: z.object({
     ga4: z.string().trim().refine((v) => !v || /^G-[A-Z0-9]+$/.test(v), "ID do GA4 no formato G-XXXXXXX."),
     plausible: z.string().trim().refine((v) => !v || /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(v), "Informe só o domínio (ex.: nextech.com)."),
+    googleAds: z.string().trim().optional().default("").refine((v) => !v || GOOGLE_ADS_ID.test(v), "ID do Google Ads no formato AW-123456789."),
+    googleAdsConversion: z.string().trim().optional().default("").refine((v) => !v || GOOGLE_ADS_LABEL.test(v), "Rótulo de conversão inválido (só letras, números, - e _)."),
+    metaPixel: z.string().trim().optional().default("").refine((v) => !v || META_PIXEL_ID.test(v), "ID do Pixel da Meta: só números (ex.: 1234567890123456)."),
   }),
   cookieTexts: perLocale(z.object({ title: z.string().trim().max(80).optional().default(""), text: z.string().trim().max(500).optional().default("") })),
   legal: z.object({ company_name: z.string().trim().max(160), tax_id: z.string().trim().max(40), address: z.string().trim().max(300) }),
