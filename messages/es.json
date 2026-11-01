@@ -217,6 +217,7 @@
     "sendLink": "Enviar enlace de recuperación",
     "linkSent": "Si existe una cuenta con este correo, recibirás un enlace para restablecer la contraseña.",
     "noAccount": "¿Aún no tienes cuenta?",
+    "noAccountFound": "No encontramos una cuenta con este correo. Crea una para continuar.",
     "haveAccount": "¿Ya tienes cuenta?",
     "updatePassword": "Guardar nueva contraseña",
     "invalidCredentials": "Correo o contraseña incorrectos.",

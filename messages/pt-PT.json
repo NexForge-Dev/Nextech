@@ -217,6 +217,7 @@
     "sendLink": "Enviar ligação de recuperação",
     "linkSent": "Se existir uma conta com este e-mail, receberá uma ligação para redefinir a palavra-passe.",
     "noAccount": "Ainda não tem conta?",
+    "noAccountFound": "Não encontrámos uma conta com este e-mail. Crie a sua para continuar.",
     "haveAccount": "Já tem conta?",
     "updatePassword": "Guardar nova palavra-passe",
     "invalidCredentials": "E-mail ou palavra-passe incorretos.",

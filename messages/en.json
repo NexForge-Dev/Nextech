@@ -217,6 +217,7 @@
     "sendLink": "Send reset link",
     "linkSent": "If an account exists for this email, you'll receive a link to reset your password.",
     "noAccount": "Don't have an account?",
+    "noAccountFound": "We couldn't find an account with this email. Create one to continue.",
     "haveAccount": "Already have an account?",
     "updatePassword": "Save new password",
     "invalidCredentials": "Incorrect email or password.",
