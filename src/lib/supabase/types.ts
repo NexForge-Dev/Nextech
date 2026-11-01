@@ -891,7 +891,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_save_product":
+            "auth_email_exists":
+{ Args: { "p_email": string }; Returns: boolean
+                           },
+"admin_save_product":
 { Args: { "p": Json }; Returns: string
                            },
 "campaign_is_live":

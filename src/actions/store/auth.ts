@@ -5,12 +5,23 @@ import { z } from "zod";
 import { getPathname } from "@/i18n/navigation";
 import { isLocale, type Locale } from "@/i18n/routing";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createServiceSupabase } from "@/lib/supabase/service";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { safeNextPath } from "@/lib/domain/safe-next";
 
 export type AuthState = { error?: string; message?: string; fieldErrors?: Record<string, string> } | null;
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3300";
+
+/** True when an auth user exists for this email. Fails closed (assumes it exists) so errors never misroute. */
+async function emailHasAccount(email: string): Promise<boolean> {
+  try {
+    const { data, error } = await createServiceSupabase().rpc("auth_email_exists", { p_email: email });
+    return error ? true : data !== false;
+  } catch {
+    return true;
+  }
+}
 
 function localeOf(form: FormData): Locale {
   const l = String(form.get("locale") ?? "");
@@ -48,7 +59,14 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
   if (!(await rateLimit("auth"))) return { error: t("tooMany") };
   const sb = await createServerSupabase();
   const { error } = await sb.auth.signInWithPassword(parsed.data);
-  if (error) return { error: t("invalidCredentials") };
+  if (error) {
+    // Supabase answers "invalid credentials" for both a wrong password and an unknown email.
+    // Product decision: an unknown email goes straight to sign-up, pre-filled.
+    if (!(await emailHasAccount(parsed.data.email))) {
+      redirect(`${getPathname({ locale, href: "/cadastro" })}?${new URLSearchParams({ email: parsed.data.email, motivo: "sem-conta" })}`);
+    }
+    return { error: t("invalidCredentials") };
+  }
   redirect(safeNextPath(String(form.get("next") ?? "")) ?? getPathname({ locale, href: "/minha-conta" }));
 }
 
