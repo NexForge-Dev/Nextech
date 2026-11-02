@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored NexForge SDK (copied verbatim from the panel repo).
+    "src/lib/analytics/nexforge-client.*",
   ]),
 ]);
 

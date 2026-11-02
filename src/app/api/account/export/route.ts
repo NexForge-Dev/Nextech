@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth/session";
+import { analytics } from "@/lib/analytics";
 
 /** LGPD/GDPR data portability: everything we hold about the signed-in user, as JSON. */
 export async function GET() {
@@ -16,6 +17,7 @@ export async function GET() {
     sb.from("customer_addresses").select("recipient_name, cpf, phone, cep, street, number, complement, district, city, state, created_at"),
     sb.from("return_requests").select("reason, message, status, outcome, outcome_note, created_at, resolved_at"),
   ]);
+  analytics.feature(user.id, "exportacao_dados");
   const body = {
     exported_at: new Date().toISOString(),
     account: { id: user.id, email: user.email },

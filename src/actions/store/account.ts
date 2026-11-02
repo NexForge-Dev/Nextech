@@ -12,6 +12,7 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { MARKET_COOKIE } from "@/lib/domain/markets";
 import { getAvailableMarkets } from "@/lib/data/taxonomy";
+import { analytics } from "@/lib/analytics";
 import type { AuthState } from "./auth";
 
 function localeOf(form: FormData): Locale {
@@ -30,6 +31,7 @@ export async function updateProfile(_: AuthState, form: FormData): Promise<AuthS
   const sb = await createServerSupabase();
   const { error } = await sb.from("profiles").update({ full_name: name.data }).eq("id", user.id);
   if (error) return { error: ta("genericError") };
+  analytics.feature(user.id, "perfil_atualizado");
   revalidatePath("/", "layout");
   return { message: t("saved") };
 }
@@ -103,6 +105,7 @@ export async function deleteAccount(_: AuthState, form: FormData): Promise<AuthS
   const { error } = await svc.auth.admin.deleteUser(user.id);
   // delete first: signing out before a failed deletion would leave the user logged out with the account intact
   if (error) return { error: ta("genericError") };
+  analytics.accountDeleted(user.id);
   await (await createServerSupabase()).auth.signOut({ scope: "local" }).catch(() => undefined);
   redirect(getPathname({ locale, href: "/" }));
 }

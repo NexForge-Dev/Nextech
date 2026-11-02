@@ -9,6 +9,7 @@ import { getStripe } from "@/lib/stripe/server";
 import { cancelOrderWith, type CancelResult } from "@/lib/orders/cancel";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
+import { analytics } from "@/lib/analytics";
 
 export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> {
   const user = await getSessionUser();
@@ -60,6 +61,7 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
     },
     orderNumber,
   );
+  if (r.ok) analytics.feature(user.id, "pedido_cancelado");
   revalidatePath("/[locale]/minha-conta/pedidos", "layout");
   return r;
 }
@@ -101,6 +103,7 @@ export async function requestReturn(_: ReturnState, form: FormData): Promise<Ret
   }
   const { data: o } = await sb.from("my_orders").select("id").eq("number", parsed.data.number).maybeSingle();
   if (o?.id) await notifyOrder("returnReceived", o.id);
+  analytics.feature(user.id, "devolucao_solicitada");
   revalidatePath("/[locale]/minha-conta/pedidos", "layout");
   return { ok: true };
 }
@@ -116,5 +119,6 @@ export async function myInvoiceUrl(orderNumber: number): Promise<string | null> 
   const { data: row } = await svc.from("orders").select("invoice_path").eq("id", o.id).single();
   if (!row?.invoice_path) return null;
   const { data } = await svc.storage.from("invoices").createSignedUrl(row.invoice_path, 300);
+  if (data?.signedUrl) analytics.feature(user.id, "nota_fiscal_baixada");
   return data?.signedUrl ?? null;
 }
