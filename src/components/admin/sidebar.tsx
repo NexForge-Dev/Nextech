@@ -3,13 +3,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BadgeCheck, ChartLine, FileSpreadsheet, GalleryHorizontal, LayoutDashboard, Link2, Megaphone, Menu, Network, Package,
+  BadgeCheck, ChartLine, FileSpreadsheet, GalleryHorizontal, LayoutDashboard, Link2, Megaphone, Menu, Network, Package, ShoppingCart,
   PanelLeftClose, PanelLeftOpen, Settings, Shapes, ShieldCheck, Store, Tag, Users, type LucideIcon,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import type { NavItem } from "./nav";
 
-const ICONS: Record<string, LucideIcon> = { BadgeCheck, ChartLine, FileSpreadsheet, GalleryHorizontal, LayoutDashboard, Link2, Megaphone, Network, Package, Settings, Shapes, ShieldCheck, Store, Tag, Users };
+const ICONS: Record<string, LucideIcon> = { BadgeCheck, ChartLine, FileSpreadsheet, GalleryHorizontal, LayoutDashboard, Link2, Megaphone, Network, Package, Settings, ShoppingCart, Shapes, ShieldCheck, Store, Tag, Users };
 
 function NavLinks({ items, collapsed, onNavigate }: { items: NavItem[]; collapsed: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();

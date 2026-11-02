@@ -6,6 +6,24 @@ import { getCatalogCounts, getMetrics } from "@/lib/data/admin/metrics";
 import { PageHeader } from "@/components/admin/page-header";
 import { PeriodFilter } from "@/components/admin/period-filter";
 import { CommissionsChart, DailyLine, KpiCard, RankBar } from "@/components/admin/charts";
+import { orderKpis } from "@/lib/data/admin/orders";
+import { formatMoney } from "@/lib/domain/money";
+
+async function OwnStoreKpis() {
+  const k = await orderKpis(30);
+  const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
+  return (
+    <section className="mb-8">
+      <h2 className="mb-3 text-sm font-semibold">Loja própria — últimos 30 dias</h2>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Pedidos pagos" value={String(k.paidOrders)} />
+        <KpiCard label="Faturamento" value={money(k.revenueMinor)} hint="Pago menos reembolsos" />
+        <KpiCard label="Margem bruta" value={money(k.marginMinor)} hint={`${k.marginKnown} pedido(s) com custo registrado`} />
+        <Link href="/admin/pedidos?status=awaiting_supplier" className="block"><KpiCard label="Aguardando compra" value={String(k.awaitingSupplier)} hint="Compre no fornecedor" /></Link>
+      </div>
+    </section>
+  );
+}
 
 export const metadata = { title: "Visão geral" };
 
@@ -14,11 +32,13 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const sp = new URLSearchParams(Object.entries(await searchParams).filter((e): e is [string, string] => typeof e[1] === "string"));
   const counts = await getCatalogCounts();
   const canAnalytics = ctx.permissions.has("analytics.read");
+  const ownStore = ctx.permissions.has("orders.read") ? <OwnStoreKpis /> : null;
 
   if (!canAnalytics) {
     return (
       <>
         <PageHeader title="Visão geral" description="Indicadores do catálogo." />
+        {ownStore}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard label="Total de produtos" value={String(counts.total)} />
           <KpiCard label="Produtos ativos" value={String(counts.active)} />
@@ -39,6 +59,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Visão geral" description="Dados reais do banco e das redes de afiliados. Cliques não são vendas: conversões e comissões vêm somente das redes." />
+      {ownStore}
       <PeriodFilter current={period.key} from={period.fromDate} to={period.toDate} />
       <h2 className="sr-only">Indicadores</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
