@@ -71,7 +71,8 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
       const r = await d.addEvent(piId, "payment_failed", { reason: str(err?.message), code: str(err?.code) });
       if (!r) return "ignored";
       // card declines can be retried in the same checkout; an expired boleto/Pix is final
-      const types = Array.isArray(o.payment_method_types) ? (o.payment_method_types as string[]) : [];
+      const rawTypes = o.allowed_payment_method_types ?? o.payment_method_types;
+      const types = Array.isArray(rawTypes) ? (rawTypes as string[]) : [];
       const asyncExpired = o.status === "canceled" || (o.status === "requires_payment_method" && types.some((t) => t === "boleto" || t === "pix"));
       if (asyncExpired) {
         const c = await d.cancelByPaymentIntent(piId);

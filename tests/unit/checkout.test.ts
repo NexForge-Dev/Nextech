@@ -44,7 +44,9 @@ describe("startCheckoutWith", () => {
     const r = await startCheckoutWith(d, checkoutInputSchema.parse(input));
     expect(r).toEqual({ ok: true, kind: "card", orderNumber: 1001, totalMinor: 49980, clientSecret: "pi_1_secret" });
     const [params, opts] = calls.create[0] as [Record<string, unknown>, { idempotencyKey: string }];
-    expect(params).toMatchObject({ amount: 49980, currency: "brl", payment_method_types: ["card"], metadata: { order_id: ORDER, order_number: "1001" } });
+    expect(params).toMatchObject({ amount: 49980, currency: "brl", allowed_payment_method_types: ["card"], metadata: { order_id: ORDER, order_number: "1001" } });
+    // Stripe API 2026-09-30+ rejects payment_method_types on PaymentIntents
+    expect(params).not.toHaveProperty("payment_method_types");
     expect(opts.idempotencyKey).toBe(`order-${ORDER}`);
     expect(calls.attach).toEqual([[ORDER, "pi_1", null]]);
   });
