@@ -10,6 +10,7 @@ export const revalidate = 3600;
 
 const STATIC: InternalPathname[] = ["/", "/produtos", "/ofertas", "/sobre", "/como-funciona", "/faq", "/contato", "/privacidade", "/termos", "/cookies"];
 const AFFILIATE_STATIC: InternalPathname[] = ["/como-ganhamos-dinheiro", "/afiliados"];
+const STORE_STATIC: InternalPathname[] = ["/trocas-e-devolucoes", "/entrega"];
 
 function entries(locales: readonly Locale[], href: Href, lastModified?: string, priority = 0.5): MetadataRoute.Sitemap {
   return locales.map((l) => ({
@@ -26,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lock = storefrontLocaleLock(bm);
   const locales: readonly Locale[] = lock ? [lock] : LOCALES;
   const modes = visibleModes(bm);
-  const statics = bm.affiliates ? [...STATIC, ...AFFILIATE_STATIC] : STATIC;
+  const statics = [...STATIC, ...(bm.affiliates ? AFFILIATE_STATIC : []), ...(bm.ownStore ? STORE_STATIC : [])];
   const [{ data: products }, { data: categories }, { data: campaigns }] = await Promise.all([
     sb.from("products").select("slug, updated_at").eq("status", "published").in("sale_mode", modes.length ? modes : ["none"]).limit(45000),
     sb.from("categories").select("slug, updated_at").eq("active", true),

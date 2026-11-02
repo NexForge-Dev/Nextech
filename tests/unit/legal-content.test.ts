@@ -17,3 +17,33 @@ describe("legal & institutional content", () => {
     });
   }
 });
+
+describe("own-store legal content (pt-BR)", () => {
+  const STORE = ["terms", "privacy", "cookies", "how-it-works", "faq", "returns", "shipping"];
+  it("has every own-store page", () => {
+    for (const p of STORE) expect(existsSync(`src/content/legal/pt-BR/store/${p}.md`), p).toBe(true);
+  });
+  it("terms identify the seller and state the CDC rights", () => {
+    const t = readFileSync("src/content/legal/pt-BR/store/terms.md", "utf8");
+    expect(t).toContain("{{tax_id}}");
+    expect(t).toContain("{{address}}");
+    expect(t).toMatch(/7 dias/);
+    expect(t).toMatch(/90 dias/);
+  });
+  it("privacy covers purchase data and the consent cookie", () => {
+    const t = readFileSync("src/content/legal/pt-BR/store/privacy.md", "utf8");
+    for (const s of ["nx_consent", "CPF", "Stripe", "5 anos"]) expect(t).toContain(s);
+  });
+});
+
+describe("legal loader variants", () => {
+  it("serves the own-store text when the store variant is requested, the default otherwise", async () => {
+    const { loadLegal } = await import("@/lib/content/legal");
+    const s = { storeName: "NEXTECH", contactEmail: "", legal: { company_name: "Loja X", tax_id: "12.345.678/0001-90", address: "Rua A, 1" } } as never;
+    expect(await loadLegal("terms", "pt-BR", s, "store")).toContain("12.345.678/0001-90");
+    expect(await loadLegal("terms", "pt-BR", s, "store")).toContain("Quem vende");
+    expect(await loadLegal("terms", "pt-BR", s)).toContain("links de afiliados");
+    // no store variant for other locales: falls back to the default text
+    expect(await loadLegal("terms", "en", s, "store")).toBeTruthy();
+  });
+});

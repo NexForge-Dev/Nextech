@@ -49,7 +49,9 @@
     "company": "Empresa",
     "help": "Ayuda",
     "legal": "Legal",
-    "ownStoreNotice": "Tienda online de electrónica. Vendido y enviado por NEXTECH, con pago seguro y envío gratis."
+    "ownStoreNotice": "Tienda online de electrónica. Vendido y enviado por NEXTECH, con pago seguro y envío gratis.",
+    "returns": "Cambios, devoluciones y garantía",
+    "shipping": "Envíos"
   },
   "markets": {
     "BR": "Brasil",
@@ -263,7 +265,9 @@
     "contactSent": "Mensaje enviado. ¡Gracias por escribirnos!",
     "contactError": "No se pudo enviar. Revisa los campos e inténtalo de nuevo.",
     "contactPurchaseNote": "Las dudas sobre pedidos, pagos, envíos, devoluciones o garantías deben tratarse directamente con la tienda asociada donde realizaste la compra.",
-    "contactOrderNote": "¿Dudas sobre un pedido? Indica el número de pedido (p. ej., #1001) para atenderte más rápido."
+    "contactOrderNote": "¿Dudas sobre un pedido? Indica el número de pedido (p. ej., #1001) para atenderte más rápido.",
+    "returns": "Cambios, devoluciones y garantía",
+    "shipping": "Envíos"
   },
   "cookies": {
     "bannerTitle": "Tu privacidad",

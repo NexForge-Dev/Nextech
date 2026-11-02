@@ -5,7 +5,7 @@ import { Logo } from "./logo";
 import { MarketSelector } from "./market-selector";
 import { CookiePreferencesButton } from "./cookie-banner";
 
-export async function Footer({ ctx, storeName }: { ctx: StoreContext; storeName: string }) {
+export async function Footer({ ctx, storeName, legal = { company_name: "", tax_id: "", address: "" }, contactEmail = "" }: { ctx: StoreContext; storeName: string; legal?: { company_name: string; tax_id: string; address: string }; contactEmail?: string }) {
   const t = await getTranslations("footer");
   const tm = await getTranslations("markets");
   const marketName = (code: string) => (tm.has(code as "BR") ? tm(code as "BR") : code);
@@ -39,6 +39,8 @@ export async function Footer({ ctx, storeName }: { ctx: StoreContext; storeName:
           <ul className="space-y-2">
             <li><Link className={link} href="/privacidade">{t("privacy")}</Link></li>
             <li><Link className={link} href="/termos">{t("terms")}</Link></li>
+            {ctx.businessModels.ownStore && <li><Link className={link} href="/trocas-e-devolucoes">{t("returns")}</Link></li>}
+            {ctx.businessModels.ownStore && <li><Link className={link} href="/entrega">{t("shipping")}</Link></li>}
             <li><Link className={link} href="/cookies">{t("cookies")}</Link></li>
             <li><CookiePreferencesButton label={t("cookiePreferences")} className={`${link} cursor-pointer text-left`} /></li>
           </ul>
@@ -46,7 +48,14 @@ export async function Footer({ ctx, storeName }: { ctx: StoreContext; storeName:
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-6">
-          <p className="text-xs text-mute">{t("rights", { year: new Date().getFullYear() })}</p>
+          <div className="space-y-1">
+            <p className="text-xs text-mute">{t("rights", { year: new Date().getFullYear() })}</p>
+            {ctx.businessModels.ownStore && legal.company_name && (
+              <p className="text-xs text-mute" data-testid="seller-identity">
+                {[legal.company_name, legal.tax_id && `CNPJ ${legal.tax_id}`, legal.address, contactEmail].filter(Boolean).join(" · ")}
+              </p>
+            )}
+          </div>
           {options.length > 1 && !ctx.brazilOnly ? (
             <MarketSelector current={ctx.market} options={options} label={t("country")} />
           ) : (

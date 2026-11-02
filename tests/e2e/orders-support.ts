@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { svc } from "./support";
+import { resetAuthRateLimit } from "./admin-support";
 
 export const CUSTOMER_PASSWORD = "cliente-e2e-123";
 const ADDRESS = { recipientName: "Ana Souza", street: "Av. Paulista", number: "1000", complement: null, district: "Bela Vista", city: "São Paulo", state: "SP", cep: "01310100" };
@@ -15,6 +16,7 @@ export async function makeCustomer(email: string): Promise<string> {
 }
 
 export async function customerLogin(page: Page, email: string) {
+  await resetAuthRateLimit();
   await page.goto("/pt-br/entrar");
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha").fill(CUSTOMER_PASSWORD);

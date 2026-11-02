@@ -43,6 +43,8 @@ export const pathnames = {
   "/privacidade": pt("/privacidade", "/privacy", "/privacidad"),
   "/termos": pt("/termos", "/terms", "/terminos"),
   "/cookies": "/cookies",
+  "/trocas-e-devolucoes": pt("/trocas-e-devolucoes", "/returns", "/devoluciones"),
+  "/entrega": pt("/entrega", "/shipping", "/envios"),
   "/afiliados": pt("/afiliados", "/affiliate-disclosure", "/afiliados"),
   "/campanha/[slug]": pt("/campanha/[slug]", "/campaign/[slug]", "/campana/[slug]"),
   "/entrar": pt("/entrar", "/sign-in", "/iniciar-sesion"),

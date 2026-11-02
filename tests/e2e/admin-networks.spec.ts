@@ -27,6 +27,7 @@ test("Amazon tag generates the affiliate link in the product form", async ({ pag
   try {
     await adminLogin(page);
     await page.goto("/admin/produtos/novo");
+    await page.getByLabel("Modo de venda").selectOption("affiliate");
     await page.getByRole("button", { name: "Adicionar oferta" }).click();
     await page.getByLabel("Loja parceira").selectOption({ label: `Amazon E2E ${stamp}` });
     await page.getByLabel("Link original do produto").fill("https://www.amazon.com.br/dp/B0TEST1234");
