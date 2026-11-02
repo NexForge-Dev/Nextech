@@ -48,7 +48,8 @@
     "rights": "© {year} NEXTECH. Todos os direitos reservados.",
     "company": "Empresa",
     "help": "Ajuda",
-    "legal": "Legal"
+    "legal": "Legal",
+    "ownStoreNotice": "Loja online de eletrónica. Vendido e entregue pela NEXTECH, com pagamento seguro e portes grátis."
   },
   "markets": {
     "BR": "Brasil",
@@ -250,7 +251,8 @@
     "contactSend": "Enviar mensagem",
     "contactSent": "Mensagem enviada. Obrigado pelo contacto!",
     "contactError": "Não foi possível enviar. Verifique os campos e tente novamente.",
-    "contactPurchaseNote": "Questões sobre encomendas, pagamentos, entregas, trocas ou garantias devem ser tratadas diretamente com a loja parceira onde a compra foi feita."
+    "contactPurchaseNote": "Questões sobre encomendas, pagamentos, entregas, trocas ou garantias devem ser tratadas diretamente com a loja parceira onde a compra foi feita.",
+    "contactOrderNote": "Dúvidas sobre uma encomenda? Indique o número da encomenda (ex.: #1001) para agilizar o atendimento."
   },
   "cookies": {
     "bannerTitle": "A sua privacidade",

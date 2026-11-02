@@ -2,11 +2,24 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { routing } from "./i18n/routing";
+import { lockedLocalePath } from "./i18n/locale-lock";
+import { parseBusinessModels } from "./lib/domain/business-models";
 
 const intl = createMiddleware(routing);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+// Business-model switches, cached briefly per server instance (one small anon read at most every 30s).
+let modelsCache: { at: number; affiliates: boolean } | null = null;
+const MODELS_TTL_MS = Number(process.env.BUSINESS_MODELS_PROXY_TTL_MS ?? 30_000);
+async function affiliatesEnabled(supabase: ReturnType<typeof createServerClient>): Promise<boolean> {
+  if (modelsCache && Date.now() - modelsCache.at < MODELS_TTL_MS) return modelsCache.affiliates;
+  const { data } = await supabase.from("site_settings").select("value").eq("key", "public.business_models").maybeSingle();
+  const affiliates = parseBusinessModels(data?.value).affiliates;
+  modelsCache = { at: Date.now(), affiliates };
+  return affiliates;
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,8 +56,16 @@ export async function proxy(request: NextRequest) {
   } else if (isAuthRoute) {
     response = NextResponse.next({ request });
   } else {
-    // 3. store pages: locale routing
-    response = intl(request);
+    // 3. store pages: own store only (affiliates off) → pt-BR only; then locale routing
+    const target = lockedLocalePath(pathname);
+    if (target && !(await affiliatesEnabled(supabase))) {
+      const url = request.nextUrl.clone();
+      url.pathname = target;
+      response = NextResponse.redirect(url);
+      response.cookies.set("NEXT_LOCALE", "pt-BR", { path: "/", sameSite: "lax" });
+    } else {
+      response = intl(request);
+    }
   }
   for (const c of pending) response.cookies.set(c.name, c.value, c.options);
   return response;

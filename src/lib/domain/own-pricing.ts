@@ -1,3 +1,4 @@
+import type { PriceSummary } from "./pricing";
 /** Own-store (loja própria) money rules. All amounts are integer centavos (BRL minor units). */
 
 export type OwnSale = {
@@ -59,4 +60,10 @@ export function cartTotals(lines: TotalsLine[], method: PaymentMethod): { subtot
     if (method === "pix") discountMinor += (l.priceMinor - pixPriceMinor(l.priceMinor, l.pixDiscountPct)) * l.quantity;
   }
   return { subtotalMinor, discountMinor, totalMinor: subtotalMinor - discountMinor };
+}
+
+/** Card/list price summary for an own product, in the same shape the storefront uses for affiliate offers. */
+export function ownPriceSummary(sale: Pick<OwnSale, "priceMinor" | "compareAtMinor">): Extract<PriceSummary, { kind: "price" }> {
+  const discount = ownDiscountPct(sale);
+  return { kind: "price", fromMinor: sale.priceMinor, currency: "BRL", multiple: false, previousMinor: discount ? sale.compareAtMinor : null, discount };
 }

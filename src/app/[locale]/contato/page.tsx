@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getBusinessModels } from "@/lib/data/settings";
 import { getTranslations } from "next-intl/server";
 import { pageLocale } from "@/i18n/page-locale";
 import { resolveLocaleParam } from "@/i18n/routing";
@@ -19,7 +20,7 @@ export default async function Page({ params }: Props) {
   const t = await getTranslations("legal");
   return (
     <LegalPageView page="contact" locale={locale} title={t("contact")}>
-      <ContactForm locale={locale} />
+      <ContactForm locale={locale} ownStore={!(await getBusinessModels()).affiliates} />
     </LegalPageView>
   );
 }

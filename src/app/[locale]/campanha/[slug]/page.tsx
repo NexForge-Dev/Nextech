@@ -30,7 +30,7 @@ export default async function CampaignPage({ params }: Props) {
   const [t, tp, tc, format, user, favorites] = await Promise.all([getTranslations("campaign"), getTranslations("product"), getTranslations("common"), getFormatter(), getSessionUser(), getFavoriteIds()]);
   const ctas = new Map(
     campaign.products
-      .filter((p) => p.price.kind !== "unavailable")
+      .filter((p) => p.saleMode === "affiliate" && p.price.kind !== "unavailable")
       .map((p) => [p.id, { href: `/go/${p.id}?c=${campaign.slug}`, label: p.price.kind === "link_only" ? tp("seePriceOnStore") : tp("viewOnStore") }]),
   );
   return (

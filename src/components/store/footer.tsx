@@ -16,14 +16,14 @@ export async function Footer({ ctx, storeName }: { ctx: StoreContext; storeName:
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-4 py-14 md:grid-cols-4 md:px-6">
         <div className="col-span-2 space-y-4 md:col-span-1">
           <Logo name={storeName} />
-          <p className="max-w-xs text-sm text-mute">{t("affiliateNotice")}</p>
+          <p className="max-w-xs text-sm text-mute">{ctx.businessModels.affiliates ? t("affiliateNotice") : t("ownStoreNotice")}</p>
         </div>
         <nav className="space-y-3" aria-label={t("company")}>
           <p className="text-xs font-medium uppercase tracking-wider text-black">{t("company")}</p>
           <ul className="space-y-2">
             <li><Link className={link} href="/sobre">{t("about")}</Link></li>
             <li><Link className={link} href="/como-funciona">{t("howItWorks")}</Link></li>
-            <li><Link className={link} href="/como-ganhamos-dinheiro">{t("howWeEarn")}</Link></li>
+            {ctx.businessModels.affiliates && <li><Link className={link} href="/como-ganhamos-dinheiro">{t("howWeEarn")}</Link></li>}
           </ul>
         </nav>
         <nav className="space-y-3" aria-label={t("help")}>
@@ -31,7 +31,7 @@ export async function Footer({ ctx, storeName }: { ctx: StoreContext; storeName:
           <ul className="space-y-2">
             <li><Link className={link} href="/faq">{t("faq")}</Link></li>
             <li><Link className={link} href="/contato">{t("contact")}</Link></li>
-            <li><Link className={link} href="/afiliados">{t("affiliateDisclosure")}</Link></li>
+            {ctx.businessModels.affiliates && <li><Link className={link} href="/afiliados">{t("affiliateDisclosure")}</Link></li>}
           </ul>
         </nav>
         <nav className="space-y-3" aria-label={t("legal")}>
@@ -47,7 +47,7 @@ export async function Footer({ ctx, storeName }: { ctx: StoreContext; storeName:
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-6">
           <p className="text-xs text-mute">{t("rights", { year: new Date().getFullYear() })}</p>
-          {options.length > 0 ? (
+          {options.length > 1 && !ctx.brazilOnly ? (
             <MarketSelector current={ctx.market} options={options} label={t("country")} />
           ) : (
             <p className="text-sm text-mute">

@@ -15,7 +15,7 @@ test("product page has a tracked CTA, notice and specs", async ({ page }) => {
 
 test("a BR-only product shows where it is available when the market is PT", async ({ page }) => {
   // demo product 1 (odd) only has a BR offer; PT is an available market (demo store serves BR + PT)
-  await page.context().addCookies([{ name: "nx_market", value: "PT", url: "http://localhost:3300" }]);
+  await page.context().addCookies([{ name: "nx_market", value: "PT", url: `http://localhost:${process.env.E2E_PORT ?? 3300}` }]);
   await page.goto("/pt-br/produto/produto-de-demonstracao-1");
   await expect(page.getByText("Indisponível no seu país").first()).toBeVisible();
   await expect(page.getByText(/Disponível em: .*Brasil/)).toBeVisible();

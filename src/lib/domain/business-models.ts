@@ -31,3 +31,7 @@ export function isModeVisible(mode: SaleMode, b: BusinessModels): boolean {
 export function storefrontLocaleLock(b: BusinessModels): Locale | null {
   return b.affiliates ? null : "pt-BR";
 }
+
+export function visibleModes(b: BusinessModels): SaleMode[] {
+  return (["own", "affiliate"] as const).filter((m) => isModeVisible(m, b));
+}

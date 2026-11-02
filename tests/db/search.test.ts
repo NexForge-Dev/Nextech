@@ -1,5 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { anonClient, makeProduct } from "./helpers";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { anonClient, makeProduct, serviceClient } from "./helpers";
+
+const models = (affiliates: boolean) =>
+  serviceClient().from("site_settings").upsert({ key: "public.business_models", value: { own_store: true, affiliates, payments: { card: true, boleto: true, pix: false } } });
 
 const base = {
   p_locale: "pt-BR",
@@ -16,9 +19,43 @@ const base = {
   p_offset: 0,
 };
 
+let own: { id: string };
+
 beforeAll(async () => {
+  await models(true);
   await makeProduct({ name: "Café Expresso Máquina" });
   await makeProduct({ name: "Café Rascunho Secreto", status: "draft" });
+  own = await makeProduct({ name: "Fone Própria Zumbido" });
+  const svc = serviceClient();
+  await svc.from("products").update({ sale_mode: "own" }).eq("id", own.id);
+  await svc.from("product_sale").insert({ product_id: own.id, price_minor: 24990, compare_at_minor: 29990 });
+});
+
+afterAll(async () => {
+  await models(false);
+});
+
+describe("search_products — business models", () => {
+  it("prices own products from product_sale in Brazil", async () => {
+    const { data } = await anonClient().rpc("search_products", { ...base, q: "zumbido" });
+    expect(data?.map((r) => [r.name, r.best_price_minor, r.discount])).toEqual([["Fone Própria Zumbido", 24990, 17]]);
+  });
+  it("hides own products outside Brazil", async () => {
+    const { data } = await anonClient().rpc("search_products", { ...base, p_market: "PT", q: "zumbido" });
+    expect(data).toEqual([]);
+  });
+  it("hides affiliate products while affiliates are off", async () => {
+    await models(false);
+    const { data } = await anonClient().rpc("search_products", { ...base, q: "cafe expresso" });
+    await models(true);
+    expect(data).toEqual([]);
+  });
+  it("hides affiliate products from suggestions while affiliates are off", async () => {
+    await models(false);
+    const { data } = await anonClient().rpc("suggest", { q: "cafe exp", p_locale: "pt-BR", p_limit: 8 });
+    await models(true);
+    expect((data ?? []).filter((r) => r.kind === "product")).toEqual([]);
+  });
 });
 
 describe("search_products", () => {

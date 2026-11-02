@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cartTotals, estimateMarginMinor, estimateStripeFeeMinor, ownDiscountPct, pixPriceMinor } from "@/lib/domain/own-pricing";
+import { cartTotals, estimateMarginMinor, estimateStripeFeeMinor, ownDiscountPct, ownPriceSummary, pixPriceMinor } from "@/lib/domain/own-pricing";
 
 const sale = { priceMinor: 24990, compareAtMinor: 29990, pixDiscountPct: 5, available: true, deliveryMinDays: 3, deliveryMaxDays: 7 };
 
@@ -25,5 +25,9 @@ describe("own pricing", () => {
     ];
     expect(cartTotals(lines, "card")).toEqual({ subtotalMinor: 62970, discountMinor: 0, totalMinor: 62970 });
     expect(cartTotals(lines, "pix")).toEqual({ subtotalMinor: 62970, discountMinor: 1249, totalMinor: 61721 });
+  });
+  it("summarises an own product price for cards", () => {
+    expect(ownPriceSummary(sale)).toEqual({ kind: "price", fromMinor: 24990, currency: "BRL", multiple: false, previousMinor: 29990, discount: 17 });
+    expect(ownPriceSummary({ ...sale, compareAtMinor: null })).toEqual({ kind: "price", fromMinor: 24990, currency: "BRL", multiple: false, previousMinor: null, discount: null });
   });
 });

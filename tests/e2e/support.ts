@@ -25,6 +25,14 @@ export async function withEmptyCatalog(fn: () => Promise<void>) {
 
 export async function acceptCookies(page: import("@playwright/test").Page) {
   await page.context().addCookies([
-    { name: "nx_consent", value: encodeURIComponent(JSON.stringify({ v: 1, analytics: false, marketing: false, decidedAt: new Date().toISOString() })), url: "http://localhost:3300" },
+    { name: "nx_consent", value: encodeURIComponent(JSON.stringify({ v: 1, analytics: false, marketing: false, decidedAt: new Date().toISOString() })), url: `http://localhost:${process.env.E2E_PORT ?? 3300}` },
   ]);
+}
+
+/** Switch business models (read uncached by the app, so it applies on the next request). */
+export async function setBusinessModels(v: { ownStore: boolean; affiliates: boolean; pix?: boolean }) {
+  const { error } = await svc()
+    .from("site_settings")
+    .upsert({ key: "public.business_models", value: { own_store: v.ownStore, affiliates: v.affiliates, payments: { card: true, boleto: true, pix: v.pix ?? false } } });
+  if (error) throw error;
 }

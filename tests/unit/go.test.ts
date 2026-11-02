@@ -18,7 +18,7 @@ function offer(p: Partial<GoOffer> = {}): GoOffer {
 
 function repo(over: Partial<GoRepo> = {}): GoRepo {
   return {
-    getProduct: async () => ({ id: P, published: true, offers: [offer(), offer({ id: O2, priceMinor: 900, affiliateUrl: "https://loja.com/p/2" })] }),
+    getProduct: async () => ({ id: P, published: true, saleMode: "affiliate", modeEnabled: true, offers: [offer(), offer({ id: O2, priceMinor: 900, affiliateUrl: "https://loja.com/p/2" })] }),
     getStoreDomains: async () => ["loja.com"],
     getNetwork: async () => ({ subidParam: null }),
     getCampaignId: async () => null,
@@ -27,6 +27,17 @@ function repo(over: Partial<GoRepo> = {}): GoRepo {
 }
 
 const input = (p: Partial<Parameters<typeof resolveGo>[0]> = {}) => ({ productId: P, market: "BR", ua: CHROME, consent: null, now: NOW, ...p });
+
+describe("resolveGo — business models", () => {
+  it("does not redirect while affiliates are switched off", async () => {
+    const r = await resolveGo(input(), repo({ getProduct: async () => ({ id: P, published: true, saleMode: "affiliate", modeEnabled: false, offers: [offer()] }) }));
+    expect(r).toEqual({ status: 404, reason: "mode_disabled" });
+  });
+  it("sends own-store products to their product page instead of a partner", async () => {
+    const r = await resolveGo(input(), repo({ getProduct: async () => ({ id: P, published: true, saleMode: "own", modeEnabled: true, slug: "fone-x", offers: [offer()] }) }));
+    expect(r).toEqual({ status: 404, reason: "own_product", slug: "fone-x" });
+  });
+});
 
 describe("resolveGo", () => {
   it("404s an unpublished product", async () => {

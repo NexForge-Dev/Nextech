@@ -48,7 +48,8 @@
     "rights": "© {year} NEXTECH. All rights reserved.",
     "company": "Company",
     "help": "Help",
-    "legal": "Legal"
+    "legal": "Legal",
+    "ownStoreNotice": "Online electronics store. Sold and shipped by NEXTECH, with secure payment and free shipping."
   },
   "markets": {
     "BR": "Brazil",
@@ -250,7 +251,8 @@
     "contactSend": "Send message",
     "contactSent": "Message sent. Thanks for reaching out!",
     "contactError": "We couldn't send it. Check the fields and try again.",
-    "contactPurchaseNote": "Questions about orders, payments, delivery, returns or warranties must be handled directly with the partner store where you made the purchase."
+    "contactPurchaseNote": "Questions about orders, payments, delivery, returns or warranties must be handled directly with the partner store where you made the purchase.",
+    "contactOrderNote": "Questions about an order? Include your order number (e.g. #1001) so we can help faster."
   },
   "cookies": {
     "bannerTitle": "Your privacy",

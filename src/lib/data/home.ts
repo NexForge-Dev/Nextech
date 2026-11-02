@@ -5,6 +5,8 @@ import type { MarketCode } from "@/lib/domain/markets";
 import { getCategories, type NavCategory } from "./taxonomy";
 import { pickTranslation } from "./translations";
 import { toCards, type ProductCardData } from "./catalog";
+import { getBusinessModels } from "./settings";
+import { visibleModes } from "@/lib/domain/business-models";
 
 export type BannerData = { id: string; title: string; subtitle: string | null; imagePath: string; mobileImagePath: string | null; linkUrl: string | null };
 
@@ -54,13 +56,14 @@ export async function getHome(locale: Locale, market: MarketCode): Promise<{
   hasAnyProduct: boolean;
 }> {
   const sb = createAnonSupabase();
+  const modes = visibleModes(await getBusinessModels());
   const [banners, categories, featuredRes, promoRes, popularRes, anyRes] = await Promise.all([
     getActiveBanners(locale),
     getCategories(locale),
     sb.from("products").select(PRODUCT_FIELDS).eq("status", "published").eq("featured", true).order("published_at", { ascending: false }).limit(8),
     sb.from("promotions").select(`highlighted, starts_at, products(${PRODUCT_FIELDS})`).order("highlighted", { ascending: false }).order("starts_at", { ascending: false }).limit(8),
     sb.rpc("search_products", { q: "", p_locale: locale, p_market: market, p_sort: "popular", p_limit: 8, p_offset: 0 }),
-    sb.from("products").select("id", { count: "exact", head: true }).eq("status", "published"),
+    sb.from("products").select("id", { count: "exact", head: true }).eq("status", "published").in("sale_mode", modes.length ? modes : ["none"]),
   ]);
 
   const featuredRows = ((featuredRes.data ?? []) as unknown as ProductRow[]).map((p) => baseRow(p, locale));

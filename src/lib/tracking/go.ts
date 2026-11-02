@@ -10,7 +10,8 @@ const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export type GoOffer = OfferForPricing & { storeId: string; networkId: string | null; affiliateUrl: string | null; originalUrl: string };
 
 export type GoRepo = {
-  getProduct(id: string): Promise<{ id: string; published: boolean; offers: GoOffer[] } | null>;
+  /** saleMode/modeEnabled default to an enabled affiliate product. */
+  getProduct(id: string): Promise<{ id: string; published: boolean; saleMode?: "own" | "affiliate"; modeEnabled?: boolean; slug?: string; offers: GoOffer[] } | null>;
   getStoreDomains(storeId: string): Promise<string[]>;
   getNetwork(id: string): Promise<{ subidParam: string | null } | null>;
   getCampaignId(slug: string): Promise<string | null>;
@@ -44,7 +45,7 @@ export type GoInput = {
   now?: Date;
 };
 
-export type GoResult = { status: 302; location: string; click: ClickRow } | { status: 404; reason: string; blockedHost?: string };
+export type GoResult = { status: 302; location: string; click: ClickRow } | { status: 404; reason: string; blockedHost?: string; slug?: string };
 
 /** Decide where /go/[productId] redirects and what click to record. Pure apart from the repo. */
 export async function resolveGo(input: GoInput, repo: GoRepo): Promise<GoResult> {
@@ -52,6 +53,8 @@ export async function resolveGo(input: GoInput, repo: GoRepo): Promise<GoResult>
   if (!UUID.test(input.productId)) return { status: 404, reason: "invalid_id" };
   const product = await repo.getProduct(input.productId);
   if (!product || !product.published) return { status: 404, reason: "not_found" };
+  if (product.saleMode === "own") return product.modeEnabled === false ? { status: 404, reason: "mode_disabled" } : { status: 404, reason: "own_product", slug: product.slug };
+  if (product.modeEnabled === false) return { status: 404, reason: "mode_disabled" };
 
   const active = product.offers.filter((o) => o.active);
   const requested = input.offerId && UUID.test(input.offerId) ? active.find((o) => o.id === input.offerId) : undefined;

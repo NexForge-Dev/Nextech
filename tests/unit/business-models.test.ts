@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isModeVisible, parseBusinessModels, storefrontLocaleLock, toStoredBusinessModels } from "@/lib/domain/business-models";
+import { isModeVisible, parseBusinessModels, storefrontLocaleLock, toStoredBusinessModels, visibleModes } from "@/lib/domain/business-models";
 
 const on = { ownStore: true, affiliates: true, payments: { card: true, boleto: true, pix: false } };
 
@@ -25,5 +25,10 @@ describe("business models", () => {
   it("locks the storefront to pt-BR while affiliates are off", () => {
     expect(storefrontLocaleLock({ ...on, affiliates: false })).toBe("pt-BR");
     expect(storefrontLocaleLock({ ...on, affiliates: true })).toBeNull();
+  });
+  it("lists the visible sale modes", () => {
+    expect(visibleModes({ ...on, ownStore: true, affiliates: false })).toEqual(["own"]);
+    expect(visibleModes({ ...on, ownStore: true, affiliates: true })).toEqual(["own", "affiliate"]);
+    expect(visibleModes({ ...on, ownStore: false, affiliates: false })).toEqual([]);
   });
 });

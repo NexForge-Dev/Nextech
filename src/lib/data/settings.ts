@@ -2,7 +2,8 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { createAnonSupabase } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/routing";
-import { DEFAULT_BUSINESS_MODELS, parseBusinessModels, type BusinessModels } from "@/lib/domain/business-models";
+import { cache } from "react";
+import { parseBusinessModels, type BusinessModels } from "@/lib/domain/business-models";
 
 export type PublicSettings = {
   storeName: string;
@@ -16,7 +17,6 @@ export type PublicSettings = {
   logoPath: string | null;
   faviconPath: string | null;
   heroImage: string | null;
-  businessModels: BusinessModels;
 };
 
 const DEFAULTS: PublicSettings = {
@@ -31,7 +31,6 @@ const DEFAULTS: PublicSettings = {
   logoPath: null,
   faviconPath: null,
   heroImage: null,
-  businessModels: DEFAULT_BUSINESS_MODELS,
 };
 
 export const getPublicSettings = unstable_cache(
@@ -57,9 +56,17 @@ export const getPublicSettings = unstable_cache(
       logoPath: nullableStr("public.logo_path"),
       faviconPath: nullableStr("public.favicon_path"),
       heroImage: nullableStr("public.hero_image"),
-      businessModels: parseBusinessModels(m.get("public.business_models")),
     };
   },
   ["public-settings"],
   { tags: ["settings"], revalidate: 300 },
 );
+
+/**
+ * Business-model switches. Deliberately not in the 5-minute settings cache: switching a model on/off
+ * must take effect on the next request. One tiny row read, memoised per request.
+ */
+export const getBusinessModels = cache(async (): Promise<BusinessModels> => {
+  const { data } = await createAnonSupabase().from("site_settings").select("value").eq("key", "public.business_models").maybeSingle();
+  return parseBusinessModels(data?.value);
+});
