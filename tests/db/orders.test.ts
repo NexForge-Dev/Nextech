@@ -86,3 +86,37 @@ describe("order privacy", () => {
     expect(error).not.toBeNull();
   });
 });
+
+describe("webhook transitions (service role)", () => {
+  it("marks paid once; a repeated success is a no-op", async () => {
+    const { data } = await order(a.client, [{ productId: fone.id, quantity: 1 }]);
+    const id = data![0].order_id;
+    const svc = serviceClient();
+    await svc.from("orders").update({ stripe_payment_intent_id: `pi_${id}` }).eq("id", id);
+    const first = await svc.rpc("order_mark_paid", { p_pi: `pi_${id}`, p_order: id, p_fee: 1037, p_summary: "Cartão visa final 4242" });
+    const second = await svc.rpc("order_mark_paid", { p_pi: `pi_${id}`, p_order: id, p_fee: 1037, p_summary: "x" });
+    expect(first.data?.[0].transitioned).toBe(true);
+    expect(second.data?.[0].transitioned).toBe(false);
+    const { data: row } = await svc.from("orders").select("status, stripe_fee_minor, payment_summary").eq("id", id).single();
+    expect(row).toEqual({ status: "awaiting_supplier", stripe_fee_minor: 1037, payment_summary: "Cartão visa final 4242" });
+    // a late cancel (e.g. out-of-order event) cannot undo a paid order
+    expect((await svc.rpc("order_cancel_by_pi", { p_pi: `pi_${id}` })).data).toEqual([]);
+  });
+  it("tracks partial and full refunds and refuses refunding more than paid", async () => {
+    const { data } = await order(a.client, [{ productId: fone.id, quantity: 1 }]);
+    const id = data![0].order_id;
+    const svc = serviceClient();
+    const refund = (amount: number, ref: string | null) =>
+      svc.rpc("order_record_refund", { p_order: id, p_pi: null as never, p_amount: amount, p_method: ref ? "stripe" : "manual", p_stripe_refund: ref as never, p_status: "succeeded", p_note: null as never, p_actor: null as never });
+    const ref = `re_${id}`;
+    expect((await refund(10000, ref)).data?.[0]).toMatchObject({ fully_refunded: false, changed: true });
+    expect((await refund(10000, ref)).data?.[0]).toMatchObject({ changed: false });
+    expect((await refund(20000, null)).error?.message).toBe("refund_exceeds_total");
+    expect((await refund(14990, null)).data?.[0]).toMatchObject({ fully_refunded: true });
+    expect((await svc.from("orders").select("status, refunded_minor").eq("id", id).single()).data).toEqual({ status: "refunded", refunded_minor: 24990 });
+  });
+  it("customers cannot call webhook functions", async () => {
+    const { error } = await a.client.rpc("order_mark_paid", { p_pi: "pi_x", p_order: "00000000-0000-4000-8000-000000000000", p_fee: 0, p_summary: "" });
+    expect(error).not.toBeNull();
+  });
+});

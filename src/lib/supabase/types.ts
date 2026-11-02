@@ -1186,6 +1186,26 @@ isOneToOne: false
 "offer_proven_previous":
 { Args: { "p_link": string }; Returns: number
                            },
+"order_add_event_by_pi":
+{ Args: { "p_data": Json,"p_kind": string,"p_pi": string }; Returns: {
+              "order_id": string
+            }[]
+                           },
+"order_cancel_by_pi":
+{ Args: { "p_pi": string }; Returns: {
+              "order_id": string
+            }[]
+                           },
+"order_mark_paid":
+{ Args: { "p_fee": number,"p_order": string,"p_pi": string,"p_summary": string }; Returns: {
+              "order_id": string,"transitioned": boolean
+            }[]
+                           },
+"order_record_refund":
+{ Args: { "p_actor": string,"p_amount": number,"p_method": string,"p_note": string,"p_order": string,"p_pi": string,"p_status": string,"p_stripe_refund": string }; Returns: {
+              "changed": boolean,"fully_refunded": boolean,"order_id": string
+            }[]
+                           },
 "pix_price_minor":
 { Args: { "p_pct": number,"p_price": number }; Returns: number
                            },
