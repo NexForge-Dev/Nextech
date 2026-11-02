@@ -145,7 +145,17 @@
     "previousImage": "Previous image",
     "nextImage": "Next image",
     "noImage": "No image",
-    "promotionReason": "{reason}"
+    "promotionReason": "{reason}",
+    "addToCart": "Add to cart",
+    "buyNow": "Buy now",
+    "soldOut": "Sold out",
+    "inStock": "In stock",
+    "freeShipping": "Free shipping · arrives in {min}–{max} business days",
+    "ownSeller": "Sold and shipped by NEXTECH · 7-day withdrawal · 90-day warranty",
+    "cardOrBoleto": "by card or boleto",
+    "pixPrice": "{price} with Pix",
+    "pixOff": "{pct}% off",
+    "onlyBrazil": "We only deliver in Brazil."
   },
   "deals": {
     "title": "Deals",
@@ -278,5 +288,27 @@
   },
   "empty": {
     "noData": "No data yet"
+  },
+  "cart": {
+    "title": "Cart",
+    "headerLabel": "Cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyText": "Find products and add them to your cart.",
+    "explore": "Browse products",
+    "quantity": "Quantity",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "remove": "Remove",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "free": "Free",
+    "total": "Total",
+    "checkout": "Checkout",
+    "signInNote": "You'll sign in or create an account to finish.",
+    "unavailable": "Sold out — remove to continue",
+    "hidden": "Unavailable — remove to continue",
+    "loading": "Loading cart…",
+    "added": "Added to cart",
+    "viewCart": "View cart"
   }
 }

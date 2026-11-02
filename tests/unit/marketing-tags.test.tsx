@@ -85,3 +85,38 @@ describe("settings schema — ad tags", () => {
   it("rejects a non-numeric pixel id", () => expect(withAds({ metaPixel: "fb-123" }).success).toBe(false));
   it("rejects a label with quotes", () => expect(withAds({ googleAdsConversion: "abc'def" }).success).toBe(false));
 });
+
+describe("trackAdEvent", () => {
+  type Call = unknown[];
+  const setup = (withTags = true) => {
+    const fb: Call[] = [];
+    const g: Call[] = [];
+    const store = new Map<string, string>();
+    (globalThis as Record<string, unknown>).sessionStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v) };
+    (globalThis as Record<string, unknown>).window = withTags
+      ? { fbq: (...a: unknown[]) => fb.push(a), gtag: (...a: unknown[]) => g.push(a), __nxAdsSendTo: "AW-1/abc" }
+      : {};
+    return { fb, g };
+  };
+
+  it("is a no-op without consented tags", async () => {
+    setup(false);
+    const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    expect(() => trackAdEvent("AddToCart", { valueMinor: 24990, currency: "BRL", contentIds: ["x"] })).not.toThrow();
+  });
+  it("sends the value in reais to Meta", async () => {
+    const { fb } = setup();
+    const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    trackAdEvent("AddToCart", { valueMinor: 43980, currency: "BRL", contentIds: ["x"] });
+    expect(fb[0]).toEqual(["track", "AddToCart", { value: 439.8, currency: "BRL", content_ids: ["x"], content_type: "product" }]);
+  });
+  it("sends a purchase once per order, with the Google Ads conversion", async () => {
+    const { fb, g } = setup();
+    const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1001 });
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1001 });
+    expect(fb).toHaveLength(1);
+    expect(fb[0][3]).toEqual({ eventID: "order-1001" });
+    expect(g).toEqual([["event", "conversion", { send_to: "AW-1/abc", value: 439.8, currency: "BRL", transaction_id: "1001" }]]);
+  });
+});

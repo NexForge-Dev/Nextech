@@ -145,7 +145,17 @@
     "previousImage": "Imagem anterior",
     "nextImage": "Próxima imagem",
     "noImage": "Sem imagem",
-    "promotionReason": "{reason}"
+    "promotionReason": "{reason}",
+    "addToCart": "Adicionar ao carrinho",
+    "buyNow": "Comprar agora",
+    "soldOut": "Esgotado",
+    "inStock": "Em estoque",
+    "freeShipping": "Frete grátis · chega em {min} a {max} dias úteis",
+    "ownSeller": "Vendido e entregue por NEXTECH · 7 dias para desistir · garantia de 90 dias",
+    "cardOrBoleto": "no cartão ou boleto",
+    "pixPrice": "{price} no Pix",
+    "pixOff": "{pct}% off",
+    "onlyBrazil": "Entregamos somente no Brasil."
   },
   "deals": {
     "title": "Ofertas",
@@ -278,5 +288,27 @@
   },
   "empty": {
     "noData": "Sem dados ainda"
+  },
+  "cart": {
+    "title": "Carrinho",
+    "headerLabel": "Carrinho",
+    "emptyTitle": "Seu carrinho está vazio",
+    "emptyText": "Encontre produtos e adicione ao carrinho para comprar.",
+    "explore": "Ver produtos",
+    "quantity": "Quantidade",
+    "decrease": "Diminuir quantidade",
+    "increase": "Aumentar quantidade",
+    "remove": "Remover",
+    "subtotal": "Subtotal",
+    "shipping": "Frete",
+    "free": "Grátis",
+    "total": "Total",
+    "checkout": "Finalizar compra",
+    "signInNote": "Para finalizar, você entra ou cria sua conta.",
+    "unavailable": "Esgotado — remova para continuar",
+    "hidden": "Indisponível — remova para continuar",
+    "loading": "Carregando carrinho…",
+    "added": "Adicionado ao carrinho",
+    "viewCart": "Ver carrinho"
   }
 }

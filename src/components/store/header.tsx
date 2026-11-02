@@ -10,9 +10,11 @@ import { SearchBox } from "./search-box";
 import { CategoriesMenu } from "./categories-menu";
 import { MobileMenu, MobileSearch } from "./mobile-menu";
 import { FavoritesLink } from "./favorites-link";
+import { CartLink } from "./cart-link";
+import { getBusinessModels } from "@/lib/data/settings";
 
 export async function Header({ locale, storeName, logoUrl }: { locale: Locale; storeName: string; logoUrl?: string | null }) {
-  const [t, categories, user] = await Promise.all([getTranslations("header"), getCategories(locale), getSessionUser()]);
+  const [t, tc, categories, user, bm] = await Promise.all([getTranslations("header"), getTranslations("cart"), getCategories(locale), getSessionUser(), getBusinessModels()]);
   let favCount = 0;
   if (user) {
     const sb = await createServerSupabase();
@@ -54,6 +56,11 @@ export async function Header({ locale, storeName, logoUrl }: { locale: Locale; s
           <div className="grid size-10 place-items-center md:size-auto">
             <FavoritesLink label={t("favorites")} serverCount={favCount} signedIn={!!user} />
           </div>
+          {bm.ownStore && (
+            <div className="grid size-10 place-items-center md:size-auto">
+              <CartLink label={tc("headerLabel")} />
+            </div>
+          )}
           <Link href={accountHref} className={`${navLink} hidden items-center gap-1.5 md:inline-flex`}>
             <User className="size-[18px]" strokeWidth={1.75} aria-hidden />
             <span className="hidden lg:inline">{user ? t("account") : t("signIn")}</span>
