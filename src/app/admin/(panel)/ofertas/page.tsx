@@ -13,7 +13,7 @@ export default async function PromotionsPage() {
   const sb = await createServerSupabase();
   const { data } = await sb.from("promotions").select("id, reason, starts_at, ends_at, publish_at, highlighted, active, products(product_translations(locale, name))").order("starts_at", { ascending: false }).limit(500);
   const rows = (data ?? []).map((p) => ({ ...p, name: p.products?.product_translations.find((t) => t.locale === "pt-BR")?.name ?? "—", state: scheduleLabel(p.active, p.starts_at, p.ends_at, p.publish_at) }));
-  const fmt = (d: string) => new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  const fmt = (d: string) => new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
   return (
     <>
       <PageHeader title="Ofertas" description="Produtos exibidos na seção “Ofertas”. Somente descontos comprovados são mostrados; sem comprovação, aparece o motivo." actions={<ButtonLink href="/admin/ofertas/novo"><Plus className="size-4" /> Nova oferta</ButtonLink>} />

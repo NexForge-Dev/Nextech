@@ -35,7 +35,7 @@ export default async function CampaignsPage() {
         columns={[
           { key: "name", header: "Campanha", cell: (r) => <Link href={`/admin/campanhas/${r.id}`} className="font-medium hover:underline">{r.name}</Link> },
           { key: "slug", header: "Slug", cell: (r) => <span className="font-mono text-xs text-mute">{r.slug}</span> },
-          { key: "period", header: "Período", cell: (r) => <span className="tabular text-xs">{r.starts_at ? new Date(r.starts_at).toLocaleDateString("pt-BR") : "—"} → {r.ends_at ? new Date(r.ends_at).toLocaleDateString("pt-BR") : "—"}</span> },
+          { key: "period", header: "Período", cell: (r) => <span className="tabular text-xs">{r.starts_at ? new Date(r.starts_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—"} → {r.ends_at ? new Date(r.ends_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—"}</span> },
           { key: "products", header: "Produtos", cell: (r) => <span className="tabular">{r.products}</span> },
           { key: "clicks", header: "Cliques", cell: (r) => <span className="tabular">{clickCount.get(r.id) ?? 0}</span> },
           { key: "status", header: "Situação", cell: (r) => <StatusPill active={r.effective === "active"} on={LABEL[r.effective]} off={LABEL[r.effective]} /> },

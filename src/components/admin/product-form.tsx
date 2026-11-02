@@ -286,7 +286,7 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
                 </button>
               )}
               <div className="grid gap-4 md:grid-cols-3">
-                <Field label={`Preço atual (${o.currency})`} htmlFor={`o-price-${i}`} error={err(`offers.${i}.price`)} hint={o.priceUpdatedAt ? `Atualizado em ${new Date(o.priceUpdatedAt).toLocaleString("pt-BR")}` : "Deixe vazio se a loja não permite exibir preço."}>
+                <Field label={`Preço atual (${o.currency})`} htmlFor={`o-price-${i}`} error={err(`offers.${i}.price`)} hint={o.priceUpdatedAt ? `Atualizado em ${new Date(o.priceUpdatedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}` : "Deixe vazio se a loja não permite exibir preço."}>
                   <input id={`o-price-${i}`} inputMode="decimal" className={`${inputCls} tabular`} value={o.price} onChange={(e) => setOffer(i, { price: e.target.value })} placeholder="199,90" />
                 </Field>
                 <Field label="Preço anterior" htmlFor={`o-prev-${i}`} error={err(`offers.${i}.previousPrice`)}>

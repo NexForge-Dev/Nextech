@@ -61,7 +61,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         empty={<EmptyPanel title={sp.q || sp.status || sp.payment ? "Nenhum pedido encontrado" : "Nenhum pedido ainda"} text="Os pedidos aparecem aqui assim que um cliente finaliza a compra." />}
         columns={[
           { key: "n", header: "#", cell: (r) => <Link href={`/admin/pedidos/${r.number}`} className="font-mono font-medium hover:underline">{r.number}</Link> },
-          { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span> },
+          { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</span> },
           { key: "cust", header: "Cliente", cell: (r) => <div><p className="font-medium">{r.customer}</p><p className="text-xs text-mute">{r.email}</p></div> },
           { key: "total", header: "Total", cell: (r) => <span className="tabular">{money(r.totalMinor)}</span> },
           { key: "pay", header: "Pagamento", cell: (r) => <span className="text-xs">{METHOD[r.paymentMethod] ?? r.paymentMethod} {r.paid ? "✓" : "⏳"}</span> },

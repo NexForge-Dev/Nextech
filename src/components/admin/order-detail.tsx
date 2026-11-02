@@ -140,7 +140,7 @@ export function AdminOrderView({ order, canWrite, canRefund }: { order: Order; c
         <ol className="space-y-2 text-sm" data-testid="history">
           {order.events.map((e) => (
             <li key={e.id} className="flex gap-3">
-              <span className="tabular w-36 shrink-0 text-xs text-mute">{new Date(e.at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span>
+              <span className="tabular w-36 shrink-0 text-xs text-mute">{new Date(e.at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</span>
               <span>
                 {EVENT[e.kind] ?? e.kind}
                 <span className="text-mute"> · {e.actor === "admin" ? "você/equipe" : e.actor === "stripe" ? "Stripe" : e.actor === "customer" ? "cliente" : "sistema"}</span>
@@ -276,7 +276,7 @@ function ReturnCard({ r, canWrite, onSaved }: { r: Order["returns"][number]; can
   return (
     <div className="space-y-3 rounded-md border border-line p-4" data-testid="return-card">
       <p className="text-sm">
-        <span className="font-medium">{REASON[r.reason] ?? r.reason}</span> · {new Date(r.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} ·{" "}
+        <span className="font-medium">{REASON[r.reason] ?? r.reason}</span> · {new Date(r.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })} ·{" "}
         {r.status === "open" ? "Aberta" : `Resolvida: ${OUTCOME[r.outcome ?? ""] ?? ""}`}
       </p>
       <p className="whitespace-pre-line text-sm text-mute">{r.message}</p>

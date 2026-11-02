@@ -182,7 +182,7 @@ export function StoreForm({ initial, networks, markets }: { initial: StoreFormVa
       }}
       className="max-w-5xl"
     >
-      <FormSection title="Loja" description={v.createdAt ? `Cadastrada em ${new Date(v.createdAt).toLocaleDateString("pt-BR")}` : undefined}>
+      <FormSection title="Loja" description={v.createdAt ? `Cadastrada em ${new Date(v.createdAt).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}` : undefined}>
         <Field label="Nome" htmlFor="s-name" error={errors.name}>
           <input id="s-name" className={inputCls} value={v.name} onChange={(e) => setV({ ...v, name: e.target.value, slug: slugTouched ? v.slug : slugify(e.target.value) })} maxLength={80} />
         </Field>

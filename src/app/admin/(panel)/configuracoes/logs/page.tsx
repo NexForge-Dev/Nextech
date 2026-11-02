@@ -47,7 +47,7 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
         }
         empty={<EmptyPanel title="Nenhum registro no período" />}
         columns={[
-          { key: "when", header: "Quando", cell: (r) => <span className="tabular text-xs">{new Date(r.occurred_at).toLocaleString("pt-BR")}</span> },
+          { key: "when", header: "Quando", cell: (r) => <span className="tabular text-xs">{new Date(r.occurred_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span> },
           { key: "who", header: "Quem", cell: (r) => <span className="text-xs">{r.actor_id ? email.get(r.actor_id) ?? r.actor_id : "Sistema"}</span> },
           { key: "what", header: "Ação", cell: (r) => <span className="font-mono text-xs">{r.entity}.{r.action}</span> },
           { key: "id", header: "Registro", cell: (r) => <span className="font-mono text-xs text-mute">{r.entity_id?.slice(0, 12) ?? "—"}</span> },

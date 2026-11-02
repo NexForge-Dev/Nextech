@@ -31,7 +31,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
                 <div>
                   <p className="font-medium">{m.subject || "(sem assunto)"}</p>
                   <p className="text-sm text-mute">
-                    {m.name} · <a href={`mailto:${m.email}`} className="underline">{m.email}</a> · {m.locale} · {new Date(m.created_at).toLocaleString("pt-BR")}
+                    {m.name} · <a href={`mailto:${m.email}`} className="underline">{m.email}</a> · {m.locale} · {new Date(m.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                   </p>
                 </div>
                 <MessageActions id={m.id} handled={m.handled} />

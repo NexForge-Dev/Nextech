@@ -16,7 +16,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ num
     <>
       <PageHeader
         title={`Pedido #${order.number}`}
-        description={`${new Date(order.createdAt).toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" })} · ${ADMIN_STATUS_LABEL[order.status]}`}
+        description={`${new Date(order.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "long", timeStyle: "short" })} · ${ADMIN_STATUS_LABEL[order.status]}`}
         actions={<Link href="/admin/pedidos" className="inline-flex h-10 items-center rounded-md border border-line px-4 text-sm font-medium hover:bg-soft">Todos os pedidos</Link>}
       />
       <AdminOrderView order={order} canWrite={ctx.permissions.has("orders.write")} canRefund={ctx.permissions.has("orders.refund")} />

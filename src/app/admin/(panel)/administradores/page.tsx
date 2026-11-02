@@ -45,7 +45,7 @@ export default async function AdminsPage() {
         columns={[
           { key: "email", header: "E-mail", cell: (r) => r.email },
           { key: "role", header: "Perfil", cell: (r) => ROLE_LABELS[r.role] },
-          { key: "since", header: "Desde", cell: (r) => <span className="tabular text-xs">{new Date(r.since).toLocaleDateString("pt-BR")}</span> },
+          { key: "since", header: "Desde", cell: (r) => <span className="tabular text-xs">{new Date(r.since).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span> },
           { key: "status", header: "Status", cell: (r) => <StatusPill active={r.active} /> },
           { key: "actions", header: "", className: "text-right", cell: (r) => <AdminRowActions userId={r.id} role={r.role} active={r.active} isSelf={r.id === ctx.userId} /> },
         ]}
