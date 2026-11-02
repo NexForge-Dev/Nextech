@@ -18,3 +18,19 @@ export function parseConsent(cookie: string | undefined): Consent | null {
 export function serializeConsent(c: Consent): string {
   return encodeURIComponent(JSON.stringify(c));
 }
+
+/** Google Consent Mode v2 signals. */
+export type GoogleConsentState = {
+  ad_storage: "granted" | "denied";
+  ad_user_data: "granted" | "denied";
+  ad_personalization: "granted" | "denied";
+  analytics_storage: "granted" | "denied";
+};
+
+export const GOOGLE_CONSENT_DENIED: GoogleConsentState = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", analytics_storage: "denied" };
+
+/** Map the banner categories to Consent Mode v2: analytics to analytics_storage; marketing to the three ad signals. */
+export function googleConsentState(c: { analytics: boolean; marketing: boolean }): GoogleConsentState {
+  const g = (on: boolean): "granted" | "denied" => (on ? "granted" : "denied");
+  return { ad_storage: g(c.marketing), ad_user_data: g(c.marketing), ad_personalization: g(c.marketing), analytics_storage: g(c.analytics) };
+}
