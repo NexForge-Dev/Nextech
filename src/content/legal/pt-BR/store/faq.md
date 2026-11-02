@@ -20,11 +20,11 @@ A confirmação chega em até 1 dia útil depois do pagamento. O boleto vence em
 
 ## Posso cancelar o pedido?
 
-Sim, em Minha conta → Pedidos, enquanto o pedido ainda não estiver sendo preparado. O reembolso é integral.
+Sim, em Minha conta → Pedidos, enquanto o pedido ainda não estiver sendo preparado. O reembolso é integral. Se ele já estiver em preparação ou a caminho, você ainda pode desistir: recuse a entrega ou peça a devolução depois de receber (veja a pergunta abaixo).
 
 ## E se eu me arrepender depois de receber?
 
-Você tem 7 dias após a entrega para desistir sem justificar. Abra uma solicitação em Minha conta → Pedidos.
+Você tem 7 dias corridos após a entrega para desistir sem justificar (art. 49 do CDC). Abra uma solicitação em Minha conta → Pedidos ou escreva para {{contact_email}}. A devolução não tem custo e você recebe de volta todo o valor pago.
 
 ## O produto tem garantia?
 
@@ -33,6 +33,10 @@ Sim: 90 dias de garantia legal, além da garantia do fabricante quando houver.
 ## Preciso de conta para comprar?
 
 Sim. A conta permite acompanhar o pedido, ver o rastreio e pedir suporte com facilidade.
+
+## Quem é a empresa por trás da loja?
+
+{{seller_identity}}. Atendimento: {{contact_email}}.
 
 ## Vocês entregam fora do Brasil?
 

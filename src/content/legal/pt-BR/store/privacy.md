@@ -2,7 +2,9 @@ Esta política explica quais dados pessoais a {{store_name}} trata, por que e qu
 
 ## Quem somos
 
-Controlador dos dados: {{company_name}}, CNPJ {{tax_id}}, {{address}}. Contato para assuntos de privacidade: {{contact_email}}.
+Controlador dos dados: {{seller_identity}}.
+
+Canal de privacidade e do encarregado pelo tratamento de dados (LGPD, art. 41): {{contact_email}}.
 
 ## Quais dados tratamos
 
@@ -45,8 +47,14 @@ Você pode alterar suas escolhas a qualquer momento em “Preferências de cooki
 
 - **Stripe** (processamento de pagamentos), **provedores de infraestrutura** (hospedagem e banco de dados) e **provedor de e-mail** (envio dos e-mails do pedido), que tratam dados em nosso nome.
 - **Fornecedores e transportadoras**: nome, telefone e endereço de entrega, apenas para que o produto chegue até você.
-- **Google e Meta**: somente com o seu consentimento para cookies de marketing.
+- **Google e Meta**: somente com o seu consentimento para cookies de marketing. Usamos o Modo de Consentimento do Google: sem o seu aceite, as tags do Google ficam com armazenamento de anúncios e de análise negados.
 - Autoridades, quando exigido por lei.
+
+Nunca vendemos seus dados.
+
+## Transferência internacional
+
+Alguns desses prestadores (pagamentos, hospedagem, banco de dados e e-mail) mantêm servidores fora do Brasil, por exemplo nos Estados Unidos e na União Europeia. Nesses casos, a transferência é feita para cumprir o contrato com você e com garantias contratuais de proteção de dados, conforme o art. 33 da LGPD.
 
 ## Retenção
 
@@ -54,7 +62,11 @@ Pedidos e registros de pagamento são mantidos por no mínimo **5 anos**, por ob
 
 ## Seus direitos
 
-Você pode confirmar a existência de tratamento, acessar, corrigir, exportar (portabilidade) e excluir seus dados, revogar consentimentos e se opor a tratamentos. Em Minha conta → Privacidade você exporta seus dados (incluindo pedidos) e exclui sua conta. Para outros pedidos, escreva para {{contact_email}}. Você também pode reclamar à ANPD.
+Você pode confirmar a existência de tratamento, acessar, corrigir, exportar (portabilidade) e excluir seus dados, revogar consentimentos e se opor a tratamentos. Em Minha conta → Privacidade você exporta seus dados (incluindo pedidos) e exclui sua conta. Para outros pedidos, fale com a gente: {{contact_email}}. Respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD) e aos órgãos de defesa do consumidor.
+
+## Menores de idade
+
+A loja não é direcionada a menores de 18 anos. Compras devem ser feitas por maiores de idade ou com a autorização dos responsáveis.
 
 ## Alterações
 

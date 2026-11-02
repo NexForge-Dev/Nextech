@@ -23,7 +23,7 @@ import { FavoriteButton } from "@/components/store/favorite-button";
 import { ProductGrid, Section } from "@/components/store/product-grid";
 import { AddToCart } from "@/components/store/add-to-cart";
 import { ownDiscountPct, pixPriceMinor } from "@/lib/domain/own-pricing";
-import { getPublicSettings } from "@/lib/data/settings";
+import { getPublicSettings, getStorefrontLocales } from "@/lib/data/settings";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(p.slug, locale);
   if (!product) return {};
   const description = stripTags(product.shortDescription ?? product.descriptionMd ?? "").slice(0, 160) || undefined;
-  return buildMetadata({ locale, href: { pathname: "/produto/[slug]", params: { slug: product.slug } }, title: product.name, description, type: "article" });
+  return buildMetadata({ locale, locales: await getStorefrontLocales(), href: { pathname: "/produto/[slug]", params: { slug: product.slug } }, title: product.name, description, type: "article" });
 }
 
 export default async function ProductPage({ params }: Props) {

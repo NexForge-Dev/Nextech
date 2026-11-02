@@ -13,6 +13,8 @@ export type EmailOrder = {
   outcome?: string;
   /** Owner alerts: what went wrong and what to do. */
   alert?: string;
+  /** Seller identity from settings (razão social · CNPJ · endereço · e-mail), shown in customer emails. */
+  seller?: string | null;
 };
 
 export type EmailKind =
@@ -33,7 +35,7 @@ export type EmailKind =
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
 
-type Copy = { subject: string; lead: string; showItems?: boolean; showTracking?: boolean; cta?: { label: string; href: string } };
+type Copy = { subject: string; lead: string; showItems?: boolean; showTracking?: boolean; cta?: { label: string; href: string }; rights?: boolean };
 
 function copy(kind: EmailKind, o: EmailOrder): Copy {
   const orderUrl = `${o.siteUrl}/pt-br/minha-conta/pedidos/${o.number}`;
@@ -41,9 +43,9 @@ function copy(kind: EmailKind, o: EmailOrder): Copy {
   const see = { label: "Ver meu pedido", href: orderUrl };
   switch (kind) {
     case "orderConfirmed":
-      return { subject: `Pedido #${o.number} confirmado`, lead: `Olá, ${o.customerName}! Recebemos o pagamento do seu pedido #${o.number}. Agora vamos preparar o envio e avisamos quando sair para entrega.`, showItems: true, cta: see };
+      return { subject: `Pedido #${o.number} confirmado`, lead: `Olá, ${o.customerName}! Recebemos o pagamento do seu pedido #${o.number}. Agora vamos preparar o envio e avisamos quando sair para entrega.`, showItems: true, cta: see, rights: true };
     case "boletoIssued":
-      return { subject: `Boleto do pedido #${o.number}`, lead: `Olá, ${o.customerName}! Seu boleto de ${money(o.totalMinor)} foi gerado. Pague até o vencimento; a confirmação chega em até 1 dia útil.`, showItems: true, cta: o.boletoUrl ? { label: "Abrir boleto", href: o.boletoUrl } : see };
+      return { subject: `Boleto do pedido #${o.number}`, lead: `Olá, ${o.customerName}! Seu boleto de ${money(o.totalMinor)} foi gerado. Pague até o vencimento; a confirmação chega em até 1 dia útil.`, showItems: true, cta: o.boletoUrl ? { label: "Abrir boleto", href: o.boletoUrl } : see, rights: true };
     case "paymentFailed":
       return { subject: `Pagamento do pedido #${o.number} não aprovado`, lead: `Olá, ${o.customerName}. O pagamento do pedido #${o.number} não foi concluído. Você pode tentar novamente pelo carrinho, com outro cartão ou forma de pagamento.`, cta: { label: "Ir para a loja", href: `${o.siteUrl}/pt-br/carrinho` } };
     case "orderShipped":
@@ -70,8 +72,18 @@ function copy(kind: EmailKind, o: EmailOrder): Copy {
 }
 
 /** Plain black-and-white HTML email (table layout for email clients) plus a text version. */
+const OWNER_ONLY: EmailKind[] = ["ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"];
+
 export function renderEmail(kind: EmailKind, o: EmailOrder): { subject: string; html: string; text: string } {
   const c = copy(kind, o);
+  const customer = !OWNER_ONLY.includes(kind);
+  const termsUrl = `${o.siteUrl}/pt-br/termos`;
+  const returnsUrl = `${o.siteUrl}/pt-br/trocas-e-devolucoes`;
+  // Decreto 7.962/2013 art. 4º: confirm the order and keep the contract terms at hand; CDC art. 49
+  const rights = c.rights
+    ? `Você pode desistir da compra em até 7 dias corridos após receber o produto, com reembolso integral (art. 49 do CDC). Termos de venda: ${termsUrl} · Trocas e devoluções: ${returnsUrl}`
+    : "";
+  const seller = customer && o.seller ? o.seller : "";
   const rows = c.showItems
     ? o.items.map((i) => `<tr><td style="padding:6px 0">${i.quantity}× ${esc(i.name)}</td><td style="padding:6px 0;text-align:right">${esc(money(i.lineTotalMinor))}</td></tr>`).join("") +
       `<tr><td style="padding:10px 0 0;border-top:1px solid #e5e5e5;font-weight:600">Total</td><td style="padding:10px 0 0;border-top:1px solid #e5e5e5;text-align:right;font-weight:600">${esc(money(o.totalMinor))}</td></tr>`
@@ -90,13 +102,16 @@ export function renderEmail(kind: EmailKind, o: EmailOrder): { subject: string; 
 <p style="margin:0;font-size:16px;line-height:1.5">${esc(c.lead)}</p>
 ${rows || tracking ? `<table role="presentation" width="100%" style="margin-top:20px;font-size:14px">${rows}${tracking}</table>` : ""}
 ${button}
-<p style="margin:32px 0 0;font-size:12px;color:#777777">Você recebeu este e-mail por causa de um pedido na NEXTECH.</p>
+${rights ? `<p style="margin:28px 0 0;font-size:13px;line-height:1.5;color:#222222">Você pode desistir da compra em até 7 dias corridos após receber o produto, com reembolso integral (art. 49 do CDC). <a href="${esc(termsUrl)}" style="color:#000">Termos de venda</a> · <a href="${esc(returnsUrl)}" style="color:#000">Trocas e devoluções</a></p>` : ""}
+<p style="margin:32px 0 0;font-size:12px;color:#777777">Você recebeu este e-mail por causa de um pedido na NEXTECH.${seller ? `<br>${esc(seller)}` : ""}</p>
 </td></tr></table></td></tr></table></body></html>`;
   const lines = [
     c.lead,
     ...(c.showItems ? o.items.map((i) => `${i.quantity}x ${i.name} — ${money(i.lineTotalMinor)}`).concat(`Total: ${money(o.totalMinor)}`) : []),
     ...(c.showTracking ? o.items.filter((i) => i.trackingCode).map((i) => `${i.name}: ${i.trackingCarrier ?? ""} ${i.trackingCode}`) : []),
     ...(c.cta ? [`${c.cta.label}: ${c.cta.href}`] : []),
+    ...(rights ? ["", rights] : []),
+    ...(seller ? ["", seller] : []),
   ];
   return { subject: c.subject, html, text: lines.join("\n") };
 }

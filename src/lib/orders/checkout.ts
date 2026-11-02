@@ -87,7 +87,8 @@ export async function startCheckoutWith(d: CheckoutDeps, input: CheckoutInput): 
   const base: Record<string, unknown> = {
     amount: order.totalMinor,
     currency: "brl",
-    payment_method_types: [method],
+    // Stripe API 2026-09-30+ removed payment_method_types on PaymentIntents
+    allowed_payment_method_types: [method],
     receipt_email: d.customerEmail,
     description: `Pedido NEXTECH #${order.orderNumber}`,
     metadata: { order_id: order.orderId, order_number: String(order.orderNumber) },

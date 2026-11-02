@@ -14,7 +14,7 @@ While affiliates are off the storefront is pt-BR/BRL only (other locales redirec
 
 | | Supabase | Used by |
 |---|---|---|
-| **Cloud** | project `orpzevxfdycppepkhanp` | `npm run dev`, `build`, production (Vercel) |
+| **Cloud** | project `yeqensrclrxbeikfksdf` | `npm run dev`, `build`, production (Vercel) |
 | **Local** | `npx supabase start` (API `127.0.0.1:55821`, Studio `:55823`) | `test:db`, `test:e2e` |
 
 `.env.local` points at the cloud project. To work against the local stack, swap in the local URL/keys (`npx supabase status`).
@@ -65,7 +65,7 @@ npm run dev                  # http://localhost:3300
 Migrations live in `supabase/migrations/`; `supabase/seed.sql` holds base configuration only (admin roles and permissions) and is idempotent.
 
 ```bash
-npx supabase link --project-ref orpzevxfdycppepkhanp
+npx supabase link --project-ref yeqensrclrxbeikfksdf
 npx supabase db push --linked --dry-run   # review
 npx supabase db push --linked             # apply migrations
 npx supabase db push --linked --include-seed
@@ -76,6 +76,9 @@ npx supabase db push --linked --include-seed
 The panel lives at `/admin` (sign in at `/admin/entrar`). Bootstrap the first superadmin with `npm run admin:create`.
 
 ## Deploy (Vercel)
+
+Step-by-step production launch of the own store: [`docs/DEPLOY-TODAY.md`](docs/DEPLOY-TODAY.md).
+
 
 1. Set every variable from the table above in the Vercel project. `NEXT_PUBLIC_SITE_URL` must be the production domain.
 2. In Supabase → Authentication → URL Configuration, set **Site URL** to the production domain and add `https://<domain>/**` and `http://localhost:3300/**` to **Redirect URLs**.
@@ -102,7 +105,9 @@ The panel lives at `/admin` (sign in at `/admin/entrar`). Bootstrap the first su
 
 **Email.** `src/lib/email` (Resend HTTP API, pt-BR templates). Missing env → skipped and recorded as `email_skipped` in the order history.
 
-**Legal texts.** Own-store versions live in `src/content/legal/pt-BR/store/` (terms of sale, privacy, cookies, returns, shipping, FAQ, about) and are used while the own store is on. Fill Admin → Configurações → Informações legais (MEI name, CNPJ, address) — the footer shows the seller identity required by Decreto 7.962/2013.
+**Legal texts.** Own-store versions live in `src/content/legal/pt-BR/store/` (terms of sale, privacy, cookies, returns, shipping, FAQ, about) and are used while the own store is on. Fill Admin → Configurações → Informações legais (razão social, CNPJ, address) and the contact e-mail — the footer, checkout, legal pages and customer emails show the seller identity required by Decreto 7.962/2013. Missing fields are omitted for customers (never placeholders) and listed on the admin dashboard until filled.
+
+**Consent.** Analytics/marketing tags load only after consent; Google tags get Consent Mode v2 (`ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`: denied by default, then the banner choice).
 
 **Tests against the local stack**
 

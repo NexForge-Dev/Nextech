@@ -1,9 +1,9 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { createAnonSupabase } from "@/lib/supabase/server";
-import type { Locale } from "@/i18n/routing";
+import { LOCALES, type Locale } from "@/i18n/routing";
 import { cache } from "react";
-import { parseBusinessModels, type BusinessModels } from "@/lib/domain/business-models";
+import { parseBusinessModels, storefrontLocaleLock, type BusinessModels } from "@/lib/domain/business-models";
 
 export type PublicSettings = {
   storeName: string;
@@ -70,3 +70,9 @@ export const getBusinessModels = cache(async (): Promise<BusinessModels> => {
   const { data } = await createAnonSupabase().from("site_settings").select("value").eq("key", "public.business_models").maybeSingle();
   return parseBusinessModels(data?.value);
 });
+
+/** Locales the storefront serves right now (pt-BR only while the own store runs without affiliates). */
+export async function getStorefrontLocales(): Promise<readonly Locale[]> {
+  const lock = storefrontLocaleLock(await getBusinessModels());
+  return lock ? [lock] : LOCALES;
+}

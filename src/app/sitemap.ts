@@ -18,7 +18,7 @@ function entries(locales: readonly Locale[], href: Href, lastModified?: string, 
     url: absoluteUrl(l, href),
     lastModified: lastModified ? new Date(lastModified) : undefined,
     priority,
-    alternates: { languages: alternates(href) },
+    alternates: { languages: alternates(href, locales) },
   }));
 }
 

@@ -109,6 +109,12 @@ describe("handleStripeEvent", () => {
     expect(state.status).toBe("cancelled");
     expect(state.notes).toContain("paymentFailed");
   });
+  it("cancels an expired boleto when the event only carries allowed_payment_method_types", async () => {
+    const { d, state } = fake();
+    const expired = { ...pi("requires_payment_method"), allowed_payment_method_types: ["boleto"] };
+    await handleStripeEvent(ev("evt_x3", "payment_intent.payment_failed", expired) as never, d);
+    expect(state.status).toBe("cancelled");
+  });
   it("keeps a declined card order open so the customer can retry", async () => {
     const { d, state } = fake();
     await handleStripeEvent(ev("evt_x2", "payment_intent.payment_failed", { ...pi("requires_payment_method"), payment_method_types: ["card"] }) as never, d);

@@ -2,6 +2,7 @@ import "server-only";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { sendEmail } from "@/lib/email/send";
 import { renderEmail, type EmailKind, type EmailOrder } from "@/lib/email/templates";
+import { sellerIdentityParts, type LegalSettings } from "@/lib/domain/seller";
 
 const OWNER_KINDS: EmailKind[] = ["ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"];
 
@@ -12,6 +13,11 @@ export async function notifyOrder(kind: EmailKind, orderId: string, extra: Parti
     const { data: o } = await svc.from("orders").select("id, number, total_minor, payment_method, customer, boleto, order_items(name, quantity, line_total_minor, tracking_carrier, tracking_code, tracking_url)").eq("id", orderId).maybeSingle();
     if (!o) return;
     const customer = (o.customer ?? {}) as { name?: string; email?: string };
+    const { data: settings } = await svc.from("site_settings").select("key, value").in("key", ["public.legal", "public.contact_email"]);
+    const legal = (settings?.find((r) => r.key === "public.legal")?.value ?? null) as Partial<LegalSettings> | null;
+    const contact = settings?.find((r) => r.key === "public.contact_email")?.value;
+    const sellerParts = sellerIdentityParts(legal);
+    const seller = sellerParts.length ? [...sellerParts, typeof contact === "string" ? contact.trim() : ""].filter(Boolean).join(" · ") : null;
     const boleto = (o.boleto ?? null) as { url?: string } | null;
     const email: EmailOrder = {
       number: Number(o.number),
@@ -20,6 +26,7 @@ export async function notifyOrder(kind: EmailKind, orderId: string, extra: Parti
       paymentMethod: o.payment_method,
       siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3300",
       boletoUrl: boleto?.url ?? null,
+      seller,
       items: o.order_items.map((i) => ({ name: i.name, quantity: i.quantity, lineTotalMinor: Number(i.line_total_minor), trackingCarrier: i.tracking_carrier, trackingCode: i.tracking_code, trackingUrl: i.tracking_url })),
       ...extra,
     };

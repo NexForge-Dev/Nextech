@@ -363,7 +363,10 @@
     "copied": "Código copiado",
     "doneFailed": "O pagamento não foi concluído. Você pode tentar de novo pelo carrinho.",
     "myOrders": "Ver meus pedidos",
-    "notConfigured": "Os pagamentos ainda não estão disponíveis. Tente novamente mais tarde."
+    "notConfigured": "Os pagamentos ainda não estão disponíveis. Tente novamente mais tarde.",
+    "deliveryEstimate": "Entrega estimada: até {days, plural, one {# dia útil} other {# dias úteis}} após a confirmação do pagamento.",
+    "soldBy": "Vendido e entregue por {seller}.",
+    "legalNotice": "Ao finalizar a compra, aceita os <terms>Termos de venda</terms> e a <privacy>Política de privacidade</privacy>. Pode desistir até 7 dias após receber o produto, com reembolso integral (art. 49 do CDC): consulte <returns>Trocas e devoluções</returns>."
   },
   "orders": {
     "title": "As minhas encomendas",

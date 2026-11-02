@@ -2,7 +2,7 @@ This policy explains what personal data {{store_name}} processes, why, and what 
 
 ## Who we are
 
-Data controller: {{company_name}}, {{tax_id}}, {{address}}. Privacy contact: {{contact_email}}.
+Data controller: {{seller_identity}}. Privacy contact: {{contact_email}}.
 
 ## What data we process
 

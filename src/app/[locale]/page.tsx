@@ -5,7 +5,7 @@ import { pageLocale } from "@/i18n/page-locale";
 import { Link } from "@/i18n/navigation";
 import { getStoreContext } from "@/lib/data/context";
 import { getHome } from "@/lib/data/home";
-import { getPublicSettings } from "@/lib/data/settings";
+import { getPublicSettings, getStorefrontLocales } from "@/lib/data/settings";
 import { getSessionUser } from "@/lib/auth/session";
 import { getFavoriteIds } from "@/lib/data/favorites";
 import { storagePublicUrl } from "@/lib/supabase/env";
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const s = await getPublicSettings();
   const seo = s.seo[locale] ?? s.seo["pt-BR"] ?? {};
   const t = await getTranslations({ locale, namespace: "home" });
-  const meta = buildMetadata({ locale, href: "/", title: seo.title || s.storeName, description: seo.description || t("heroSubtitle") });
+  const meta = buildMetadata({ locale, locales: await getStorefrontLocales(), href: "/", title: seo.title || s.storeName, description: seo.description || t("heroSubtitle") });
   return { ...meta, title: { absolute: seo.title || s.storeName } };
 }
 import { ProductGrid, Section } from "@/components/store/product-grid";
@@ -37,7 +37,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const searchTarget = `${absoluteUrl(locale, "/produtos")}?q={search_term_string}`;
   const ld = [
-    { "@context": "https://schema.org", "@type": "Organization", name: settings.storeName, url: siteUrl(), ...(settings.logoPath ? { logo: storagePublicUrl("site", settings.logoPath) } : {}) },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: settings.storeName,
+      url: siteUrl(),
+      ...(settings.logoPath ? { logo: storagePublicUrl("site", settings.logoPath) } : {}),
+      ...(ctx.businessModels.ownStore && settings.legal.company_name.trim() ? { legalName: settings.legal.company_name.trim() } : {}),
+      ...(ctx.businessModels.ownStore && settings.contactEmail ? { email: settings.contactEmail } : {}),
+    },
     { "@context": "https://schema.org", "@type": "WebSite", name: settings.storeName, url: absoluteUrl(locale, "/"), inLanguage: locale, potentialAction: { "@type": "SearchAction", target: searchTarget, "query-input": "required name=search_term_string" } },
   ];
   return (

@@ -9,13 +9,14 @@ import { getFavoriteIds } from "@/lib/data/favorites";
 import { getSessionUser } from "@/lib/auth/session";
 import { ProductGrid } from "@/components/store/product-grid";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { getStorefrontLocales } from "@/lib/data/settings";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = resolveLocaleParam((await params).locale) ?? "pt-BR";
   const t = await getTranslations({ locale, namespace: "deals" });
-  return buildMetadata({ locale, href: "/ofertas", title: t("title"), description: t("subtitle") });
+  return buildMetadata({ locale, locales: await getStorefrontLocales(), href: "/ofertas", title: t("title"), description: t("subtitle") });
 }
 
 export default async function DealsPage({ params }: Props) {

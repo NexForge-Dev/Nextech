@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { Fragment, isValidElement, type ReactElement, type ReactNode } from "react";
 import { AnalyticsScripts } from "@/components/store/analytics-scripts";
 import { MarketingTracker, isBuyLink } from "@/components/store/marketing-tracker";
+import { ConsentModeSync } from "@/components/store/consent-mode-sync";
 import { settingsSchema } from "@/lib/admin/schemas/settings";
 
-type AnyProps = { src?: string; id?: string; children?: ReactNode; pixel?: boolean; googleAdsSendTo?: string | null };
+type AnyProps = { src?: string; id?: string; children?: ReactNode; pixel?: boolean; googleAdsSendTo?: string | null; analytics?: boolean; marketing?: boolean };
 
 function collect(node: ReactNode, out: ReactElement<AnyProps>[] = []): ReactElement<AnyProps>[] {
   if (Array.isArray(node)) node.forEach((n) => collect(n, out));
@@ -22,7 +23,29 @@ const inline = (els: ReactElement<AnyProps>[]) => els.map((e) => (typeof e.props
 
 describe("marketing tags", () => {
   it("loads nothing without consent", () => {
-    expect(render(false, false)).toHaveLength(0);
+    const els = render(false, false);
+    expect(srcs(els)).toEqual([]);
+    expect(inline(els)).toBe("");
+    // only the Consent Mode sync (renders nothing) stays mounted, to push "denied" to an already-loaded gtag
+    expect(els.every((e) => e.type === ConsentModeSync)).toBe(true);
+  });
+
+  it("sends Consent Mode v2 default (denied), then the visitor choices, before any config", () => {
+    const js = inline(render(true, false));
+    const iDefault = js.indexOf("gtag('consent','default'");
+    const iUpdate = js.indexOf("gtag('consent','update'");
+    expect(iDefault).toBeGreaterThanOrEqual(0);
+    expect(iUpdate).toBeGreaterThan(iDefault);
+    expect(js.indexOf("gtag('config'")).toBeGreaterThan(iUpdate);
+    expect(js).toContain('"ad_storage":"denied","ad_user_data":"denied","ad_personalization":"denied","analytics_storage":"denied","wait_for_update":500');
+    expect(js).toContain('"ad_storage":"denied","ad_user_data":"denied","ad_personalization":"denied","analytics_storage":"granted"');
+    expect(js).toContain("gtag('set','ads_data_redaction',true)");
+  });
+
+  it("grants the ad signals only with marketing consent", () => {
+    const els = render(false, true);
+    expect(inline(els)).toContain('"ad_storage":"granted","ad_user_data":"granted","ad_personalization":"granted","analytics_storage":"denied"');
+    expect(els.find((e) => e.type === ConsentModeSync)?.props).toMatchObject({ analytics: false, marketing: true });
   });
 
   it("loads only GA4 with analytics consent alone", () => {
