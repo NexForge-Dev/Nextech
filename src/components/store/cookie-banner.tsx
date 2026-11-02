@@ -23,6 +23,7 @@ export function CookiePreferencesButton({ label, className }: { label: string; c
 
 export function CookieBanner({ decided, initial, texts }: { decided: boolean; initial: { analytics: boolean; marketing?: boolean }; texts?: { title?: string; text?: string } }) {
   const t = useTranslations("cookies");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [visible, setVisible] = useState(!decided);
   const [dialog, setDialog] = useState(false);
@@ -75,7 +76,7 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
         </div>
       )}
       <Dialog open={dialog} onOpenChange={setDialog}>
-        <DialogContent className="max-w-lg rounded-md border border-line p-6 shadow-none ring-0">
+        <DialogContent closeLabel={tc("close")} className="max-w-lg rounded-md border border-line p-6 shadow-none ring-0">
           <DialogTitle className="text-lg font-semibold">{t("bannerTitle")}</DialogTitle>
           <DialogDescription className="text-sm text-mute">{t("bannerText")}</DialogDescription>
           <div className="mt-2 divide-y divide-line border-y border-line">

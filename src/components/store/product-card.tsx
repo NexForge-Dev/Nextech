@@ -13,7 +13,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
   const src = storagePublicUrl("products", product.mainImage?.path);
   return (
     <article data-testid="product-card" className="group relative flex flex-col">
-      <Link href={{ pathname: "/produto/[slug]", params: { slug: product.slug } }} className="flex flex-1 flex-col" aria-label={`${t("seeProduct")}: ${product.name}`}>
+      <Link href={{ pathname: "/produto/[slug]", params: { slug: product.slug } }} className="flex flex-1 flex-col">
         <div className="relative aspect-square overflow-hidden rounded-md bg-soft">
           {src ? (
             <Image
@@ -28,6 +28,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
           ) : (
             <div className="grid h-full place-items-center text-xs text-mute">{t("noImage")}</div>
           )}
+          {!product.available && <span className="absolute bottom-2 left-2 rounded-full bg-black px-2.5 py-1 text-[11px] font-semibold text-white">{t("soldOut")}</span>}
         </div>
         <div className="flex flex-1 flex-col gap-1 pt-3">
           {product.brand && <p className="text-[11px] font-medium uppercase tracking-wider text-mute">{product.brand}</p>}
@@ -51,7 +52,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
           {cta.label}
         </a>
       )}
-      <FavoriteButton productId={product.id} signedIn={signedIn} initial={favorite} className="absolute right-2 top-2 size-9 rounded-full bg-white/90 text-black hover:bg-white" />
+      <FavoriteButton productId={product.id} signedIn={signedIn} initial={favorite} className="absolute right-2 top-2 size-10 rounded-full bg-white/90 text-black hover:bg-white" />
     </article>
   );
 }

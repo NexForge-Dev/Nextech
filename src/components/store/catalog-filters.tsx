@@ -103,6 +103,7 @@ function FilterForm({ values, categories, brands, stores, hideCategory, onDone }
 
 export function CatalogFilters(props: { values: FilterValues; categories: Option[]; brands: Option[]; stores: Option[]; hideCategory?: boolean }) {
   const t = useTranslations("catalog");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -114,7 +115,7 @@ export function CatalogFilters(props: { values: FilterValues; categories: Option
           <SlidersHorizontal className="size-4" strokeWidth={1.75} aria-hidden />
           {t("filter")}
         </SheetTrigger>
-        <SheetContent side="left" className="w-[88vw] max-w-sm overflow-y-auto border-line p-5 shadow-none">
+        <SheetContent side="left" closeLabel={tc("close")} className="w-[88vw] max-w-sm overflow-y-auto border-line p-5 shadow-none">
           <SheetTitle className="mb-2 text-lg font-semibold">{t("filters")}</SheetTitle>
           <FilterForm {...props} onDone={() => setOpen(false)} />
         </SheetContent>

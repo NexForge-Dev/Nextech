@@ -34,7 +34,7 @@ export default async function StoresPage() {
           { key: "domains", header: "Domínios", cell: (r) => <span className="font-mono text-xs text-mute">{r.store_domains.map((d) => d.domain).join(", ") || "—"}</span> },
           { key: "policy", header: "Preço", cell: (r) => <span className="text-xs">{r.policy}</span> },
           { key: "links", header: "Links", cell: (r) => <span className="tabular">{r.links}</span> },
-          { key: "created", header: "Cadastro", cell: (r) => <span className="tabular text-xs text-mute">{new Date(r.created_at).toLocaleDateString("pt-BR")}</span> },
+          { key: "created", header: "Cadastro", cell: (r) => <span className="tabular text-xs text-mute">{new Date(r.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span> },
           { key: "status", header: "Status", cell: (r) => <StatusPill active={r.active} /> },
         ]}
       />

@@ -54,7 +54,7 @@ export default async function NetworksPage() {
           { key: "creds", header: "Credenciais", cell: (r) => (!r.needsCreds ? <span className="text-xs text-mute">Não usa</span> : <StatusPill active={configured.has(r.id)} on="Configuradas" off="Pendentes" />) },
           { key: "policy", header: "Preço", cell: (r) => <span className="text-xs">{r.price_display_policy === "link_only" ? "Somente link" : "Mostra preço"}</span> },
           { key: "usage", header: "Lojas / links", cell: (r) => <span className="tabular">{r.stores} / {r.links}</span> },
-          { key: "sync", header: "Última sincronização", cell: (r) => { const l = lastRun.get(r.id); return l ? <span className="text-xs">{new Date(l.started_at).toLocaleString("pt-BR")} {l.ok === false ? "· falhou ⚠" : l.ok ? "· ok" : "· em andamento"}</span> : <span className="text-xs text-mute">—</span>; } },
+          { key: "sync", header: "Última sincronização", cell: (r) => { const l = lastRun.get(r.id); return l ? <span className="text-xs">{new Date(l.started_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} {l.ok === false ? "· falhou ⚠" : l.ok ? "· ok" : "· em andamento"}</span> : <span className="text-xs text-mute">—</span>; } },
           { key: "status", header: "Status", cell: (r) => <StatusPill active={r.active} on="Ativa" off="Inativa" /> },
         ]}
       />

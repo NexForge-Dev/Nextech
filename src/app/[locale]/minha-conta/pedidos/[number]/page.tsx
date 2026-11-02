@@ -20,7 +20,8 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
   const when = (kind: string) => order.timeline.find((e) => e.kind === kind)?.at ?? null;
   const dt = (iso: string | null) => (iso ? format.dateTime(new Date(iso), { dateStyle: "short", timeStyle: "short" }) : null);
-  const trackings = order.items.filter((i) => i.trackingCode);
+  // one shipment often covers several items: list each tracking code once
+  const trackings = order.items.filter((i, idx, all) => i.trackingCode && all.findIndex((o) => o.trackingCode === i.trackingCode && o.trackingCarrier === i.trackingCarrier) === idx);
   const stageIndex = { awaiting_payment: -1, preparing: 1, shipped: 2, delivered: 3, cancelled: -1, refunded: -1 }[order.stage];
   const steps: Step[] = [
     { label: t("stepPaid"), at: when("paid"), done: stageIndex >= 1 },
@@ -119,7 +120,7 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
       <OrderActions
         orderNumber={order.number}
         cancellable={cancellable}
-        canRequestReturn={order.stage !== "awaiting_payment" && order.stage !== "cancelled" && order.returnRequest?.status !== "open"}
+        canRequestReturn={order.stage !== "awaiting_payment" && order.stage !== "cancelled" && order.stage !== "refunded" && order.returnRequest?.status !== "open"}
         hasInvoice={order.hasInvoice}
       />
       <p className="text-xs text-mute">{t("cdc")}</p>

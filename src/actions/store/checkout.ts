@@ -8,6 +8,7 @@ import { checkoutInputSchema, startCheckoutWith, type CheckoutResult } from "@/l
 import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/order-status";
 import { log } from "@/lib/log";
 import { notifyOrder } from "@/lib/orders/notify";
+import { analytics } from "@/lib/analytics";
 
 export async function startCheckout(input: unknown): Promise<CheckoutResult & { fieldErrors?: Record<string, string[]> }> {
   const user = await getSessionUser();
@@ -25,7 +26,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
   const svc = createServiceSupabase();
   const stripe = getStripe();
   try {
-    return await startCheckoutWith(
+    const result = await startCheckoutWith(
       {
         customerEmail: user.email,
         async createOrder(i) {
@@ -43,12 +44,33 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
             await notifyOrder("boletoIssued", orderId);
           }
         },
+        async abandonOrder(orderId, failure) {
+          log.info("checkout.payment_refused", { orderId, code: failure.code, message: failure.message });
+          // guarded: only an order still awaiting payment with no payment attached is cancelled
+          const { data, error } = await svc
+            .from("orders")
+            .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+            .eq("id", orderId)
+            .eq("status", "awaiting_payment")
+            .is("stripe_payment_intent_id", null)
+            .select("id");
+          if (error) throw new Error(error.message);
+          if (data?.length) {
+            await svc.from("order_events").insert({ order_id: orderId, actor: "system", kind: "cancelled", data: { reason: "payment_refused", code: failure.code } });
+          }
+          if (failure.paymentIntentId) await stripe.paymentIntents.cancel(failure.paymentIntentId).catch(() => undefined);
+        },
         stripe: {
           createPaymentIntent: async (params, opts) => (await stripe.paymentIntents.create(params as never, opts)) as never,
         },
       },
       parsed.data,
     );
+    if (result.ok) {
+      analytics.checkoutStarted(user.id);
+      if (result.kind === "boleto") analytics.feature(user.id, "boleto_emitido");
+    }
+    return result;
   } catch (e) {
     log.error("checkout.failed", e);
     return { ok: false, error: "Não foi possível iniciar o pagamento. Tente novamente em instantes." };

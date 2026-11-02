@@ -80,6 +80,7 @@ export function SearchBox({ autoFocus = false, onNavigate, initialQuery = "" }: 
         aria-expanded={open && items.length > 0}
         aria-controls={listId}
         aria-autocomplete="list"
+        aria-activedescendant={open && active >= 0 && items[active] ? `${listId}-opt-${active}` : undefined}
         onChange={(e) => {
           setQ(e.target.value);
           setOpen(true);
@@ -106,14 +107,15 @@ export function SearchBox({ autoFocus = false, onNavigate, initialQuery = "" }: 
               const list = items.filter((i) => i.kind === g.kind);
               if (!list.length) return null;
               return (
-                <div key={g.kind} className="py-1">
-                  <p className="px-4 pb-1 text-[11px] font-medium uppercase tracking-wider text-mute">{g.label}</p>
+                <div key={g.kind} role="group" aria-labelledby={`${listId}-${g.kind}`} className="py-1">
+                  <p id={`${listId}-${g.kind}`} className="px-4 pb-1 text-[11px] font-medium uppercase tracking-wider text-mute">{g.label}</p>
                   {list.map((item) => {
                     const idx = items.indexOf(item);
                     return (
                       <button
                         type="button"
                         role="option"
+                        id={`${listId}-opt-${idx}`}
                         aria-selected={idx === active}
                         key={`${item.kind}-${item.slug}`}
                         onMouseDown={(e) => e.preventDefault()}

@@ -54,7 +54,7 @@ export function DataTable<T extends { id: string }>({
       {rows.length === 0 ? (
         empty
       ) : (
-        <div className="overflow-x-auto rounded-md border border-line">
+        <div className="relative overflow-x-auto rounded-md border border-line">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-line bg-soft text-left">

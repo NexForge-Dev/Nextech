@@ -4,7 +4,7 @@ Queremos que você fique satisfeito com a compra. Estas são as regras de trocas
 
 Você pode desistir da compra em até **7 dias corridos após receber o produto**, sem precisar justificar (art. 49 do CDC). Pedimos que o produto seja devolvido com os acessórios e, se possível, na embalagem original — mas a embalagem aberta não impede o arrependimento.
 
-Se o pedido ainda não chegou, você também pode desistir: cancele em Minha conta → Pedidos enquanto ele não estiver sendo preparado, recuse a entrega ou fale com a gente.
+Se o pedido ainda não chegou, você também pode desistir: enquanto o produto ainda não foi comprado no fornecedor, o botão **Cancelar pedido** aparece em Minha conta → Pedidos e o reembolso é integral. Depois disso, abra uma solicitação no pedido, recuse a entrega ou fale com a gente.
 
 ## Produto com defeito (garantia de 90 dias)
 
@@ -27,7 +27,7 @@ No arrependimento, devolvemos **todos os valores pagos**, monetariamente atualiz
 
 ## Produto errado ou danificado na entrega
 
-Avise em até 7 dias pelo pedido, com fotos do produto e da embalagem. Enviamos um novo ou devolvemos o valor.
+Avise assim que possível pelo pedido, com fotos do produto e da embalagem (o prazo legal para reclamar de vícios aparentes é de 90 dias, art. 26 do CDC). Enviamos um novo ou devolvemos o valor.
 
 ## Atendimento
 

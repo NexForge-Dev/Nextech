@@ -1,4 +1,4 @@
-export type NotificationKind = "stale" | "ending" | "starting" | "sync_failed" | "messages" | "no_offer";
+export type NotificationKind = "stale" | "ending" | "starting" | "sync_failed" | "messages" | "no_offer" | "orders_to_buy" | "returns_open";
 
 export type AdminNotification = { key: string; kind: NotificationKind; title: string; href: string; at: string };
 
@@ -10,6 +10,9 @@ export type NotificationInput = {
   failedSyncs: { networkId: string; networkName: string; at: string }[];
   unhandledMessages: number;
   productsWithoutOffer: { id: string; name: string }[];
+  /** Own store: paid orders still waiting for the supplier purchase, and open return/support requests. */
+  ordersToBuy?: number;
+  openReturns?: number;
 };
 
 const H48 = 48 * 3_600_000;
@@ -43,6 +46,12 @@ export function computeNotifications(i: NotificationInput): AdminNotification[] 
   }
   if (i.unhandledMessages > 0) {
     out.push({ key: `messages:${i.unhandledMessages}`, kind: "messages", title: `${i.unhandledMessages} mensagem(ns) de contato sem resposta`, href: "/admin/clientes/mensagens", at: i.now.toISOString() });
+  }
+  if (i.ordersToBuy) {
+    out.push({ key: `orders_to_buy:${i.ordersToBuy}`, kind: "orders_to_buy", title: `${i.ordersToBuy} pedido(s) pago(s) aguardando compra no fornecedor`, href: "/admin/pedidos?status=awaiting_supplier", at: i.now.toISOString() });
+  }
+  if (i.openReturns) {
+    out.push({ key: `returns_open:${i.openReturns}`, kind: "returns_open", title: `${i.openReturns} solicitação(ões) de devolução/suporte em aberto`, href: "/admin/pedidos/devolucoes", at: i.now.toISOString() });
   }
   for (const p of i.productsWithoutOffer) {
     out.push({ key: `no_offer:${p.id}`, kind: "no_offer", title: `Produto publicado sem oferta ativa: ${p.name}`, href: `/admin/produtos/${p.id}`, at: i.now.toISOString() });

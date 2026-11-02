@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { mergeFavorites } from "@/lib/domain/favorites-merge";
+import { analytics } from "@/lib/analytics";
 
 const uuid = z.string().uuid();
 
@@ -17,6 +18,7 @@ export async function toggleFavorite(productId: string): Promise<{ ok: boolean; 
     return { ok: !error, favorited: !!error };
   }
   const { error } = await sb.from("favorites").insert({ user_id: user.id, product_id: id.data });
+  if (!error) analytics.feature(user.id, "produto_favoritado");
   return { ok: !error, favorited: !error };
 }
 

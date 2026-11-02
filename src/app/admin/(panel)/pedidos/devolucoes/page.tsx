@@ -39,7 +39,7 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Prom
                 <p className="truncate text-mute">{REASON[r.reason] ?? r.reason} — {r.message}</p>
               </div>
               <span className="text-xs text-mute">
-                {new Date(r.createdAt).toLocaleDateString("pt-BR")}
+                {new Date(r.createdAt).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                 {r.outcome && ` · ${OUTCOME[r.outcome]}`}
               </span>
             </li>

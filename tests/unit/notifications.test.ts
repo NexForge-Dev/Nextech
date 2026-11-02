@@ -9,6 +9,15 @@ function input(p: Partial<NotificationInput> = {}): NotificationInput {
   return { now: NOW, staleDays: 14, offers: [], schedules: [], failedSyncs: [], unhandledMessages: 0, productsWithoutOffer: [], ...p };
 }
 
+describe("own-store notifications", () => {
+  it("counts orders to buy and open returns", async () => {
+    const { computeNotifications } = await import("@/lib/domain/notifications");
+    const n = computeNotifications({ now: new Date("2026-11-02T12:00:00Z"), staleDays: 14, offers: [], schedules: [], failedSyncs: [], unhandledMessages: 0, productsWithoutOffer: [], ordersToBuy: 2, openReturns: 1 });
+    expect(n.map((x) => x.kind).sort()).toEqual(["orders_to_buy", "returns_open"]);
+    expect(n.find((x) => x.kind === "orders_to_buy")?.href).toBe("/admin/pedidos?status=awaiting_supplier");
+  });
+});
+
 describe("computeNotifications", () => {
   it("flags a priced offer older than the stale threshold", () => {
     const n = computeNotifications(input({ offers: [{ id: "o1", productId: "p1", productName: "Fone", priceUpdatedAt: ago(15 * 24), policy: "show", hasPrice: true }] }));
