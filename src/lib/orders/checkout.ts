@@ -149,13 +149,16 @@ export async function startCheckoutWith(d: CheckoutDeps, input: CheckoutInput): 
     return { ok: false, error: paymentErrorMessage(e, method), paymentFailed: true };
   }
 
-  if (method === "boleto") {
-    const b = pi.next_action?.boleto_display_details ?? {};
-    const boleto: BoletoInfo = { url: String(b.hosted_voucher_url ?? ""), number: b.number ?? null, expiresAt: isoFromUnix(b.expires_at) };
+  const b = pi.next_action?.boleto_display_details ?? {};
+  const boleto: BoletoInfo | null = method === "boleto" ? { url: String(b.hosted_voucher_url ?? ""), number: b.number ?? null, expiresAt: isoFromUnix(b.expires_at) } : null;
+  try {
     await d.attachPaymentIntent(order.orderId, pi.id, boleto);
-    return { ok: true, kind: "boleto", orderNumber: order.orderNumber, totalMinor: order.totalMinor, boleto };
+  } catch (e) {
+    // the customer never sees this payment: close it and the order instead of leaving both open
+    await d.abandonOrder(order.orderId, { code: "attach_failed", message: (e instanceof Error ? e.message : "unknown").slice(0, 300), paymentIntentId: pi.id }).catch(() => undefined);
+    return { ok: false, error: GENERIC_PAYMENT_ERROR, paymentFailed: true };
   }
-  await d.attachPaymentIntent(order.orderId, pi.id, null);
+  if (boleto) return { ok: true, kind: "boleto", orderNumber: order.orderNumber, totalMinor: order.totalMinor, boleto };
   if (method === "pix") {
     const q = pi.next_action?.pix_display_qr_code ?? {};
     return { ok: true, kind: "pix", orderNumber: order.orderNumber, totalMinor: order.totalMinor, pix: { qrImageUrl: String(q.image_url_png ?? ""), code: String(q.data ?? ""), expiresAt: isoFromUnix(q.expires_at) } };

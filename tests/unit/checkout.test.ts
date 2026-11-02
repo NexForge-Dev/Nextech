@@ -111,6 +111,15 @@ describe("startCheckoutWith", () => {
   });
 });
 
+describe("startCheckoutWith when the payment cannot be saved on the order", () => {
+  it("cancels the PaymentIntent and the order", async () => {
+    const { d, calls } = deps({ attachPaymentIntent: async () => { throw new Error("db down"); } });
+    const r = await startCheckoutWith(d, checkoutInputSchema.parse(input));
+    expect(r).toEqual({ ok: false, error: GENERIC_PAYMENT_ERROR, paymentFailed: true });
+    expect(calls.abandon).toEqual([[ORDER, { code: "attach_failed", message: "db down", paymentIntentId: "pi_1" }]]);
+  });
+});
+
 describe("paymentErrorMessage", () => {
   it("maps known Stripe errors to clear messages", () => {
     expect(paymentErrorMessage({ message: "Invalid tax id", param: "payment_method_data[boleto][tax_id]" }, "boleto")).toMatch(/CPF informado não foi aceito/);
