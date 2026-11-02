@@ -66,4 +66,17 @@ describe("email templates", () => {
       expect(m.text.length).toBeGreaterThan(10);
     }
   });
+  it("the order confirmation states the right of withdrawal, links the terms and identifies the seller", () => {
+    const m = renderEmail("orderConfirmed", { ...order, seller: "Loja X LTDA · CNPJ 12.345.678/0001-90 · Rua A, 1 · sac@loja.example" });
+    for (const out of [m.html, m.text]) {
+      expect(out).toContain("7 dias corridos");
+      expect(out).toContain("https://nextech.example/pt-br/termos");
+      expect(out).toContain("CNPJ 12.345.678/0001-90");
+    }
+  });
+  it("owner alerts carry neither the consumer notice nor the seller footer", () => {
+    const m = renderEmail("ownerNewOrder", { ...order, seller: "Loja X LTDA" });
+    expect(m.html).not.toContain("Loja X LTDA");
+    expect(m.text).not.toContain("art. 49");
+  });
 });

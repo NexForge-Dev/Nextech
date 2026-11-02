@@ -1,4 +1,4 @@
-These terms govern your use of the {{store_name}} website, operated by {{company_name}} ({{tax_id}}). By using the website you accept them.
+These terms govern your use of the {{store_name}} website, operated by {{seller_identity}}. By using the website you accept them.
 
 ## 1. The service
 

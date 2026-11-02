@@ -2,7 +2,7 @@ Esta política explica qué datos personales trata {{store_name}}, por qué y cu
 
 ## Quiénes somos
 
-Responsable del tratamiento: {{company_name}}, {{tax_id}}, {{address}}. Contacto de privacidad: {{contact_email}}.
+Responsable del tratamiento: {{seller_identity}}. Contacto de privacidad: {{contact_email}}.
 
 ## Qué datos tratamos
 

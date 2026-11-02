@@ -19,7 +19,8 @@ type Address = Omit<SavedAddress, "id">;
 const EMPTY: Address = { recipientName: "", cpf: "", phone: "", cep: "", street: "", number: "", complement: "", district: "", city: "", state: "" };
 export const BOLETO_SESSION_KEY = (n: number) => `nx_order_${n}_pay`;
 
-export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payments: { card: boolean; boleto: boolean; pix: boolean } }) {
+/** `seller`: identity line from settings (Decreto 7.962/2013), or null while the admin has not filled it in. */
+export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedAddress[]; payments: { card: boolean; boleto: boolean; pix: boolean }; seller?: string | null }) {
   const t = useTranslations("checkout");
   const tc = useTranslations("cart");
   const router = useRouter();
@@ -40,6 +41,8 @@ export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payme
 
   const totals = useMemo(() => cartTotals(cart?.lines.filter((l) => !l.problem) ?? [], method), [cart, method]);
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
+  const deliveryDays = (cart?.lines ?? []).map((l) => l.deliveryMaxDays).filter((d): d is number => typeof d === "number" && d > 0);
+  const maxDeliveryDays = deliveryDays.length ? Math.max(...deliveryDays) : null;
   const address: Address = addressId === "new" ? addr : (saved.find((s) => s.id === addressId) ?? EMPTY);
 
   async function onCepBlur() {
@@ -169,6 +172,14 @@ export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payme
 
         {message && <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">{message}</p>}
 
+        <p className="text-xs leading-relaxed text-mute" data-testid="checkout-legal">
+          {t.rich("legalNotice", {
+            terms: (c) => <Link href="/termos" target="_blank" className="text-black underline underline-offset-2">{c}</Link>,
+            privacy: (c) => <Link href="/privacidade" target="_blank" className="text-black underline underline-offset-2">{c}</Link>,
+            returns: (c) => <Link href="/trocas-e-devolucoes" target="_blank" className="text-black underline underline-offset-2">{c}</Link>,
+          })}
+        </p>
+
         {!card && (
           <button type="submit" disabled={pending} className="h-12 w-full cursor-pointer rounded-md bg-black text-sm font-semibold uppercase tracking-wide text-white hover:bg-ink disabled:opacity-50">
             {pending ? t("processing") : method === "card" ? t("continue") : method === "boleto" ? t("generateBoleto", { total: money(totals.totalMinor) }) : t("generatePix", { total: money(totals.totalMinor) })}
@@ -190,6 +201,8 @@ export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payme
           <div className="flex justify-between border-t border-line pt-3 text-sm"><span>{tc("shipping")}</span><span>{tc("free")}</span></div>
           {totals.discountMinor > 0 && <div className="flex justify-between text-sm"><span>{t("pixDiscount")}</span><span className="tabular">−{money(totals.discountMinor)}</span></div>}
           <div className="flex justify-between text-base font-semibold"><span>{tc("total")}</span><span className="tabular" data-testid="checkout-total">{money(totals.totalMinor)}</span></div>
+          {maxDeliveryDays != null && <p className="text-xs text-mute">{t("deliveryEstimate", { days: maxDeliveryDays })}</p>}
+          {seller && <p className="border-t border-line pt-3 text-xs text-mute" data-testid="checkout-seller">{t("soldBy", { seller })}</p>}
         </div>
         {card && stripePromise && (
           <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>

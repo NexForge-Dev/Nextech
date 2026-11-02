@@ -363,7 +363,10 @@
     "copied": "Code copied",
     "doneFailed": "The payment wasn't completed. You can try again from the cart.",
     "myOrders": "View my orders",
-    "notConfigured": "Payments aren't available yet. Please try again later."
+    "notConfigured": "Payments aren't available yet. Please try again later.",
+    "deliveryEstimate": "Estimated delivery: up to {days, plural, one {# business day} other {# business days}} after the payment is confirmed.",
+    "soldBy": "Sold and shipped by {seller}.",
+    "legalNotice": "By placing the order you agree to the <terms>Terms of sale</terms> and the <privacy>Privacy policy</privacy>. You may withdraw within 7 days of receiving the product for a full refund (art. 49 of the Brazilian Consumer Code): see <returns>Returns</returns>."
   },
   "orders": {
     "title": "My orders",

@@ -4,12 +4,15 @@ import type { StoreContext } from "@/lib/data/context";
 import { Logo } from "./logo";
 import { MarketSelector } from "./market-selector";
 import { CookiePreferencesButton } from "./cookie-banner";
+import { sellerIdentityParts } from "@/lib/domain/seller";
 
 export async function Footer({ ctx, storeName, legal = { company_name: "", tax_id: "", address: "" }, contactEmail = "" }: { ctx: StoreContext; storeName: string; legal?: { company_name: string; tax_id: string; address: string }; contactEmail?: string }) {
   const t = await getTranslations("footer");
   const tm = await getTranslations("markets");
   const marketName = (code: string) => (tm.has(code as "BR") ? tm(code as "BR") : code);
   const options = ctx.availableMarkets.map((code) => ({ code, name: marketName(code) }));
+  // Decreto 7.962/2013: seller identity on every page; only the fields the admin filled in
+  const seller = sellerIdentityParts(legal);
   const link = "text-sm text-mute transition-colors duration-150 hover:text-black";
   return (
     <footer className="mt-auto border-t border-line bg-white">
@@ -50,9 +53,9 @@ export async function Footer({ ctx, storeName, legal = { company_name: "", tax_i
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="space-y-1">
             <p className="text-xs text-mute">{t("rights", { year: new Date().getFullYear() })}</p>
-            {ctx.businessModels.ownStore && legal.company_name && (
+            {ctx.businessModels.ownStore && seller.length > 0 && (
               <p className="text-xs text-mute" data-testid="seller-identity">
-                {[legal.company_name, legal.tax_id && `CNPJ ${legal.tax_id}`, legal.address, contactEmail].filter(Boolean).join(" · ")}
+                {[...seller, contactEmail.trim()].filter(Boolean).join(" · ")}
               </p>
             )}
           </div>

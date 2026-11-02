@@ -2,7 +2,7 @@ Esta política explica quais dados pessoais a {{store_name}} trata, por que e qu
 
 ## Quem somos
 
-Controlador dos dados: {{company_name}}, {{tax_id}}, {{address}}. Contato para assuntos de privacidade: {{contact_email}}.
+Controlador dos dados: {{seller_identity}}. Contato para assuntos de privacidade: {{contact_email}}.
 
 ## Quais dados tratamos
 

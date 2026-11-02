@@ -19,7 +19,7 @@ Também usamos o armazenamento local do navegador para o carrinho (`nx_cart_v1`)
 
 ## Cookies de marketing (com consentimento)
 
-Usados pelo **Google Ads** e pelo **Pixel da Meta (Facebook/Instagram)** para medir nossos anúncios — por exemplo, saber se uma visita vinda de um anúncio terminou em compra — e mostrar anúncios relevantes em outros sites. Só são carregados se você aceitar os cookies de marketing.
+Usados pelo **Google Ads** e pelo **Pixel da Meta (Facebook/Instagram)** para medir nossos anúncios — por exemplo, saber se uma visita vinda de um anúncio terminou em compra — e mostrar anúncios relevantes em outros sites. Só são carregados se você aceitar os cookies de marketing. As tags do Google recebem o seu consentimento pelo Modo de Consentimento do Google (v2): sem aceite, armazenamento de anúncios e de análise ficam negados.
 
 ## Como alterar suas escolhas
 
