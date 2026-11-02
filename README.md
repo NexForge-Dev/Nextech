@@ -77,6 +77,9 @@ The panel lives at `/admin` (sign in at `/admin/entrar`). Bootstrap the first su
 
 ## Deploy (Vercel)
 
+Step-by-step production launch of the own store: [`docs/DEPLOY-TODAY.md`](docs/DEPLOY-TODAY.md).
+
+
 1. Set every variable from the table above in the Vercel project. `NEXT_PUBLIC_SITE_URL` must be the production domain.
 2. In Supabase → Authentication → URL Configuration, set **Site URL** to the production domain and add `https://<domain>/**` and `http://localhost:3300/**` to **Redirect URLs**.
 3. Configure custom SMTP in Supabase (the built-in sender is rate-limited and not meant for production).
@@ -102,7 +105,9 @@ The panel lives at `/admin` (sign in at `/admin/entrar`). Bootstrap the first su
 
 **Email.** `src/lib/email` (Resend HTTP API, pt-BR templates). Missing env → skipped and recorded as `email_skipped` in the order history.
 
-**Legal texts.** Own-store versions live in `src/content/legal/pt-BR/store/` (terms of sale, privacy, cookies, returns, shipping, FAQ, about) and are used while the own store is on. Fill Admin → Configurações → Informações legais (MEI name, CNPJ, address) — the footer shows the seller identity required by Decreto 7.962/2013.
+**Legal texts.** Own-store versions live in `src/content/legal/pt-BR/store/` (terms of sale, privacy, cookies, returns, shipping, FAQ, about) and are used while the own store is on. Fill Admin → Configurações → Informações legais (razão social, CNPJ, address) and the contact e-mail — the footer, checkout, legal pages and customer emails show the seller identity required by Decreto 7.962/2013. Missing fields are omitted for customers (never placeholders) and listed on the admin dashboard until filled.
+
+**Consent.** Analytics/marketing tags load only after consent; Google tags get Consent Mode v2 (`ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`: denied by default, then the banner choice).
 
 **Tests against the local stack**
 
