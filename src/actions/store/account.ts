@@ -106,3 +106,14 @@ export async function deleteAccount(_: AuthState, form: FormData): Promise<AuthS
   await (await createServerSupabase()).auth.signOut({ scope: "local" }).catch(() => undefined);
   redirect(getPathname({ locale, href: "/" }));
 }
+
+/** LGPD: a customer removes a saved delivery address (with its CPF) without deleting the account. */
+export async function deleteMyAddress(id: string): Promise<{ ok: boolean }> {
+  const user = await getSessionUser();
+  if (!user || !z.string().uuid().safeParse(id).success) return { ok: false };
+  const sb = await createServerSupabase();
+  // RLS (customer_addresses_own) limits the delete to the caller's own rows
+  const { error } = await sb.from("customer_addresses").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/", "layout");
+  return { ok: !error };
+}
