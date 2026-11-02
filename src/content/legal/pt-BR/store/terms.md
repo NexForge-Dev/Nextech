@@ -30,7 +30,7 @@ O prazo estimado aparece na página do produto e no checkout, em dias úteis, e 
 
 ## 6. Cancelamento e direito de arrependimento
 
-- **Antes do envio:** cancele em Minha conta → Pedidos enquanto o pedido ainda não estiver sendo preparado, com reembolso integral.
+- **Antes da compra no fornecedor:** enquanto o botão **Cancelar pedido** aparecer em Minha conta → Pedidos, você cancela sozinho, com reembolso integral.
 - **Depois disso, e até 7 dias corridos após o recebimento:** você pode desistir da compra sem justificar (art. 49 do CDC). Abra uma solicitação em Minha conta → Pedidos — o mesmo canal usado para comprar — ou escreva para {{contact_email}}. Se o pedido ainda estiver a caminho, você também pode recusar a entrega.
 - **Reembolso:** devolvemos **todos os valores pagos**, sem custo de devolução para você. No cartão, pedimos o estorno à Stripe e à operadora do cartão imediatamente após a sua solicitação; no boleto, devolvemos por Pix ou transferência.
 
