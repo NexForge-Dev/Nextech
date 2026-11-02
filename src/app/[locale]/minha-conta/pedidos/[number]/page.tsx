@@ -119,7 +119,7 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
       <OrderActions
         orderNumber={order.number}
         cancellable={cancellable}
-        canRequestReturn={order.stage !== "awaiting_payment" && order.stage !== "cancelled" && order.returnRequest?.status !== "open"}
+        canRequestReturn={order.stage !== "awaiting_payment" && order.stage !== "cancelled" && order.stage !== "refunded" && order.returnRequest?.status !== "open"}
         hasInvoice={order.hasInvoice}
       />
       <p className="text-xs text-mute">{t("cdc")}</p>
