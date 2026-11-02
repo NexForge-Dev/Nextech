@@ -8,6 +8,8 @@ export const LIMITS = {
   suggest: { windowSeconds: 10, max: 30 },
   contact: { windowSeconds: 3600, max: 5 },
   auth: { windowSeconds: 600, max: 10 },
+  checkout: { windowSeconds: 600, max: 15 },
+  orders: { windowSeconds: 600, max: 20 },
 } as const;
 export type LimitBucket = keyof typeof LIMITS;
 
