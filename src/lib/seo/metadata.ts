@@ -36,15 +36,30 @@ export function alternates(href: Href, locales: readonly Locale[] = LOCALES): Re
 
 const OG_LOCALE: Record<Locale, string> = { "pt-BR": "pt_BR", "pt-PT": "pt_PT", en: "en_US", es: "es_ES" };
 
-export function buildMetadata(opts: { locale: Locale; locales?: readonly Locale[]; href: Href; title: string; description?: string | null; image?: string | null; noindex?: boolean; type?: "website" | "article" }): Metadata {
+const TRACKING_PARAM = /^(utm_\w+|gclid|gbraid|wbraid|fbclid|msclkid|ttclid|_gl)$/;
+
+/** Listing query that changes the content (filters/sort/search): such URLs are noindex. Paging and ad-click ids are not filters. */
+export function isFilteredQuery(sp: Record<string, unknown>): boolean {
+  return Object.keys(sp).some((k) => k !== "page" && !TRACKING_PARAM.test(k));
+}
+
+/** Page number from a listing query (1 when absent/invalid). */
+export function pageParam(sp: Record<string, unknown>): number {
+  const n = Number(typeof sp.page === "string" ? sp.page : 1);
+  return Number.isInteger(n) && n > 1 ? n : 1;
+}
+
+export function buildMetadata(opts: { locale: Locale; locales?: readonly Locale[]; href: Href; title: string; description?: string | null; image?: string | null; noindex?: boolean; type?: "website" | "article"; page?: number }): Metadata {
   const locales = opts.locales ?? LOCALES;
+  // paginated listings canonicalise to themselves so deeper pages stay discoverable
+  const suffix = opts.page && opts.page > 1 ? `?page=${opts.page}` : "";
   // a locale the storefront does not serve redirects to the primary one: canonicalise there
-  const url = absoluteUrl(locales.includes(opts.locale) ? opts.locale : locales[0], opts.href);
+  const url = absoluteUrl(locales.includes(opts.locale) ? opts.locale : locales[0], opts.href) + suffix;
   const description = opts.description ?? undefined;
   return {
     title: opts.title,
     description,
-    alternates: { canonical: url, languages: alternates(opts.href, locales) },
+    alternates: { canonical: url, languages: Object.fromEntries(Object.entries(alternates(opts.href, locales)).map(([k, v]) => [k, v + suffix])) },
     openGraph: {
       title: opts.title,
       description,

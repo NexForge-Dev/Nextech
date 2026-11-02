@@ -10,7 +10,7 @@ import { getAvailableMarkets, getCategories } from "@/lib/data/taxonomy";
 import { listProducts } from "@/lib/data/catalog";
 import { recordEvent } from "@/lib/tracking/events";
 import { CatalogView } from "@/components/store/catalog-view";
-import { buildMetadata } from "@/lib/seo/metadata";
+import { buildMetadata, isFilteredQuery, pageParam } from "@/lib/seo/metadata";
 import { getStorefrontLocales } from "@/lib/data/settings";
 
 type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -20,8 +20,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const locale = resolveLocaleParam(p.locale) ?? "pt-BR";
   const category = (await getCategories(locale)).find((c) => c.slug === p.slug);
   if (!category) return {};
-  const filtered = Object.keys(await searchParams).some((k) => k !== "page");
-  return buildMetadata({ locale, locales: await getStorefrontLocales(), href: { pathname: "/categoria/[slug]", params: { slug: category.slug } }, title: category.name, description: category.description, noindex: filtered });
+  const sp = await searchParams;
+  return buildMetadata({ locale, locales: await getStorefrontLocales(), href: { pathname: "/categoria/[slug]", params: { slug: category.slug } }, title: category.name, description: category.description, noindex: isFilteredQuery(sp), page: pageParam(sp) });
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
