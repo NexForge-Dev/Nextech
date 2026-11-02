@@ -2,7 +2,7 @@
 
 Production goes from the Amazon ES/PT affiliate site (`main`) to the Brazil own store (`dev` → `fix/launch`). Follow the steps **in order**. Nothing here needs a code change; every value comes from a dashboard, never from this repo or a chat.
 
-Cloud Supabase project: `orpzevxfdycppepkhanp`. Pending migrations on it (checked with `npx supabase migration list --linked`): `20261102000017` … `20261102000024`. `fix/launch` adds no new migrations.
+Cloud Supabase project: `yeqensrclrxbeikfksdf` ("Nextech", NexForge org, replaces the old `orpzevxfdycppepkhanp`). Pending migrations on it (checked with `npx supabase migration list --linked` on 2026-11-02): `20261102000017` … `20261102000024`. `fix/launch` adds no new migrations. Production (Vercel `nex-forge5/nextech`) still points at the old project until its `NEXT_PUBLIC_SUPABASE_*` and `SUPABASE_SERVICE_ROLE_KEY` are switched in step 3.
 
 > **What changes for visitors as soon as 0017 is applied:** `public.business_models` is created as `{own_store: true, affiliates: false}`. Affiliate products (Amazon ES/PT) are hidden, `/go/*` stops redirecting, and `/es`, `/pt-pt`, `/en` URLs redirect to `/pt-br`. The catalogue shows only own-store products, so create at least one before announcing the launch (step 9).
 
@@ -65,7 +65,7 @@ Without the Stripe keys the checkout shows "pagamentos ainda não configurados";
 ## 4. Apply the migrations
 
 ```bash
-npx supabase link --project-ref orpzevxfdycppepkhanp   # already linked in this repo
+npx supabase link --project-ref yeqensrclrxbeikfksdf   # already linked in this repo
 npx supabase db push --linked --dry-run                 # must list exactly 0017 … 0024
 npx supabase db push --linked
 npx supabase migration list --linked                    # local = remote for every row

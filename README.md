@@ -14,7 +14,7 @@ While affiliates are off the storefront is pt-BR/BRL only (other locales redirec
 
 | | Supabase | Used by |
 |---|---|---|
-| **Cloud** | project `orpzevxfdycppepkhanp` | `npm run dev`, `build`, production (Vercel) |
+| **Cloud** | project `yeqensrclrxbeikfksdf` | `npm run dev`, `build`, production (Vercel) |
 | **Local** | `npx supabase start` (API `127.0.0.1:55821`, Studio `:55823`) | `test:db`, `test:e2e` |
 
 `.env.local` points at the cloud project. To work against the local stack, swap in the local URL/keys (`npx supabase status`).
@@ -65,7 +65,7 @@ npm run dev                  # http://localhost:3300
 Migrations live in `supabase/migrations/`; `supabase/seed.sql` holds base configuration only (admin roles and permissions) and is idempotent.
 
 ```bash
-npx supabase link --project-ref orpzevxfdycppepkhanp
+npx supabase link --project-ref yeqensrclrxbeikfksdf
 npx supabase db push --linked --dry-run   # review
 npx supabase db push --linked             # apply migrations
 npx supabase db push --linked --include-seed
