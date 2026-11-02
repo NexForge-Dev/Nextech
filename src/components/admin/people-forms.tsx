@@ -3,7 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { inviteAdmin, saveSettings, setMessageHandled, updateAdmin } from "@/actions/admin/people";
 import { SOCIAL_KEYS } from "@/lib/admin/schemas/settings";
-import { btnPrimary, btnSecondary, ConfirmButton, Field, FormSection, inputCls, LocaleTabs, textareaCls, useAdminAction, type LocaleCode } from "./form";
+import { btnPrimary, btnSecondary, ConfirmButton, Field, FormSection, inputCls, LocaleTabs, textareaCls, Toggle, useAdminAction, type LocaleCode } from "./form";
+import type { BusinessModels } from "@/lib/domain/business-models";
 import { ImageUploader } from "./image-uploader";
 
 type PerLocale<T> = Partial<Record<LocaleCode, T>>;
@@ -20,10 +21,12 @@ export type SettingsValue = {
   cookieTexts: PerLocale<{ title: string; text: string }>;
   legal: { company_name: string; tax_id: string; address: string };
   priceStaleDays: number;
+  businessModels: BusinessModels;
 };
 
 const TABS = [
   ["store", "Loja"],
+  ["models", "Modelos de negócio"],
   ["contact", "Contato e redes sociais"],
   ["seo", "SEO"],
   ["analytics", "Analytics"],
@@ -138,6 +141,34 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
           <Field label="Texto" htmlFor="ck-x">
             <textarea id="ck-x" className={textareaCls} rows={3} maxLength={500} value={v.cookieTexts[loc]?.text ?? ""} onChange={(x) => setV({ ...v, cookieTexts: { ...v.cookieTexts, [loc]: { title: v.cookieTexts[loc]?.title ?? "", text: x.target.value } } })} />
           </Field>
+        </FormSection>
+      )}
+
+      {tab === "models" && (
+        <FormSection title="Modelos de negócio" description="Ligue ou desligue cada modelo sem apagar nada. Produtos de um modelo desligado ficam guardados e invisíveis na loja.">
+          <div className="space-y-4">
+            <div>
+              <Toggle checked={v.businessModels.ownStore} onChange={(ownStore) => setV({ ...v, businessModels: { ...v.businessModels, ownStore } })} label="Loja própria — carrinho, checkout Stripe e pedidos" />
+            </div>
+            <div>
+              <Toggle checked={v.businessModels.affiliates} onChange={(affiliates) => setV({ ...v, businessModels: { ...v.businessModels, affiliates } })} label="Afiliados — botões “ver na loja”, /go e páginas de afiliados" />
+              <p className="mt-1 text-xs text-mute">Com afiliados desligados, a loja funciona só em português do Brasil.</p>
+            </div>
+          </div>
+        </FormSection>
+      )}
+
+      {tab === "models" && (
+        <FormSection title="Formas de pagamento" description="Usadas no checkout da loja própria (Stripe).">
+          <div className="space-y-4">
+            <div><Toggle checked={v.businessModels.payments.card} onChange={(card) => setV({ ...v, businessModels: { ...v.businessModels, payments: { ...v.businessModels.payments, card } } })} label="Cartão de crédito e débito (à vista)" /></div>
+            <div><Toggle checked={v.businessModels.payments.boleto} onChange={(boleto) => setV({ ...v, businessModels: { ...v.businessModels, payments: { ...v.businessModels.payments, boleto } } })} label="Boleto (confirma em até 1 dia útil; reembolso feito por fora)" /></div>
+            <div>
+              <Toggle checked={v.businessModels.payments.pix} onChange={(pix) => setV({ ...v, businessModels: { ...v.businessModels, payments: { ...v.businessModels.payments, pix } } })} label="Pix" />
+              <p className="mt-1 text-xs text-mute">No Stripe Brasil o Pix é liberado por convite. Ligue só depois que o Stripe aprovar a sua conta.</p>
+            </div>
+            {e("businessModels.payments") && <p role="alert" className="text-sm font-medium text-black">{e("businessModels.payments")?.[0]}</p>}
+          </div>
         </FormSection>
       )}
 

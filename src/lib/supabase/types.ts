@@ -677,6 +677,52 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"product_sale": {
+                  Row: {
+                    "available": boolean,"compare_at_minor": number | null,"created_at": string,"delivery_max_days": number,"delivery_min_days": number,"pix_discount_pct": number,"price_minor": number,"product_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"pix_discount_pct"?: number,"price_minor": number,"product_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"pix_discount_pct"?: number,"price_minor"?: number,"product_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_sale_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: true
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"product_suppliers": {
+                  Row: {
+                    "cost_minor": number | null,"created_at": string,"id": string,"is_primary": boolean,"notes": string | null,"product_id": string,"supplier_id": string,"url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cost_minor"?: number | null,"created_at"?: string,"id"?: string,"is_primary"?: boolean,"notes"?: string | null,"product_id": string,"supplier_id": string,"url"?: string | null
+                  }
+                  Update: {
+                    "cost_minor"?: number | null,"created_at"?: string,"id"?: string,"is_primary"?: boolean,"notes"?: string | null,"product_id"?: string,"supplier_id"?: string,"url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_suppliers_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "product_suppliers_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"product_tags": {
                   Row: {
                     "product_id": string,"tag_id": string
@@ -725,14 +771,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "brand_id": string | null,"category_id": string,"created_at": string,"external_id": string | null,"featured": boolean,"id": string,"published_at": string | null,"rating": number | null,"rating_count": number | null,"rating_source": string | null,"rating_source_kind": Database["public"]['Enums']["source_kind"] | null,"search_tsv": unknown,"sku": string | null,"slug": string,"specs": NonNullable<Json>,"status": string,"updated_at": string
+                    "brand_id": string | null,"category_id": string,"created_at": string,"external_id": string | null,"featured": boolean,"id": string,"published_at": string | null,"rating": number | null,"rating_count": number | null,"rating_source": string | null,"rating_source_kind": Database["public"]['Enums']["source_kind"] | null,"sale_mode": string,"search_tsv": unknown,"sku": string | null,"slug": string,"specs": NonNullable<Json>,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "brand_id"?: string | null,"category_id": string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"search_tsv"?: unknown,"sku"?: string | null,"slug": string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
+                    "brand_id"?: string | null,"category_id": string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug": string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "brand_id"?: string | null,"category_id"?: string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"search_tsv"?: unknown,"sku"?: string | null,"slug"?: string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
+                    "brand_id"?: string | null,"category_id"?: string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug"?: string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -871,6 +917,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"suppliers": {
+                  Row: {
+                    "active": boolean,"created_at": string,"id": string,"name": string,"slug": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"created_at"?: string,"id"?: string,"name": string,"slug": string
+                  }
+                  Update: {
+                    "active"?: boolean,"created_at"?: string,"id"?: string,"name"?: string,"slug"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"tags": {
                   Row: {
                     "created_at": string,"id": string,"name": string,"slug": string,"updated_at": string
@@ -891,11 +951,14 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "auth_email_exists":
+            "admin_save_product":
+{ Args: { "p": Json }; Returns: string
+                           },
+"auth_email_exists":
 { Args: { "p_email": string }; Returns: boolean
                            },
-"admin_save_product":
-{ Args: { "p": Json }; Returns: string
+"business_model_enabled":
+{ Args: { "p_mode": string }; Returns: boolean
                            },
 "campaign_is_live":
 { Args: { "c": string }; Returns: boolean
@@ -948,6 +1011,9 @@ isOneToOne: false
 { Args: { "p_market": string,"p_product": string }; Returns: {
               "currency": string,"discount": number,"link_id": string,"previous_minor": number,"price_minor": number
             }[]
+                           },
+"product_mode_enabled":
+{ Args: { "p": string }; Returns: boolean
                            },
 "product_offers":
 { Args: { "p_ids": (string)[] }; Returns: {

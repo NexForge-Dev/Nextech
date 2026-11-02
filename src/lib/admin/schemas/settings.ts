@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { storagePath } from "./common";
+import { DEFAULT_BUSINESS_MODELS } from "@/lib/domain/business-models";
 
 const httpsOrEmpty = z
   .string()
@@ -12,6 +13,17 @@ const perLocale = <T extends z.ZodTypeAny>(entry: T) => z.object({ "pt-BR": entr
 export const GOOGLE_ADS_ID = /^AW-\d{6,15}$/;
 export const GOOGLE_ADS_LABEL = /^[A-Za-z0-9_-]{4,40}$/;
 export const META_PIXEL_ID = /^\d{8,20}$/;
+
+export const businessModelsSchema = z
+  .object({
+    ownStore: z.boolean(),
+    affiliates: z.boolean(),
+    payments: z.object({ card: z.boolean(), boleto: z.boolean(), pix: z.boolean() }),
+  })
+  .refine((b) => !b.ownStore || b.payments.card || b.payments.boleto || b.payments.pix, {
+    message: "Ative ao menos uma forma de pagamento.",
+    path: ["payments"],
+  });
 
 export const SOCIAL_KEYS = ["instagram", "facebook", "x", "tiktok", "youtube", "linkedin", "pinterest"] as const;
 
@@ -34,5 +46,6 @@ export const settingsSchema = z.object({
   cookieTexts: perLocale(z.object({ title: z.string().trim().max(80).optional().default(""), text: z.string().trim().max(500).optional().default("") })),
   legal: z.object({ company_name: z.string().trim().max(160), tax_id: z.string().trim().max(40), address: z.string().trim().max(300) }),
   priceStaleDays: z.coerce.number().int().min(1, "Mínimo 1 dia.").max(365),
+  businessModels: businessModelsSchema.optional().default(DEFAULT_BUSINESS_MODELS),
 });
 export type SettingsInput = z.input<typeof settingsSchema>;
