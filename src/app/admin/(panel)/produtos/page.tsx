@@ -109,6 +109,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
           {
             key: "name",
             header: "Nome",
+            className: "min-w-56",
             cell: (r) => (
               <div className="min-w-0">
                 <Link href={`/admin/produtos/${r.id}`} className="font-medium hover:underline">{r.name}</Link>

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { ActionResult } from "@/lib/admin/action-core";
 
-export const inputCls = "h-10 w-full rounded-md border border-line bg-white px-3 text-sm outline-none transition-colors duration-150 focus:border-black aria-invalid:border-ink";
+export const inputCls = "h-10 w-full rounded-md border border-line bg-white px-3 text-sm outline-none transition-colors duration-150 focus:border-black aria-invalid:border-ink disabled:cursor-not-allowed disabled:bg-soft disabled:text-mute";
 export const textareaCls = "w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-black aria-invalid:border-ink";
 export const btnPrimary = "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-black px-5 text-sm font-medium text-white transition-colors duration-150 hover:bg-ink disabled:opacity-60";
 export const btnSecondary = "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-line bg-white px-4 text-sm font-medium transition-colors duration-150 hover:bg-soft disabled:opacity-60";
@@ -51,7 +51,7 @@ export function Toggle({ checked, onChange, label, disabled }: { checked: boolea
         onClick={() => onChange(!checked)}
         className={`relative h-6 w-10 cursor-pointer rounded-full transition-colors duration-150 disabled:opacity-50 ${checked ? "bg-black" : "bg-line"}`}
       >
-        <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform duration-150 ${checked ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+        <span className={`absolute left-0 top-0.5 size-5 rounded-full bg-white transition-transform duration-150 ${checked ? "translate-x-[18px]" : "translate-x-0.5"}`} />
       </button>
       {label}
     </label>
@@ -85,15 +85,15 @@ export function useAdminAction() {
   return { pending, run };
 }
 
-export function ConfirmButton({ label, title, description, confirmLabel = "Confirmar", onConfirm, className }: { label: ReactNode; title: string; description: string; confirmLabel?: string; onConfirm: () => void; className?: string }) {
+export function ConfirmButton({ label, title, description, confirmLabel = "Confirmar", onConfirm, className, disabled }: { label: ReactNode; title: string; description: string; confirmLabel?: string; onConfirm: () => void; className?: string; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className ?? btnSecondary}>
+      <button type="button" disabled={disabled} onClick={() => setOpen(true)} className={className ?? btnSecondary}>
         {label}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md rounded-md border border-line p-6 shadow-none ring-0">
+        <DialogContent closeLabel="Fechar" className="max-w-[calc(100%-2rem)] rounded-md border border-line p-6 shadow-none ring-0 sm:max-w-md">
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
           <DialogDescription className="text-sm text-mute">{description}</DialogDescription>
           <div className="mt-4 flex justify-end gap-2">

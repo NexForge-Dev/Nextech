@@ -24,7 +24,7 @@ export async function adminSearch(q: string): Promise<AdminSearchHit[]> {
   ]);
   const hits: AdminSearchHit[] = [];
   const seen = new Set<string>();
-  // "#1004" or "1004": jump to the order (orders have no browser policies; read with the service role after the check)
+  // an order number (optionally prefixed with a hash sign): jump to the order (orders have no browser policies; read with the service role after the check)
   const orderNumber = /^#?\d{1,9}$/.test(term.data) ? Number(term.data.replace("#", "")) : null;
   if (orderNumber && ctx.permissions.has("orders.read")) {
     const { data: o } = await createServiceSupabase().from("orders").select("number, status, customer").eq("number", orderNumber).maybeSingle();

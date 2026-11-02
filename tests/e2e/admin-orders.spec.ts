@@ -69,6 +69,7 @@ test("a boleto order is refunded by hand and marked refunded", async ({ page }) 
   await page.goto(`/admin/pedidos/${o.number}`);
   await expect(page.getByRole("switch", { name: "Reembolsado por fora (Pix/transferência)" })).toBeDisabled();
   await page.getByRole("button", { name: "Reembolsar" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Reembolsar" }).click();
   await expect(page.getByTestId("history")).toContainText("Reembolso total");
   await expect(page.getByText("Reembolsado").first()).toBeVisible();
 });

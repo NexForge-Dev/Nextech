@@ -7,7 +7,7 @@ import { adminFileUrl, attachInvoice, refundOrder, resolveReturn, updateOrderIte
 import { ADMIN_STATUS_LABEL, ORDER_STATUSES, adminCanSetStatus } from "@/lib/domain/order-status";
 import { formatMoney } from "@/lib/domain/money";
 import type { AdminOrderDetail } from "@/lib/data/admin/orders";
-import { btnPrimary, btnSecondary, Field, FormSection, inputCls, textareaCls, Toggle, useAdminAction } from "./form";
+import { btnPrimary, btnSecondary, ConfirmButton, Field, FormSection, inputCls, textareaCls, Toggle, useAdminAction } from "./form";
 
 type Order = NonNullable<AdminOrderDetail>;
 const money = (m: number | null | undefined) => (m == null ? "—" : formatMoney(m, "BRL", "pt-BR"));
@@ -87,7 +87,7 @@ export function AdminOrderView({ order, canWrite, canRefund }: { order: Order; c
           </tbody>
         </table>
         <p className="text-xs text-mute">
-          {METHOD[order.paymentMethod]}{order.paymentSummary ? ` · ${order.paymentSummary}` : ""}{order.stripePaymentIntentId ? ` · ${order.stripePaymentIntentId}` : ""}
+          {METHOD[order.paymentMethod]}{order.paymentSummary && order.paymentSummary !== METHOD[order.paymentMethod] ? ` · ${order.paymentSummary}` : ""}{order.stripePaymentIntentId ? ` · ${order.stripePaymentIntentId}` : ""}
         </p>
       </FormSection>
 
@@ -117,9 +117,15 @@ export function AdminOrderView({ order, canWrite, canRefund }: { order: Order; c
             <Field label="Observação (opcional)" htmlFor="rf-note">
               <input id="rf-note" className={inputCls} value={refund.note} onChange={(e) => setRefund({ ...refund, note: e.target.value })} />
             </Field>
-            <button type="button" className={btnPrimary} disabled={pending} onClick={() => run(() => refundOrder({ orderId: order.id, ...refund }), { success: "Reembolso registrado.", onSuccess: () => router.refresh() })}>
-              Reembolsar
-            </button>
+            <ConfirmButton
+              label="Reembolsar"
+              className={btnPrimary}
+              disabled={pending}
+              title={`Reembolsar R$ ${refund.amount || "0,00"}?`}
+              description={refund.manual ? "O reembolso será registrado como feito por fora (Pix/transferência). Esta ação não pode ser desfeita." : "O valor será devolvido ao cliente pelo Stripe. Esta ação não pode ser desfeita."}
+              confirmLabel="Reembolsar"
+              onConfirm={() => run(() => refundOrder({ orderId: order.id, ...refund }), { success: "Reembolso registrado.", onSuccess: () => router.refresh() })}
+            />
           </div>
           <Toggle checked={refund.manual} disabled={order.paymentMethod === "boleto"} onChange={(manual) => setRefund({ ...refund, manual })} label="Reembolsado por fora (Pix/transferência)" />
           <p className="text-xs text-mute">Máximo: {money(refundable)}</p>
@@ -271,6 +277,10 @@ function ReturnCard({ r, canWrite, onSaved }: { r: Order["returns"][number]; can
   const { pending, run } = useAdminAction();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [v, setV] = useState({ outcome: "refund_full", note: "", refundAmount: "" });
+  const resolve = () => {
+    setErrors({});
+    run(() => resolveReturn({ returnId: r.id, ...v }), { success: "Solicitação resolvida.", onSuccess: onSaved, onError: (x) => setErrors(x.fieldErrors ?? {}) });
+  };
   const REASON: Record<string, string> = { withdrawal: "Desistência", defect: "Defeito", other: "Outro" };
   const OUTCOME: Record<string, string> = { refund_full: "Reembolso total", refund_partial: "Reembolso parcial", replacement: "Troca", refused: "Recusada" };
   return (
@@ -302,9 +312,22 @@ function ReturnCard({ r, canWrite, onSaved }: { r: Order["returns"][number]; can
           <Field label="Valor (parcial)" htmlFor={`rr-a-${r.id}`} error={errors.refundAmount}>
             <input id={`rr-a-${r.id}`} inputMode="decimal" className={inputCls} disabled={v.outcome !== "refund_partial"} value={v.refundAmount} onChange={(e) => setV({ ...v, refundAmount: e.target.value })} />
           </Field>
-          <button type="button" className={btnPrimary} disabled={pending} onClick={() => { setErrors({}); run(() => resolveReturn({ returnId: r.id, ...v }), { success: "Solicitação resolvida.", onSuccess: onSaved, onError: (x) => setErrors(x.fieldErrors ?? {}) }); }}>
-            Resolver
-          </button>
+          {v.outcome === "refund_full" || v.outcome === "refund_partial" ? (
+            // a refund outcome moves money: same confirmation step as "Reembolsar"
+            <ConfirmButton
+              label="Resolver"
+              className={btnPrimary}
+              disabled={pending}
+              title={v.outcome === "refund_full" ? "Resolver com reembolso total?" : `Resolver com reembolso de R$ ${v.refundAmount || "0,00"}?`}
+              description="O valor será devolvido ao cliente (pelo Stripe, ou registrado como feito por fora no boleto) e o cliente recebe a resposta por e-mail. Esta ação não pode ser desfeita."
+              confirmLabel="Resolver e reembolsar"
+              onConfirm={resolve}
+            />
+          ) : (
+            <button type="button" className={btnPrimary} disabled={pending} onClick={resolve}>
+              Resolver
+            </button>
+          )}
         </div>
       )}
       {r.outcome_note && <p className="text-xs text-mute">Resposta: {r.outcome_note}</p>}

@@ -233,7 +233,7 @@ export function StoreForm({ initial, networks, markets }: { initial: StoreFormVa
             {v.domains.map((d) => (
               <li key={d} className="inline-flex h-8 items-center gap-2 rounded-md border border-line pl-3 pr-1 font-mono text-xs">
                 {d}
-                <button type="button" aria-label={`Remover ${d}`} onClick={() => setV({ ...v, domains: v.domains.filter((x) => x !== d) })} className="grid size-6 cursor-pointer place-items-center rounded hover:bg-soft"><Trash2 className="size-3" /></button>
+                <button type="button" aria-label={`Remover ${d}`} onClick={() => setV({ ...v, domains: v.domains.filter((x) => x !== d) })} className="grid size-8 cursor-pointer place-items-center rounded hover:bg-soft"><Trash2 className="size-3.5" /></button>
               </li>
             ))}
           </ul>
