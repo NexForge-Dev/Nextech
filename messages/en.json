@@ -413,7 +413,7 @@
     "invoice": "Download invoice",
     "invoiceError": "The invoice is not available right now. Try again in a few minutes.",
     "cancel": "Cancel order",
-    "cancelConfirm": "Are you sure? The order will be cancelled and refunded.",
+    "cancelConfirm": "Are you sure? The order will be cancelled and, if it was already paid, refunded.",
     "cancelYes": "Yes, cancel",
     "cancelNo": "Back",
     "cancelled": "Order cancelled.",

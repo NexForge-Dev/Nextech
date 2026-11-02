@@ -413,7 +413,7 @@
     "invoice": "Baixar nota fiscal",
     "invoiceError": "A nota fiscal não está disponível agora. Tente novamente em alguns minutos.",
     "cancel": "Cancelar pedido",
-    "cancelConfirm": "Tem certeza? O pedido será cancelado e o valor devolvido.",
+    "cancelConfirm": "Tem a certeza? A encomenda será cancelada e, se já tiver sido paga, o valor será devolvido.",
     "cancelYes": "Sim, cancelar",
     "cancelNo": "Voltar",
     "cancelled": "Pedido cancelado.",

@@ -413,7 +413,7 @@
     "invoice": "Descargar factura",
     "invoiceError": "La factura no está disponible ahora. Inténtalo de nuevo en unos minutos.",
     "cancel": "Cancelar pedido",
-    "cancelConfirm": "¿Seguro? El pedido se cancelará y se reembolsará.",
+    "cancelConfirm": "¿Seguro? El pedido se cancelará y, si ya se pagó, se reembolsará.",
     "cancelYes": "Sí, cancelar",
     "cancelNo": "Volver",
     "cancelled": "Pedido cancelado.",
