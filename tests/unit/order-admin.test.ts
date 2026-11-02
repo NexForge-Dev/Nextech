@@ -19,7 +19,7 @@ describe("order admin rules", () => {
 
 describe("order admin schemas", () => {
   it("never lets the admin set paid by hand", () => {
-    const r = statusSchema.safeParse({ orderId: O, status: "paid", note: "" });
+    const r = statusSchema.safeParse({ orderId: O, status: "paid", expected: "awaiting_supplier", note: "" });
     expect(!r.success && r.error.issues[0].message).toBe("O pagamento só é confirmado pelo Stripe.");
   });
   it("parses supplier cost to centavos and requires https links", () => {

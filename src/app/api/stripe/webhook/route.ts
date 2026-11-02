@@ -13,10 +13,10 @@ function deps(): WebhookDeps {
   const svc = createServiceSupabase();
   return {
     async claimEvent(id, type) {
-      const { error } = await svc.from("stripe_events").insert({ id, type });
-      if (error?.code === "23505") return false;
+      // skips only events already processed; a claim stuck for 2 minutes (crash/timeout) is retried
+      const { data, error } = await svc.rpc("claim_stripe_event", { p_id: id, p_type: type });
       if (error) throw new Error(error.message);
-      return true;
+      return data === true;
     },
     async releaseEvent(id) {
       await svc.from("stripe_events").delete().eq("id", id);
@@ -43,7 +43,24 @@ function deps(): WebhookDeps {
       const { data, error } = await svc.rpc("order_mark_paid", { p_pi: piId, p_order: orderId, p_fee: fee as never, p_summary: summary as never });
       if (error) throw new Error(error.message);
       const r = data?.[0];
-      return r ? { orderId: r.order_id, transitioned: r.transitioned } : null;
+      return r ? { orderId: r.order_id, transitioned: r.transitioned, wasCancelled: r.was_cancelled } : null;
+    },
+    async paidAfterCancel(piId, orderId) {
+      const { data: o } = await svc.from("orders").select("payment_method, total_minor, refunded_minor").eq("id", orderId).single();
+      const amount = Number(o?.total_minor ?? 0) - Number(o?.refunded_minor ?? 0);
+      if (!o || amount <= 0) return;
+      if (o.payment_method === "boleto") {
+        await svc.from("order_events").insert({ order_id: orderId, actor: "system", kind: "manual_refund_pending", data: { amount, reason: "paid_after_cancel" } });
+        after(() => notifyOrder("ownerManualRefund", orderId, { refundMinor: amount }));
+        return;
+      }
+      const refund = await getStripe().refunds.create({ payment_intent: piId, amount, metadata: { order_id: orderId, source: "paid_after_cancel" } }, { idempotencyKey: `refund-after-cancel-${orderId}` });
+      await svc.rpc("order_record_refund", { p_order: orderId, p_pi: null as never, p_amount: amount, p_method: "stripe", p_stripe_refund: refund.id, p_status: refund.status === "succeeded" ? "succeeded" : "pending", p_note: "Pago depois do cancelamento" as never, p_actor: null as never });
+      after(() => notifyOrder("orderRefunded", orderId, { refundMinor: amount }));
+    },
+    async listRefunds(chargeId) {
+      const list = await getStripe().refunds.list({ charge: chargeId, limit: 100 });
+      return list.data as unknown as Record<string, unknown>[];
     },
     async cancelByPaymentIntent(piId) {
       const { data, error } = await svc.rpc("order_cancel_by_pi", { p_pi: piId });

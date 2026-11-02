@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { getStripe } from "@/lib/stripe/server";
 import { invoiceSchema, orderItemSchema, refundSchema, resolveReturnSchema, statusSchema } from "@/lib/admin/schemas/order";
-import { canShip, refundableMinor } from "@/lib/orders/admin-rules";
+import { refundableMinor } from "@/lib/orders/admin-rules";
 import { notifyOrder } from "@/lib/orders/notify";
 import { formatMoney } from "@/lib/domain/money";
 
@@ -24,24 +24,37 @@ function touch(number: number) {
   revalidatePath(`/admin/pedidos/${number}`);
 }
 
-const statusImpl = adminAction({ permission: "orders.write", schema: statusSchema, audit: { action: "status", entity: "orders" } }, async ({ orderId, status, note }, ctx) => {
+const STATUS_ERRORS: Record<string, string> = {
+  order_closed: "Pedido cancelado ou reembolsado: não pode mais ser alterado.",
+  status_changed: "O pedido mudou enquanto você editava (ex.: o cliente cancelou). Recarregue a página.",
+  missing_tracking: "Informe o código de rastreio de todos os itens antes de marcar como enviado.",
+  invalid_status: "O pagamento só é confirmado pelo Stripe.",
+  already_shipped: "Este item já foi enviado; não dá para desmarcar a compra.",
+};
+const dbFailure = (message: string) => new ActionFailure("invalid", STATUS_ERRORS[message] ?? message);
+
+const statusImpl = adminAction({ permission: "orders.write", schema: statusSchema, audit: { action: "status", entity: "orders" } }, async ({ orderId, status, expected, note }, ctx) => {
   const o = await loadOrder(orderId);
   if (o.status === status) return { id: orderId, audit: { status } };
-  if ((status === "shipped" || status === "in_transit" || status === "delivered") && !canShip(o.order_items.map((i) => ({ trackingCode: i.tracking_code })))) {
-    throw new ActionFailure("invalid", "Informe o código de rastreio de todos os itens antes de marcar como enviado.");
-  }
   if (status === "refunded" && Number(o.refunded_minor) < Number(o.total_minor)) {
     throw new ActionFailure("invalid", "Use “Reembolsar” para devolver o valor; o status muda sozinho quando o reembolso total é registrado.");
   }
-  const svc = createServiceSupabase();
-  const { error } = await svc.from("orders").update({ status, ...(status === "cancelled" ? { cancelled_at: new Date().toISOString() } : {}) }).eq("id", orderId);
-  if (error) throw error;
-  const kind = status === "shipped" || status === "in_transit" ? "shipped" : status === "delivered" ? "delivered" : status === "cancelled" ? "cancelled" : "status_changed";
-  const trackings = kind === "shipped" ? o.order_items.map((i) => i.tracking_code) : undefined;
-  await svc.from("order_events").insert({ order_id: orderId, actor: "admin", actor_id: ctx.userId, kind, data: { from: o.status, to: status, note: note || null, ...(trackings ? { trackings } : {}) } });
+  const trackings = status === "shipped" || status === "in_transit" ? o.order_items.map((i) => i.tracking_code) : undefined;
+  // locked, conditional transition: refuses closed orders and stale reads (e.g. the customer cancelled meanwhile)
+  const { error } = await createServiceSupabase().rpc("admin_set_order_status", {
+    p_order: orderId,
+    p_expected: expected,
+    p_to: status,
+    p_actor: ctx.userId,
+    p_data: { note: note || null, ...(trackings ? { trackings } : {}) } as never,
+  });
+  if (error) throw dbFailure(error.message);
   if (status === "shipped" && o.status !== "in_transit") await notifyOrder("orderShipped", orderId);
   if (status === "delivered") await notifyOrder("orderDelivered", orderId);
-  if (status === "cancelled") await notifyOrder("orderCancelled", orderId);
+  if (status === "cancelled") {
+    if (!o.paid_at && o.stripe_payment_intent_id) await getStripe().paymentIntents.cancel(o.stripe_payment_intent_id).catch(() => undefined);
+    await notifyOrder("orderCancelled", orderId);
+  }
   touch(Number(o.number));
   return { id: orderId, audit: { from: o.status, to: status } };
 });
@@ -51,37 +64,25 @@ export async function updateOrderStatus(input: unknown) {
 
 const itemImpl = adminAction({ permission: "orders.write", schema: orderItemSchema, audit: { action: "item", entity: "order_items" } }, async (v, ctx) => {
   const svc = createServiceSupabase();
-  const { data: item } = await svc.from("order_items").select("id, order_id, supplier_purchased_at, orders(number, status)").eq("id", v.itemId).maybeSingle();
+  const { data: item } = await svc.from("order_items").select("order_id, orders(number)").eq("id", v.itemId).maybeSingle();
   if (!item || !item.orders) throw new ActionFailure("invalid", "Item não encontrado.");
-  const order = item.orders;
-  const purchasedAt = v.purchased ? (item.supplier_purchased_at ?? new Date().toISOString()) : null;
-  if (!v.purchased && item.supplier_purchased_at && ["shipped", "in_transit", "delivered"].includes(order.status)) {
-    throw new ActionFailure("invalid", "Este item já foi enviado; não dá para desmarcar a compra.");
-  }
-  const { error } = await svc
-    .from("order_items")
-    .update({
-      supplier_id: v.supplierId,
-      supplier_cost_minor: v.supplierCostMinor,
-      supplier_order_ref: v.supplierOrderRef,
-      supplier_url: v.supplierUrl,
-      supplier_purchased_at: purchasedAt,
-      tracking_carrier: v.trackingCarrier,
-      tracking_code: v.trackingCode,
-      tracking_url: v.trackingUrl,
-    })
-    .eq("id", v.itemId);
-  if (error) throw error;
-  if (v.purchased && !item.supplier_purchased_at) {
-    await svc.from("order_events").insert({ order_id: item.order_id, actor: "admin", actor_id: ctx.userId, kind: "supplier_purchase", data: { item: v.itemId, cost: v.supplierCostMinor, ref: v.supplierOrderRef } });
-    if (order.status === "paid" || order.status === "awaiting_supplier") {
-      await svc.from("orders").update({ status: "supplier_purchased" }).eq("id", item.order_id);
-      await svc.from("order_events").insert({ order_id: item.order_id, actor: "admin", actor_id: ctx.userId, kind: "status_changed", data: { from: order.status, to: "supplier_purchased" } });
-    }
-  } else {
-    await svc.from("order_events").insert({ order_id: item.order_id, actor: "admin", actor_id: ctx.userId, kind: "item_updated", data: { item: v.itemId, tracking: v.trackingCode } });
-  }
-  touch(Number(order.number));
+  // one locked transaction: refuses cancelled/refunded orders, moves the order forward on the first purchase
+  const { error } = await svc.rpc("admin_update_order_item", {
+    p_item: v.itemId,
+    p_patch: {
+      supplierId: v.supplierId,
+      supplierCostMinor: v.supplierCostMinor,
+      supplierOrderRef: v.supplierOrderRef,
+      supplierUrl: v.supplierUrl,
+      trackingCarrier: v.trackingCarrier,
+      trackingCode: v.trackingCode,
+      trackingUrl: v.trackingUrl,
+      purchased: v.purchased,
+    } as never,
+    p_actor: ctx.userId,
+  });
+  if (error) throw dbFailure(error.message);
+  touch(Number(item.orders.number));
   return { id: v.itemId, audit: { purchased: v.purchased, tracking: !!v.trackingCode } };
 });
 export async function updateOrderItem(input: unknown) {

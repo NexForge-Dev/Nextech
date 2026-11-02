@@ -42,7 +42,7 @@ describe("startCheckoutWith", () => {
   it("charges exactly the order total computed by the database, once per order", async () => {
     const { d, calls } = deps();
     const r = await startCheckoutWith(d, checkoutInputSchema.parse(input));
-    expect(r).toEqual({ ok: true, kind: "card", orderNumber: 1001, clientSecret: "pi_1_secret" });
+    expect(r).toEqual({ ok: true, kind: "card", orderNumber: 1001, totalMinor: 49980, clientSecret: "pi_1_secret" });
     const [params, opts] = calls.create[0] as [Record<string, unknown>, { idempotencyKey: string }];
     expect(params).toMatchObject({ amount: 49980, currency: "brl", payment_method_types: ["card"], metadata: { order_id: ORDER, order_number: "1001" } });
     expect(opts.idempotencyKey).toBe(`order-${ORDER}`);
@@ -72,7 +72,18 @@ describe("startCheckoutWith", () => {
     expect(params.confirm).toBe(true);
     expect(params.payment_method_data).toMatchObject({ type: "boleto", boleto: { tax_id: "52998224725" }, billing_details: { name: "Ana Souza", email: "ana@example.com" } });
     expect(params.payment_method_options).toEqual({ boleto: { expires_after_days: 3 } });
-    expect(r).toEqual({ ok: true, kind: "boleto", orderNumber: 1001, boleto: { url: "https://payments.stripe.com/boleto/x", number: "123", expiresAt: new Date(1793700000 * 1000).toISOString() } });
+    expect(r).toEqual({ ok: true, kind: "boleto", orderNumber: 1001, totalMinor: 49980, boleto: { url: "https://payments.stripe.com/boleto/x", number: "123", expiresAt: new Date(1793700000 * 1000).toISOString() } });
     expect(calls.attach[0]).toEqual([ORDER, "pi_2", { url: "https://payments.stripe.com/boleto/x", number: "123", expiresAt: new Date(1793700000 * 1000).toISOString() }]);
+  });
+  it("tells the customer when the price changed before paying", async () => {
+    const { d, calls } = deps({ createOrder: async () => { throw new Error("price_changed"); } });
+    expect(await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, expectedTotalMinor: 1 }))).toEqual({ ok: false, error: "O preço de um produto mudou. Confira o novo total antes de pagar.", priceChanged: true });
+    expect(calls.create).toHaveLength(0);
+  });
+  it("passes the total the customer saw to the database", async () => {
+    let seen: unknown;
+    const { d } = deps({ createOrder: async (i) => ((seen = i.expectedTotalMinor), { orderId: ORDER, orderNumber: 1001, totalMinor: 49980 }) });
+    await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, expectedTotalMinor: 49980 }));
+    expect(seen).toBe(49980);
   });
 });

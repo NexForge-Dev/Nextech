@@ -7,6 +7,7 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
 import { checkoutInputSchema, startCheckoutWith, type CheckoutResult } from "@/lib/orders/checkout";
 import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/order-status";
 import { log } from "@/lib/log";
+import { notifyOrder } from "@/lib/orders/notify";
 
 export async function startCheckout(input: unknown): Promise<CheckoutResult & { fieldErrors?: Record<string, string[]> }> {
   const user = await getSessionUser();
@@ -28,7 +29,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
       {
         customerEmail: user.email,
         async createOrder(i) {
-          const { data, error } = await sb.rpc("create_order_from_cart", { p_items: i.items as never, p_address: i.address as never, p_method: i.method, p_save_address: i.saveAddress });
+          const { data, error } = await sb.rpc("create_order_from_cart", { p_items: i.items as never, p_address: i.address as never, p_method: i.method, p_save_address: i.saveAddress, ...(i.expectedTotalMinor ? { p_expected_total: i.expectedTotalMinor } : {}) });
           if (error) throw new Error(error.message);
           const row = data?.[0];
           if (!row) throw new Error("order_failed");
@@ -37,7 +38,10 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
         async attachPaymentIntent(orderId, paymentIntentId, boleto) {
           const { error } = await svc.from("orders").update({ stripe_payment_intent_id: paymentIntentId, boleto: boleto as never }).eq("id", orderId);
           if (error) throw new Error(error.message);
-          if (boleto) await svc.from("order_events").insert({ order_id: orderId, actor: "stripe", kind: "boleto_issued", data: { expiresAt: boleto.expiresAt } });
+          if (boleto) {
+            await svc.from("order_events").insert({ order_id: orderId, actor: "stripe", kind: "boleto_issued", data: { expiresAt: boleto.expiresAt } });
+            await notifyOrder("boletoIssued", orderId);
+          }
         },
         stripe: {
           createPaymentIntent: async (params, opts) => (await stripe.paymentIntents.create(params as never, opts)) as never,

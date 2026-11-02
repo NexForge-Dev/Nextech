@@ -52,20 +52,24 @@ export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payme
     setAddr((a) => ({ ...a, street: r.street || a.street, district: r.district || a.district, city: r.city || a.city, state: r.state || a.state }));
   }
 
+  const [chargedTotal, setChargedTotal] = useState<number | null>(null);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!cart?.checkoutable) return;
+    if (!cart?.checkoutable || pending) return;
     setPending(true);
     setErrors({});
     setMessage(null);
     trackAdEvent("InitiateCheckout", { valueMinor: totals.totalMinor, currency: "BRL", contentIds: cart.lines.map((l) => l.productId) });
-    const r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address });
+    const r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, expectedTotalMinor: totals.totalMinor });
     setPending(false);
     if (!r.ok) {
       setMessage(r.error);
       setErrors(r.fieldErrors ?? {});
+      if (r.priceChanged) loadCart(getLocalCart()).then(setCart, () => undefined);
       return;
     }
+    setChargedTotal(r.totalMinor);
     if (r.kind === "card") return setCard({ clientSecret: r.clientSecret, orderNumber: r.orderNumber });
     try {
       sessionStorage.setItem(BOLETO_SESSION_KEY(r.orderNumber), JSON.stringify(r.kind === "boleto" ? { boleto: r.boleto } : { pix: r.pix }));
@@ -188,7 +192,7 @@ export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payme
         </div>
         {card && stripePromise && (
           <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>
-            <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(totals.totalMinor) })} />
+            <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(chargedTotal ?? totals.totalMinor) })} />
           </Elements>
         )}
         <p className="text-center text-xs text-mute">{t("secure")}</p>

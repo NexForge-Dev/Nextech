@@ -25,6 +25,8 @@ export const checkoutInputSchema = z.object({
   method: z.enum(["card", "boleto", "pix"]),
   saveAddress: z.boolean().default(false),
   address: addressSchema,
+  /** Total the customer saw; the database refuses the order when prices changed meanwhile. */
+  expectedTotalMinor: z.number().int().positive().optional(),
 });
 export type CheckoutInput = z.output<typeof checkoutInputSchema>;
 
@@ -45,10 +47,10 @@ export type CheckoutDeps = {
 };
 
 export type CheckoutResult =
-  | { ok: true; kind: "card"; orderNumber: number; clientSecret: string }
-  | { ok: true; kind: "boleto"; orderNumber: number; boleto: BoletoInfo }
-  | { ok: true; kind: "pix"; orderNumber: number; pix: PixInfo }
-  | { ok: false; error: string; unavailableSlug?: string };
+  | { ok: true; kind: "card"; orderNumber: number; totalMinor: number; clientSecret: string }
+  | { ok: true; kind: "boleto"; orderNumber: number; totalMinor: number; boleto: BoletoInfo }
+  | { ok: true; kind: "pix"; orderNumber: number; totalMinor: number; pix: PixInfo }
+  | { ok: false; error: string; unavailableSlug?: string; priceChanged?: boolean };
 
 const ERRORS: Record<string, string> = {
   cart_empty: "Seu carrinho está vazio.",
@@ -75,6 +77,7 @@ export async function startCheckoutWith(d: CheckoutDeps, input: CheckoutInput): 
     order = await d.createOrder(input);
   } catch (e) {
     const code = e instanceof Error ? e.message : "";
+    if (code === "price_changed") return { ok: false, error: "O preço de um produto mudou. Confira o novo total antes de pagar.", priceChanged: true };
     if (code.startsWith("item_unavailable:")) return { ok: false, error: "Um produto do carrinho esgotou ou saiu de linha. Revise o carrinho.", unavailableSlug: code.slice("item_unavailable:".length) };
     return { ok: false, error: ERRORS[code] ?? "Não foi possível criar o pedido. Tente novamente." };
   }
@@ -107,12 +110,12 @@ export async function startCheckoutWith(d: CheckoutDeps, input: CheckoutInput): 
     const b = pi.next_action?.boleto_display_details ?? {};
     const boleto: BoletoInfo = { url: String(b.hosted_voucher_url ?? ""), number: b.number ?? null, expiresAt: isoFromUnix(b.expires_at) };
     await d.attachPaymentIntent(order.orderId, pi.id, boleto);
-    return { ok: true, kind: "boleto", orderNumber: order.orderNumber, boleto };
+    return { ok: true, kind: "boleto", orderNumber: order.orderNumber, totalMinor: order.totalMinor, boleto };
   }
   await d.attachPaymentIntent(order.orderId, pi.id, null);
   if (method === "pix") {
     const q = pi.next_action?.pix_display_qr_code ?? {};
-    return { ok: true, kind: "pix", orderNumber: order.orderNumber, pix: { qrImageUrl: String(q.image_url_png ?? ""), code: String(q.data ?? ""), expiresAt: isoFromUnix(q.expires_at) } };
+    return { ok: true, kind: "pix", orderNumber: order.orderNumber, totalMinor: order.totalMinor, pix: { qrImageUrl: String(q.image_url_png ?? ""), code: String(q.data ?? ""), expiresAt: isoFromUnix(q.expires_at) } };
   }
-  return { ok: true, kind: "card", orderNumber: order.orderNumber, clientSecret: pi.client_secret ?? "" };
+  return { ok: true, kind: "card", orderNumber: order.orderNumber, totalMinor: order.totalMinor, clientSecret: pi.client_secret ?? "" };
 }

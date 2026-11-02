@@ -30,7 +30,7 @@ See `.env.example`.
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | public | `sb_publishable_…` (falls back to `NEXT_PUBLIC_SUPABASE_ANON_KEY`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | server | `sb_secret_…` or legacy service_role JWT — bypasses RLS |
 | `NETWORK_CREDENTIALS_KEY` | server | 32 random bytes, base64 — encrypts affiliate network credentials |
-| `CRON_SECRET` | server | Shared secret for `/api/cron/*` |
+| `CRON_SECRET` | server | Shared secret for `/api/cron/*` (sync, retention, orders) |
 | `STRIPE_SECRET_KEY` | server | `sk_test_…` in development, `sk_live_…` only in Vercel production. Checkout shows "pagamentos ainda não configurados" without it |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | public | `pk_test_…` / `pk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | server | Signing secret of the `/api/stripe/webhook` endpoint |
@@ -91,12 +91,14 @@ The panel lives at `/admin` (sign in at `/admin/entrar`). Bootstrap the first su
 
 1. Create the Stripe Brazil account (CPF or the MEI's CNPJ, BRL bank account in the same name). Request Pix access (invite-only on Stripe Brazil), then turn Pix on in Admin → Configurações → Modelos de negócio.
 2. Add the test keys to `.env.local` (never paste keys into chats or commits).
-3. Webhook endpoint `https://<domain>/api/stripe/webhook` with events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `charge.refunded`, `refund.updated`, `charge.dispute.created`, `charge.dispute.closed`. Locally: `stripe listen --forward-to localhost:3300/api/stripe/webhook` and use the printed `whsec_…` as `STRIPE_WEBHOOK_SECRET`.
+3. Webhook endpoint `https://<domain>/api/stripe/webhook` with events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `charge.refunded`, `refund.created`, `refund.updated`, `charge.dispute.created`, `charge.dispute.closed`. Locally: `stripe listen --forward-to localhost:3300/api/stripe/webhook` and use the printed `whsec_…` as `STRIPE_WEBHOOK_SECRET`.
 4. Test card `4242 4242 4242 4242`, any future date, any CVC.
 
 **Facts that shaped the design.** Stripe Brazil has no installments (parcelamento), so it is not offered. Boleto cannot be refunded through Stripe: refund by Pix/transfer and record it as "reembolsado por fora" in the order. Card payouts settle in 30 days; boleto/Pix in ~2 business days.
 
 **Orders.** Statuses: awaiting_payment → (webhook) awaiting_supplier → supplier_purchased (first item bought) → shipped → in_transit → delivered; plus cancelled / refunded. Customers see a simplified timeline and never see supplier data: they read orders only through the `my_orders` / `my_order_items` views; admin pages use the service role after `pageGuard("orders.read")`. Customers can cancel only until any item is bought at a supplier (enforced in SQL).
+
+**Abandoned orders.** `/api/cron/orders` (daily, Vercel Cron) cancels unpaid orders — boleto 4 days after creation (3-day expiry + 1), card/Pix after 1 day — and their PaymentIntents. A payment that still succeeds on a cancelled order is refunded automatically (card/Pix) or flagged for a manual refund (boleto).
 
 **Email.** `src/lib/email` (Resend HTTP API, pt-BR templates). Missing env → skipped and recorded as `email_skipped` in the order history.
 

@@ -100,7 +100,7 @@ export function AdminOrderView({ order, canWrite, canRefund }: { order: Order; c
                 ))}
               </select>
             </Field>
-            <button type="button" className={btnPrimary} disabled={pending || status === order.status} onClick={() => run(() => updateOrderStatus({ orderId: order.id, status, note: "" }), { success: "Status atualizado.", onSuccess: () => router.refresh() })}>
+            <button type="button" className={btnPrimary} disabled={pending || status === order.status} onClick={() => run(() => updateOrderStatus({ orderId: order.id, status, expected: order.status, note: "" }), { success: "Status atualizado.", onSuccess: () => router.refresh() })}>
               Salvar status
             </button>
           </div>

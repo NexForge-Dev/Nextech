@@ -1155,6 +1155,12 @@ isOneToOne: false
 "admin_save_product_full":
 { Args: { "p": Json }; Returns: string
                            },
+"admin_set_order_status":
+{ Args: { "p_actor": string,"p_data": Json,"p_expected": string,"p_order": string,"p_to": string }; Returns: undefined
+                           },
+"admin_update_order_item":
+{ Args: { "p_actor": string,"p_item": string,"p_patch": Json }; Returns: string
+                           },
 "auth_email_exists":
 { Args: { "p_email": string }; Returns: boolean
                            },
@@ -1164,8 +1170,16 @@ isOneToOne: false
 "campaign_is_live":
 { Args: { "c": string }; Returns: boolean
                            },
+"cancel_stale_orders":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "order_id": string,"payment_intent": string
+            }[]
+                           },
+"claim_stripe_event":
+{ Args: { "p_id": string,"p_type": string }; Returns: boolean
+                           },
 "create_order_from_cart":
-{ Args: { "p_address": Json,"p_items": Json,"p_method": string,"p_save_address"?: boolean }; Returns: {
+{ Args: { "p_address": Json,"p_expected_total"?: number,"p_items": Json,"p_method": string,"p_save_address"?: boolean }; Returns: {
               "order_id": string,"order_number": number,"total_minor": number
             }[]
                            },
@@ -1232,7 +1246,7 @@ isOneToOne: false
                            },
 "order_mark_paid":
 { Args: { "p_fee": number,"p_order": string,"p_pi": string,"p_summary": string }; Returns: {
-              "order_id": string,"transitioned": boolean
+              "order_id": string,"transitioned": boolean,"was_cancelled": boolean
             }[]
                            },
 "order_record_refund":

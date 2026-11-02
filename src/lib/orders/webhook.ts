@@ -11,7 +11,11 @@ export type WebhookDeps = {
   /** Real Stripe fee (balance transaction) and a customer-safe summary such as "Cartão final 4242". */
   paymentDetails(paymentIntent: Record<string, unknown>): Promise<{ feeMinor: number | null; summary: string | null }>;
   /** awaiting_payment → awaiting_supplier (via paid). transitioned=false when already paid/cancelled. */
-  markPaid(paymentIntentId: string, orderId: string, feeMinor: number | null, summary: string | null): Promise<{ orderId: string; transitioned: boolean } | null>;
+  markPaid(paymentIntentId: string, orderId: string, feeMinor: number | null, summary: string | null): Promise<{ orderId: string; transitioned: boolean; wasCancelled?: boolean } | null>;
+  /** A payment succeeded on an order that was already cancelled: give the money back (or alert the owner). */
+  paidAfterCancel(paymentIntentId: string, orderId: string): Promise<void>;
+  /** Refunds of a charge, for charge.refunded payloads that no longer embed them. */
+  listRefunds(chargeId: string): Promise<Record<string, unknown>[]>;
   cancelByPaymentIntent(paymentIntentId: string): Promise<{ orderId: string } | null>;
   recordRefund(r: { paymentIntentId: string; stripeRefundId: string; amountMinor: number; status: string }): Promise<{ orderId: string; fullyRefunded: boolean; changed: boolean } | null>;
   /** Append to the order history; null when no order uses this payment intent. */
@@ -52,6 +56,10 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
       const { feeMinor, summary } = await d.paymentDetails(o);
       const r = await d.markPaid(piId, orderId, feeMinor, summary);
       if (!r) return "ignored";
+      if (r.wasCancelled) {
+        await d.paidAfterCancel(piId, r.orderId);
+        return "processed";
+      }
       if (r.transitioned) {
         await d.notify("orderConfirmed", r.orderId);
         await d.notify("ownerNewOrder", r.orderId);
@@ -62,8 +70,13 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
       const err = o.last_payment_error as Record<string, unknown> | undefined;
       const r = await d.addEvent(piId, "payment_failed", { reason: str(err?.message), code: str(err?.code) });
       if (!r) return "ignored";
-      // card failures can be retried in the same checkout; async methods (Pix expiry) are final
-      if (o.status === "canceled") await d.cancelByPaymentIntent(piId);
+      // card declines can be retried in the same checkout; an expired boleto/Pix is final
+      const types = Array.isArray(o.payment_method_types) ? (o.payment_method_types as string[]) : [];
+      const asyncExpired = o.status === "canceled" || (o.status === "requires_payment_method" && types.some((t) => t === "boleto" || t === "pix"));
+      if (asyncExpired) {
+        const c = await d.cancelByPaymentIntent(piId);
+        if (c) await d.notify("paymentFailed", c.orderId);
+      }
       return "processed";
     }
     case "payment_intent.canceled": {
@@ -75,10 +88,8 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
     case "charge.refund.updated":
     case "refund.updated":
     case "refund.created": {
-      const refunds =
-        o.object === "refund"
-          ? [o]
-          : (((o.refunds as Record<string, unknown> | undefined)?.data as Record<string, unknown>[] | undefined) ?? []);
+      const embedded = ((o.refunds as Record<string, unknown> | undefined)?.data as Record<string, unknown>[] | undefined) ?? null;
+      const refunds = o.object === "refund" ? [o] : (embedded ?? (str(o.id) ? await d.listRefunds(str(o.id)!) : []));
       let last: { orderId: string; fullyRefunded: boolean; changed: boolean } | null = null;
       let changedAny = false;
       for (const rf of refunds) {

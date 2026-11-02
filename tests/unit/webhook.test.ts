@@ -19,6 +19,7 @@ function fake() {
     markProcessed: async () => {},
     paymentDetails: async () => ({ feeMinor: 1794, summary: "Cartão final 4242" }),
     markPaid: async () => {
+      if (state.status === "cancelled") return { orderId: "o1", transitioned: false, wasCancelled: true };
       if (state.status !== "awaiting_payment") return { orderId: "o1", transitioned: false };
       state.status = "awaiting_supplier";
       return { orderId: "o1", transitioned: true };
@@ -34,6 +35,8 @@ function fake() {
       if (total >= 43980) state.status = "refunded";
       return { orderId: "o1", fullyRefunded: total >= 43980, changed: true };
     },
+    paidAfterCancel: async (_pi, orderId) => void state.notes.push(`paidAfterCancel ${orderId}`),
+    listRefunds: async () => [{ id: "re_listed", amount: 43980, status: "succeeded" }],
     addEvent: async (_pi, kind) => (state.events.push(kind), { orderId: "o1" }),
     notify: async (kind) => void state.notes.push(kind),
   };
@@ -92,5 +95,30 @@ describe("handleStripeEvent", () => {
     await handleStripeEvent(ev("evt_d", "charge.dispute.created", { id: "dp_1", object: "dispute", payment_intent: "pi_1", amount: 43980 }) as never, d);
     expect(state.notes).toEqual(["ownerDispute"]);
     expect(state.events).toEqual(["dispute_created"]);
+  });
+  it("hands a payment that succeeded on a cancelled order to the refund path", async () => {
+    const { d, state } = fake();
+    state.status = "cancelled";
+    await handleStripeEvent(ev("evt_pc", "payment_intent.succeeded", pi()) as never, d);
+    expect(state.notes).toEqual(["paidAfterCancel o1"]);
+  });
+  it("cancels an order when an async payment (boleto/Pix) expires", async () => {
+    const { d, state } = fake();
+    const expired = { ...pi("requires_payment_method"), payment_method_types: ["boleto"] };
+    await handleStripeEvent(ev("evt_x1", "payment_intent.payment_failed", expired) as never, d);
+    expect(state.status).toBe("cancelled");
+    expect(state.notes).toContain("paymentFailed");
+  });
+  it("keeps a declined card order open so the customer can retry", async () => {
+    const { d, state } = fake();
+    await handleStripeEvent(ev("evt_x2", "payment_intent.payment_failed", { ...pi("requires_payment_method"), payment_method_types: ["card"] }) as never, d);
+    expect(state.status).toBe("awaiting_payment");
+  });
+  it("lists refunds from Stripe when charge.refunded carries none", async () => {
+    const { d, state } = fake();
+    state.status = "awaiting_supplier";
+    await handleStripeEvent(ev("evt_r2", "charge.refunded", { id: "ch_1", object: "charge", payment_intent: "pi_1", amount_refunded: 43980 }) as never, d);
+    expect(state.refunds.get("re_listed")).toBe(43980);
+    expect(state.status).toBe("refunded");
   });
 });

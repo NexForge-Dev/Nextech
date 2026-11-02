@@ -21,6 +21,8 @@ const optText = (max: number) => z.string().trim().max(max).default("").transfor
 export const statusSchema = z.object({
   orderId: z.string().uuid(),
   status: z.enum(ORDER_STATUSES).refine(adminCanSetStatus, "O pagamento só é confirmado pelo Stripe."),
+  /** The status the admin saw; the change is refused if the order moved meanwhile. */
+  expected: z.enum(ORDER_STATUSES),
   note: z.string().trim().max(500).default(""),
 });
 
