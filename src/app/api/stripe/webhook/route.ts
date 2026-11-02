@@ -5,9 +5,22 @@ import { verifyStripeEvent } from "@/lib/stripe/verify";
 import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
+import { analytics } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** NexForge panel metrics for a paid / failed order (account id + total only; no order data). */
+async function trackOrder(svc: ReturnType<typeof createServiceSupabase>, kind: "paid" | "failed", orderId: string) {
+  try {
+    const { data: o } = await svc.from("orders").select("user_id, total_minor").eq("id", orderId).maybeSingle();
+    if (!o?.user_id) return;
+    if (kind === "paid") analytics.orderPaid(o.user_id, orderId, Number(o.total_minor));
+    else analytics.paymentFailed(o.user_id);
+  } catch (e) {
+    log.info("nexforge.order_lookup_failed", { reason: e instanceof Error ? e.message.slice(0, 80) : "unknown" });
+  }
+}
 
 function deps(): WebhookDeps {
   const svc = createServiceSupabase();
@@ -78,11 +91,14 @@ function deps(): WebhookDeps {
     async addEvent(piId, kind, data) {
       const { data: rows, error } = await svc.rpc("order_add_event_by_pi", { p_pi: piId, p_kind: kind, p_data: data as never });
       if (error) throw new Error(error.message);
-      return rows?.[0] ? { orderId: rows[0].order_id } : null;
+      const orderId = rows?.[0]?.order_id;
+      if (orderId && kind === "payment_failed") await trackOrder(svc, "failed", orderId);
+      return orderId ? { orderId } : null;
     },
     async notify(kind, orderId, extra) {
       // emails go out after the 2xx so Stripe never waits on the email provider
       after(() => notifyOrder(kind, orderId, extra));
+      if (kind === "orderConfirmed") await trackOrder(svc, "paid", orderId);
     },
   };
 }

@@ -11,6 +11,7 @@ import { createServiceSupabase } from "@/lib/supabase/service";
 import { getSessionUser } from "@/lib/auth/session";
 import { MARKET_COOKIE } from "@/lib/domain/markets";
 import { getAvailableMarkets } from "@/lib/data/taxonomy";
+import { analytics } from "@/lib/analytics";
 import type { AuthState } from "./auth";
 
 function localeOf(form: FormData): Locale {
@@ -29,6 +30,7 @@ export async function updateProfile(_: AuthState, form: FormData): Promise<AuthS
   const sb = await createServerSupabase();
   const { error } = await sb.from("profiles").update({ full_name: name.data }).eq("id", user.id);
   if (error) return { error: ta("genericError") };
+  analytics.feature(user.id, "perfil_atualizado");
   revalidatePath("/", "layout");
   return { message: t("saved") };
 }
@@ -96,5 +98,6 @@ export async function deleteAccount(_: AuthState, form: FormData): Promise<AuthS
   // orders and return requests are kept for fiscal/consumer-law records with user_id set to null
   const { error } = await createServiceSupabase().auth.admin.deleteUser(user.id);
   if (error) return { error: ta("genericError") };
+  analytics.accountDeleted(user.id);
   redirect(getPathname({ locale, href: "/" }));
 }

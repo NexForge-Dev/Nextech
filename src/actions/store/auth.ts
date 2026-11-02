@@ -8,6 +8,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { safeNextPath } from "@/lib/domain/safe-next";
+import { analytics } from "@/lib/analytics";
 
 export type AuthState = { error?: string; message?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -47,7 +48,9 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
     options: { data: { full_name: parsed.data.fullName, locale }, emailRedirectTo: `${SITE}/auth/callback?next=${encodeURIComponent(account)}` },
   });
   if (error) return { error: /registered|exists/i.test(error.message) ? t("emailTaken") : t("genericError") };
+  if (data.user) analytics.signupStarted(data.user.id);
   if (!data.session) return { message: t("checkEmail") };
+  if (data.user) analytics.signupCompleted(data.user.id);
   redirect(account);
 }
 
@@ -58,7 +61,7 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
   if (!parsed.success) return { error: t("invalidCredentials") };
   if (!(await rateLimit("auth"))) return { error: t("tooMany") };
   const sb = await createServerSupabase();
-  const { error } = await sb.auth.signInWithPassword(parsed.data);
+  const { data: signedIn, error } = await sb.auth.signInWithPassword(parsed.data);
   if (error) {
     // Supabase answers "invalid credentials" for both a wrong password and an unknown email.
     // Product decision: an unknown email goes straight to sign-up, pre-filled.
@@ -67,6 +70,7 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
     }
     return { error: t("invalidCredentials") };
   }
+  if (signedIn.user) analytics.session(signedIn.user.id);
   redirect(safeNextPath(String(form.get("next") ?? "")) ?? getPathname({ locale, href: "/minha-conta" }));
 }
 
