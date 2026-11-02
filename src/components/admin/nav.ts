@@ -5,6 +5,7 @@ export type NavItem = { href: string; label: string; icon: string; permission?: 
 /** Sidebar entries; an item is shown when the admin has `permission` (or any of `any`). */
 export const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Visão geral", icon: "LayoutDashboard" },
+  { href: "/admin/pedidos", label: "Pedidos", icon: "ShoppingCart", permission: "orders.read" },
   { href: "/admin/produtos", label: "Produtos", icon: "Package", permission: "products.write" },
   { href: "/admin/marcas", label: "Marcas", icon: "BadgeCheck", permission: "brands.write" },
   { href: "/admin/categorias", label: "Categorias", icon: "Shapes", permission: "categories.write" },

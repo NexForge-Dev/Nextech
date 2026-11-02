@@ -12,8 +12,10 @@ function serviceRepo(): GoRepo {
   const sb = createServiceSupabase();
   return {
     async getProduct(id) {
-      const { data: p } = await sb.from("products").select("id, status").eq("id", id).maybeSingle();
+      const { data: p } = await sb.from("products").select("id, slug, status, sale_mode").eq("id", id).maybeSingle();
       if (!p) return null;
+      const saleMode = p.sale_mode === "own" ? "own" : "affiliate";
+      const { data: enabled } = await sb.rpc("business_model_enabled", { p_mode: saleMode });
       const { data: links } = await sb
         .from("affiliate_links")
         .select("id, store_id, network_id, market, currency, active, price_minor, price_updated_at, price_source, previous_price_minor, previous_verified, affiliate_url, original_url, stores!inner(active, price_display_policy, network_id, affiliate_networks(adapter, price_display_policy))")
@@ -42,7 +44,7 @@ function serviceRepo(): GoRepo {
             originalUrl: l.original_url,
           };
         });
-      return { id: p.id, published: p.status === "published", offers };
+      return { id: p.id, slug: p.slug, published: p.status === "published", saleMode, modeEnabled: enabled === true, offers };
     },
     async getStoreDomains(storeId) {
       const { data } = await sb.from("store_domains").select("domain").eq("store_id", storeId);
@@ -102,6 +104,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prod
   );
 
   if (result.status === 404) {
+    if (result.reason === "own_product" && result.slug) {
+      return NextResponse.redirect(new URL(`${LOCALE_PREFIX["pt-BR"]}/produto/${result.slug}`, req.nextUrl.origin), { status: 302, headers: { "Cache-Control": "no-store" } });
+    }
     if (result.reason.startsWith("blocked_")) {
       after(async () => {
         await createServiceSupabase()

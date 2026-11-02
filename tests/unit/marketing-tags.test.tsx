@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { Fragment, isValidElement, type ReactElement, type ReactNode } from "react";
 import { AnalyticsScripts } from "@/components/store/analytics-scripts";
 import { MarketingTracker, isBuyLink } from "@/components/store/marketing-tracker";
+import { ConsentModeSync } from "@/components/store/consent-mode-sync";
 import { settingsSchema } from "@/lib/admin/schemas/settings";
 
-type AnyProps = { src?: string; id?: string; children?: ReactNode; pixel?: boolean; googleAdsSendTo?: string | null };
+type AnyProps = { src?: string; id?: string; children?: ReactNode; pixel?: boolean; googleAdsSendTo?: string | null; analytics?: boolean; marketing?: boolean };
 
 function collect(node: ReactNode, out: ReactElement<AnyProps>[] = []): ReactElement<AnyProps>[] {
   if (Array.isArray(node)) node.forEach((n) => collect(n, out));
@@ -22,7 +23,29 @@ const inline = (els: ReactElement<AnyProps>[]) => els.map((e) => (typeof e.props
 
 describe("marketing tags", () => {
   it("loads nothing without consent", () => {
-    expect(render(false, false)).toHaveLength(0);
+    const els = render(false, false);
+    expect(srcs(els)).toEqual([]);
+    expect(inline(els)).toBe("");
+    // only the Consent Mode sync (renders nothing) stays mounted, to push "denied" to an already-loaded gtag
+    expect(els.every((e) => e.type === ConsentModeSync)).toBe(true);
+  });
+
+  it("sends Consent Mode v2 default (denied), then the visitor choices, before any config", () => {
+    const js = inline(render(true, false));
+    const iDefault = js.indexOf("gtag('consent','default'");
+    const iUpdate = js.indexOf("gtag('consent','update'");
+    expect(iDefault).toBeGreaterThanOrEqual(0);
+    expect(iUpdate).toBeGreaterThan(iDefault);
+    expect(js.indexOf("gtag('config'")).toBeGreaterThan(iUpdate);
+    expect(js).toContain('"ad_storage":"denied","ad_user_data":"denied","ad_personalization":"denied","analytics_storage":"denied","wait_for_update":500');
+    expect(js).toContain('"ad_storage":"denied","ad_user_data":"denied","ad_personalization":"denied","analytics_storage":"granted"');
+    expect(js).toContain("gtag('set','ads_data_redaction',true)");
+  });
+
+  it("grants the ad signals only with marketing consent", () => {
+    const els = render(false, true);
+    expect(inline(els)).toContain('"ad_storage":"granted","ad_user_data":"granted","ad_personalization":"granted","analytics_storage":"denied"');
+    expect(els.find((e) => e.type === ConsentModeSync)?.props).toMatchObject({ analytics: false, marketing: true });
   });
 
   it("loads only GA4 with analytics consent alone", () => {
@@ -84,4 +107,56 @@ describe("settings schema — ad tags", () => {
   it("rejects a GA4 id in the Google Ads field", () => expect(withAds({ googleAds: "G-ABC123" }).success).toBe(false));
   it("rejects a non-numeric pixel id", () => expect(withAds({ metaPixel: "fb-123" }).success).toBe(false));
   it("rejects a label with quotes", () => expect(withAds({ googleAdsConversion: "abc'def" }).success).toBe(false));
+});
+
+describe("trackAdEvent", () => {
+  type Call = unknown[];
+  const setup = (withTags = true) => {
+    const fb: Call[] = [];
+    const g: Call[] = [];
+    const store = new Map<string, string>();
+    (globalThis as Record<string, unknown>).localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), removeItem: (k: string) => store.delete(k) };
+    (globalThis as Record<string, unknown>).window = withTags
+      ? { fbq: (...a: unknown[]) => fb.push(a), gtag: (...a: unknown[]) => g.push(a), __nxAdsSendTo: "AW-1/abc" }
+      : {};
+    return { fb, g };
+  };
+
+  it("is a no-op without consented tags", async () => {
+    setup(false);
+    const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    expect(() => trackAdEvent("AddToCart", { valueMinor: 24990, currency: "BRL", contentIds: ["x"] })).not.toThrow();
+  });
+  it("sends the value in reais to Meta", async () => {
+    const { fb } = setup();
+    const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    trackAdEvent("AddToCart", { valueMinor: 43980, currency: "BRL", contentIds: ["x"] });
+    expect(fb[0]).toEqual(["track", "AddToCart", { value: 439.8, currency: "BRL", content_ids: ["x"], content_type: "product" }]);
+  });
+  it("never sends a purchase for an order that was not just checked out on this device", async () => {
+    const { fb, g } = setup();
+    const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1002 });
+    expect(fb).toHaveLength(0);
+    expect(g).toHaveLength(0);
+  });
+  it("does not resend the purchase when the order page is reopened in a new session", async () => {
+    const { fb } = setup();
+    const { trackAdEvent, markCheckoutStarted } = await import("@/components/store/marketing-tracker");
+    markCheckoutStarted(1003);
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1003 });
+    (globalThis as Record<string, unknown>).sessionStorage = { getItem: () => null, setItem: () => undefined }; // a new browser session
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1003 });
+    expect(fb).toHaveLength(1);
+  });
+  it("sends a purchase once per order, with the Google Ads conversion", async () => {
+    const { fb, g } = setup();
+    const { trackAdEvent, markCheckoutStarted } = await import("@/components/store/marketing-tracker");
+    markCheckoutStarted(1001);
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1001 });
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1001 });
+    expect(fb).toHaveLength(1);
+    expect(fb[0][3]).toEqual({ eventID: "order-1001" });
+    expect(g).toEqual([["event", "conversion", { send_to: "AW-1/abc", value: 439.8, currency: "BRL", transaction_id: "1001" }]]);
+  });
 });

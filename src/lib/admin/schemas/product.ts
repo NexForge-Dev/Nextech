@@ -58,6 +58,23 @@ const translationSchema = z.object({
   specs: specList.optional().default([]),
 });
 
+const saleInputSchema = z.object({
+  price: z.string().trim().default(""),
+  compareAt: z.string().trim().optional().default(""),
+  pixDiscountPct: z.string().trim().optional().default("0"),
+  available: z.boolean().default(true),
+  deliveryMinDays: z.coerce.number().int().min(0, "Mínimo 0 dia.").max(120).default(3),
+  deliveryMaxDays: z.coerce.number().int().min(0).max(120, "Máximo 120 dias.").default(7),
+});
+
+const supplierInputSchema = z.object({
+  supplierId: z.string().uuid("Escolha o fornecedor."),
+  url: z.string().trim().optional().default(""),
+  cost: z.string().trim().optional().default(""),
+  isPrimary: z.boolean().default(false),
+  notes: optionalText(500),
+});
+
 export const productInputSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -81,8 +98,31 @@ export const productInputSchema = z
     }),
     images: z.array(z.object({ path: z.string().min(1).max(300), alt: z.string().max(200).default(""), isMain: z.boolean() })).max(20).default([]),
     offers: z.array(offerInputSchema).max(30).default([]),
+    saleMode: z.enum(["own", "affiliate"]).default("affiliate"),
+    sale: saleInputSchema.optional(),
+    suppliers: z.array(supplierInputSchema).max(10).default([]),
   })
   .superRefine((p, ctx) => {
+    if (p.saleMode === "own") {
+      const s = p.sale;
+      const price = s?.price ? toMinor(s.price, "BRL") : null;
+      if (!s?.price) ctx.addIssue({ code: "custom", path: ["sale", "price"], message: "Informe o preço de venda." });
+      else if (price == null || price <= 0) ctx.addIssue({ code: "custom", path: ["sale", "price"], message: "Preço inválido." });
+      if (s?.compareAt) {
+        const cmp = toMinor(s.compareAt, "BRL");
+        if (cmp == null) ctx.addIssue({ code: "custom", path: ["sale", "compareAt"], message: "Preço inválido." });
+        else if (price != null && cmp <= price) ctx.addIssue({ code: "custom", path: ["sale", "compareAt"], message: "O preço “de” precisa ser maior que o preço de venda." });
+      }
+      const pct = Number((s?.pixDiscountPct || "0").replace(",", "."));
+      if (!Number.isFinite(pct) || pct < 0 || pct > 50) ctx.addIssue({ code: "custom", path: ["sale", "pixDiscountPct"], message: "Desconto no Pix entre 0 e 50%." });
+      if (s && s.deliveryMaxDays < s.deliveryMinDays) ctx.addIssue({ code: "custom", path: ["sale", "deliveryMaxDays"], message: "O prazo máximo precisa ser maior ou igual ao mínimo." });
+    }
+    if (p.suppliers.filter((x) => x.isPrimary).length > 1) ctx.addIssue({ code: "custom", path: ["suppliers"], message: "Marque no máximo um fornecedor principal." });
+    p.suppliers.forEach((x, i) => {
+      if (x.url && !https.safeParse(x.url).success) ctx.addIssue({ code: "custom", path: ["suppliers", i, "url"], message: "Use um endereço https:// válido." });
+      if (x.cost && toMinor(x.cost, "BRL") == null) ctx.addIssue({ code: "custom", path: ["suppliers", i, "cost"], message: "Custo inválido." });
+    });
+    if (new Set(p.suppliers.map((x) => x.supplierId)).size !== p.suppliers.length) ctx.addIssue({ code: "custom", path: ["suppliers"], message: "Cada fornecedor só pode aparecer uma vez." });
     if (p.images.length && p.images.filter((i) => i.isMain).length !== 1) ctx.addIssue({ code: "custom", path: ["images"], message: "Escolha exatamente uma imagem principal." });
     if (p.rating) {
       const n = Number(p.rating.replace(",", "."));
@@ -98,6 +138,18 @@ export const productInputSchema = z
     rating: p.rating ? Math.round(Number(p.rating.replace(",", ".")) * 10) / 10 : null,
     ratingCount: p.ratingCount ? Number(p.ratingCount) : null,
     ratingSource: p.ratingSource || null,
+    sale:
+      p.saleMode === "own" && p.sale
+        ? {
+            priceMinor: toMinor(p.sale.price, "BRL")!,
+            compareAtMinor: p.sale.compareAt ? toMinor(p.sale.compareAt, "BRL") : null,
+            pixDiscountPct: Number((p.sale.pixDiscountPct || "0").replace(",", ".")),
+            available: p.sale.available,
+            deliveryMinDays: p.sale.deliveryMinDays,
+            deliveryMaxDays: p.sale.deliveryMaxDays,
+          }
+        : null,
+    suppliers: p.suppliers.map((x) => ({ supplierId: x.supplierId, url: x.url || null, costMinor: x.cost ? toMinor(x.cost, "BRL") : null, isPrimary: x.isPrimary, notes: x.notes || null })),
     translations: Object.fromEntries(Object.entries(p.translations).filter(([, t]) => t && t.name.trim())) as Partial<Record<"pt-BR" | "pt-PT" | "en" | "es", z.infer<typeof translationSchema>>>,
   }));
 

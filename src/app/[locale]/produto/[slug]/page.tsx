@@ -21,6 +21,9 @@ import { Gallery } from "@/components/store/gallery";
 import { PriceView } from "@/components/store/price";
 import { FavoriteButton } from "@/components/store/favorite-button";
 import { ProductGrid, Section } from "@/components/store/product-grid";
+import { AddToCart } from "@/components/store/add-to-cart";
+import { ownDiscountPct, pixPriceMinor } from "@/lib/domain/own-pricing";
+import { getPublicSettings, getStorefrontLocales } from "@/lib/data/settings";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -32,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(p.slug, locale);
   if (!product) return {};
   const description = stripTags(product.shortDescription ?? product.descriptionMd ?? "").slice(0, 160) || undefined;
-  return buildMetadata({ locale, href: { pathname: "/produto/[slug]", params: { slug: product.slug } }, title: product.name, description, type: "article" });
+  return buildMetadata({ locale, locales: await getStorefrontLocales(), href: { pathname: "/produto/[slug]", params: { slug: product.slug } }, title: product.name, description, type: "article" });
 }
 
 export default async function ProductPage({ params }: Props) {
@@ -41,7 +44,7 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProduct(slug, locale);
   if (!product) notFound();
 
-  const [ctx, t, tcat, tm, format, user, favorites] = await Promise.all([
+  const [ctx, t, tcat, tm, format, user, favorites, tcart, settings] = await Promise.all([
     getStoreContext(locale),
     getTranslations("product"),
     getTranslations("catalog"),
@@ -49,7 +52,12 @@ export default async function ProductPage({ params }: Props) {
     getFormatter(),
     getSessionUser(),
     getFavoriteIds(),
+    getTranslations("cart"),
+    getPublicSettings(),
   ]);
+  const own = product.saleMode === "own" ? product.sale : null;
+  const ownDiscount = own ? ownDiscountPct(own) : null;
+  const pixOn = ctx.businessModels.payments.pix && !!own && own.pixDiscountPct > 0;
   const now = new Date();
   const market = ctx.market;
   const summary = priceSummary(product.offers, market, now);
@@ -79,7 +87,9 @@ export default async function ProductPage({ params }: Props) {
       sku: product.sku,
       images: images.map((i) => i.src),
       rating: product.rating,
-      offers: marketOffers.map((o) => ({ ...o, url: `${SITE}${goHref(o.id)}` })),
+      offers: own
+        ? [{ id: product.id, market: "BR", currency: "BRL", active: own.available, policy: "show" as const, priceMinor: own.priceMinor, priceUpdatedAt: now.toISOString(), previousPriceMinor: null, previousVerified: false, priceSource: "manual" as const, requiresFreshIntegration: false, history: [], storeName: settings.storeName, url }]
+        : marketOffers.map((o) => ({ ...o, url: `${SITE}${goHref(o.id)}` })),
     },
     url,
     now,
@@ -115,6 +125,44 @@ export default async function ProductPage({ params }: Props) {
           )}
           {product.shortDescription && <p className="mt-4 text-mute">{product.shortDescription}</p>}
 
+          {own ? (
+            <div className="mt-8 border-t border-line pt-8" data-testid="own-buy-box">
+              {ownDiscount != null && own.compareAtMinor != null && (
+                <p className="tabular text-sm text-mute line-through">{formatMoney(own.compareAtMinor, "BRL", locale)}</p>
+              )}
+              <p className="flex items-center gap-3">
+                <span className="tabular text-4xl font-semibold tracking-tight" data-testid="price-main">{formatMoney(own.priceMinor, "BRL", locale)}</span>
+                {ownDiscount != null && <span className="rounded-full bg-black px-2 py-0.5 text-xs font-semibold text-white">-{ownDiscount}%</span>}
+              </p>
+              <p className="mt-1 text-sm text-mute">{t("cardOrBoleto")}</p>
+              {pixOn && (
+                <p className="mt-1 text-sm">
+                  <strong className="tabular">{t("pixPrice", { price: formatMoney(pixPriceMinor(own.priceMinor, own.pixDiscountPct), "BRL", locale) })}</strong>{" "}
+                  <span className="rounded-full border border-black px-2 py-0.5 text-xs font-medium">{t("pixOff", { pct: own.pixDiscountPct })}</span>
+                </p>
+              )}
+              <ul className="mt-5 space-y-1 text-sm">
+                <li>✓ {t("freeShipping", { min: own.deliveryMinDays, max: own.deliveryMaxDays })}</li>
+                <li>{own.available ? `✓ ${t("inStock")}` : t("soldOut")}</li>
+              </ul>
+              {market === "BR" ? (
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <div className="flex-1">
+                    <AddToCart
+                      productId={product.id}
+                      priceMinor={own.priceMinor}
+                      available={own.available}
+                      labels={{ addToCart: t("addToCart"), buyNow: t("buyNow"), soldOut: t("soldOut"), added: tcart("added"), viewCart: tcart("viewCart") }}
+                    />
+                  </div>
+                  <FavoriteButton productId={product.id} signedIn={!!user} initial={favorites.has(product.id)} withLabel className="h-12 rounded-md border border-line px-5 hover:bg-soft" />
+                </div>
+              ) : (
+                <p className="mt-6 text-sm font-medium">{t("onlyBrazil")}</p>
+              )}
+              <p className="mt-5 text-xs text-mute">{t("ownSeller")}</p>
+            </div>
+          ) : (
           <div className="mt-8 border-t border-line pt-8">
             <PriceView price={summary} locale={locale} size="lg" />
             {summary.kind === "unavailable" ? (
@@ -150,6 +198,7 @@ export default async function ProductPage({ params }: Props) {
               <Link href="/afiliados" className="text-black underline underline-offset-2">{t("learnMore")}</Link>
             </p>
           </div>
+          )}
 
           {others.length > 0 && (
             <div className="mt-8 border-t border-line pt-6">

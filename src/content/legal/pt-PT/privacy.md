@@ -2,7 +2,7 @@ Esta política explica que dados pessoais a {{store_name}} trata, porquê e quai
 
 ## Quem somos
 
-Responsável pelo tratamento: {{company_name}}, {{tax_id}}, {{address}}. Contacto para assuntos de privacidade: {{contact_email}}.
+Responsável pelo tratamento: {{seller_identity}}. Contacto para assuntos de privacidade: {{contact_email}}.
 
 ## Que dados tratamos
 

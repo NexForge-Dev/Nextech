@@ -1,17 +1,23 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// E2E_PORT runs an isolated production build (against the local Supabase env exported in the shell),
+// so a developer's own `npm run dev` on 3300 is never reused by the tests.
+const port = Number(process.env.E2E_PORT ?? 3300);
+const isolated = !!process.env.E2E_PORT;
+
 export default defineConfig({
   testDir: "tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,
   retries: 0,
-  use: { baseURL: "http://localhost:3300", trace: "retain-on-failure" },
+  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3300/api/health",
-    reuseExistingServer: true,
-    timeout: 180_000,
+    command: isolated ? `npm run build && npx next start -p ${port}` : "npm run dev",
+    url: `http://localhost:${port}/api/health`,
+    reuseExistingServer: !isolated,
+    timeout: 600_000,
   },
 });

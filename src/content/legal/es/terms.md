@@ -1,4 +1,4 @@
-Estos términos regulan el uso del sitio web {{store_name}}, gestionado por {{company_name}} ({{tax_id}}). Al usar el sitio, los aceptas.
+Estos términos regulan el uso del sitio web {{store_name}}, gestionado por {{seller_identity}}. Al usar el sitio, los aceptas.
 
 ## 1. El servicio
 

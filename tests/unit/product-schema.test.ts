@@ -50,3 +50,38 @@ describe("validateOfferUrls", () => {
     expect(errs).toEqual({});
   });
 });
+
+describe("productInputSchema — own store", () => {
+  const SUP1 = "33333333-3333-4333-8333-333333333333";
+  const SUP2 = "44444444-4444-4444-8444-444444444444";
+  const sale = { price: "249,90", compareAt: "299,90", pixDiscountPct: "5", available: true, deliveryMinDays: 3, deliveryMaxDays: 7 };
+  const own = { ...base, offers: [], saleMode: "own", sale, suppliers: [{ supplierId: SUP1, url: "https://www.amazon.com.br/dp/X", cost: "165,00", isPrimary: true, notes: "" }] };
+  const issue = (r: ReturnType<typeof productInputSchema.safeParse>, path: string) => (!r.success ? r.error.issues.find((i) => i.path.join(".") === path)?.message : undefined);
+
+  it("defaults existing products to affiliate mode", () => {
+    const r = productInputSchema.safeParse(base);
+    expect(r.success && r.data.saleMode).toBe("affiliate");
+  });
+  it("accepts an own product without offers and parses money to centavos", () => {
+    const r = productInputSchema.safeParse(own);
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.sale).toEqual({ priceMinor: 24990, compareAtMinor: 29990, pixDiscountPct: 5, available: true, deliveryMinDays: 3, deliveryMaxDays: 7 });
+    expect(r.success && r.data.suppliers[0]).toMatchObject({ supplierId: SUP1, costMinor: 16500, isPrimary: true });
+  });
+  it("requires a sale price in own mode", () => {
+    expect(issue(productInputSchema.safeParse({ ...own, sale: { ...sale, price: "" } }), "sale.price")).toBe("Informe o preço de venda.");
+  });
+  it("rejects a 'from' price not above the sale price", () => {
+    expect(issue(productInputSchema.safeParse({ ...own, sale: { ...sale, compareAt: "249,90" } }), "sale.compareAt")).toBe("O preço “de” precisa ser maior que o preço de venda.");
+  });
+  it("rejects two primary suppliers", () => {
+    const r = productInputSchema.safeParse({ ...own, suppliers: [own.suppliers[0], { ...own.suppliers[0], supplierId: SUP2 }] });
+    expect(issue(r, "suppliers")).toBe("Marque no máximo um fornecedor principal.");
+  });
+  it("rejects a non-https supplier link", () => {
+    expect(issue(productInputSchema.safeParse({ ...own, suppliers: [{ ...own.suppliers[0], url: "http://x.com" }] }), "suppliers.0.url")).toBe("Use um endereço https:// válido.");
+  });
+  it("rejects a delivery window that ends before it starts", () => {
+    expect(issue(productInputSchema.safeParse({ ...own, sale: { ...sale, deliveryMinDays: 8, deliveryMaxDays: 3 } }), "sale.deliveryMaxDays")).toBe("O prazo máximo precisa ser maior ou igual ao mínimo.");
+  });
+});

@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { slugify } from "@/lib/domain/slug";
 import { discountPercent } from "@/lib/domain/pricing";
+import { estimateMarginMinor, estimateStripeFeeMinor, pixPriceMinor } from "@/lib/domain/own-pricing";
+import { formatMoney } from "@/lib/domain/money";
 import { toMinor } from "@/lib/domain/money";
 import { saveProduct } from "@/actions/admin/products";
 import { addStoreDomain } from "@/actions/admin/taxonomy";
@@ -46,7 +48,12 @@ export type ProductFormValue = {
   translations: Partial<Record<LocaleCode, Translation>>;
   images: ImageItem[];
   offers: OfferValue[];
+  saleMode: "own" | "affiliate";
+  sale: SaleValue;
+  suppliers: SupplierValue[];
 };
+export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number };
+export type SupplierValue = { supplierId: string; url: string; cost: string; isPrimary: boolean; notes: string };
 type Store = { id: string; name: string; networkId: string | null; markets: string[] };
 type Opt = { id: string; name: string };
 type Market = { code: string; name: string; currency: string };
@@ -68,7 +75,7 @@ function SpecsEditor({ value, onChange }: { value: Spec[]; onChange: (v: Spec[])
   );
 }
 
-export function ProductForm({ initial, categories, brands, stores, markets, canAddDomain }: { initial: ProductFormValue; categories: Opt[]; brands: Opt[]; stores: Store[]; markets: Market[]; canAddDomain: boolean }) {
+export function ProductForm({ initial, categories, brands, stores, markets, suppliers, canAddDomain }: { initial: ProductFormValue; categories: Opt[]; brands: Opt[]; stores: Store[]; markets: Market[]; suppliers: Opt[]; canAddDomain: boolean }) {
   const router = useRouter();
   const { pending, run } = useAdminAction();
   const [v, setV] = useState(initial);
@@ -84,6 +91,13 @@ export function ProductForm({ initial, categories, brands, stores, markets, canA
     const slug = !slugTouched && tab === "pt-BR" && patch.name !== undefined ? slugify(patch.name) : v.slug;
     setV({ ...v, translations, slug });
   };
+  const setSale = (patch: Partial<SaleValue>) => setV({ ...v, sale: { ...v.sale, ...patch } });
+  const setSupplier = (i: number, patch: Partial<SupplierValue>) =>
+    setV({ ...v, suppliers: v.suppliers.map((x, j) => (j === i ? { ...x, ...patch } : patch.isPrimary ? { ...x, isPrimary: false } : x)) });
+  const priceMinor = toMinor(v.sale.price, "BRL");
+  const primaryCost = toMinor(v.suppliers.find((x) => x.isPrimary)?.cost ?? "", "BRL");
+  const margin = priceMinor != null && primaryCost != null ? estimateMarginMinor({ revenueMinor: priceMinor, feeMinor: estimateStripeFeeMinor(priceMinor, "card"), costMinor: primaryCost }) : null;
+  const pixPct = Number(v.sale.pixDiscountPct.replace(",", ".")) || 0;
   const setOffer = (i: number, patch: Partial<OfferValue>) => setV({ ...v, offers: v.offers.map((o, j) => (j === i ? { ...o, ...patch } : o)) });
 
   function submit(e: React.FormEvent) {
@@ -143,6 +157,80 @@ export function ProductForm({ initial, categories, brands, stores, markets, canA
         </Field>
       </FormSection>
 
+      <FormSection title="Modo de venda" description="Venda própria: o cliente compra e paga na NEXTECH e você compra no fornecedor. Afiliado: o botão leva à loja parceira.">
+        <Field label="Modo de venda" htmlFor="p-mode">
+          <select id="p-mode" className={inputCls} value={v.saleMode} onChange={(e) => setV({ ...v, saleMode: e.target.value === "own" ? "own" : "affiliate" })}>
+            <option value="own">Venda própria (checkout NEXTECH)</option>
+            <option value="affiliate">Afiliado (link para loja parceira)</option>
+          </select>
+        </Field>
+      </FormSection>
+
+      {v.saleMode === "own" && (
+        <FormSection title="Venda própria" description="Preço que o cliente paga na NEXTECH, com frete grátis embutido. Fornecedores e custos só aparecem para você.">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Preço de venda (R$)" htmlFor="s-price" error={err("sale.price")}>
+              <input id="s-price" inputMode="decimal" className={inputCls} placeholder="249,90" value={v.sale.price} onChange={(e) => setSale({ price: e.target.value })} />
+            </Field>
+            <Field label="Preço “de” (opcional)" htmlFor="s-cmp" error={err("sale.compareAt")} hint="Aparece riscado ao lado do preço.">
+              <input id="s-cmp" inputMode="decimal" className={inputCls} placeholder="299,90" value={v.sale.compareAt} onChange={(e) => setSale({ compareAt: e.target.value })} />
+            </Field>
+            <Field label="Desconto no Pix (%)" htmlFor="s-pix" error={err("sale.pixDiscountPct")} hint={priceMinor != null && pixPct > 0 ? `No Pix: ${formatMoney(pixPriceMinor(priceMinor, pixPct), "BRL", "pt-BR")}` : "Vale quando o Pix estiver ligado."}>
+              <input id="s-pix" inputMode="decimal" className={inputCls} value={v.sale.pixDiscountPct} onChange={(e) => setSale({ pixDiscountPct: e.target.value })} />
+            </Field>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Disponibilidade" htmlFor="s-av">
+              <select id="s-av" className={inputCls} value={v.sale.available ? "1" : "0"} onChange={(e) => setSale({ available: e.target.value === "1" })}>
+                <option value="1">Em estoque</option>
+                <option value="0">Esgotado</option>
+              </select>
+            </Field>
+            <Field label="Entrega — mínimo (dias úteis)" htmlFor="s-dmin" error={err("sale.deliveryMinDays")}>
+              <input id="s-dmin" type="number" min={0} max={120} className={inputCls} value={v.sale.deliveryMinDays} onChange={(e) => setSale({ deliveryMinDays: Number(e.target.value) })} />
+            </Field>
+            <Field label="Entrega — máximo (dias úteis)" htmlFor="s-dmax" error={err("sale.deliveryMaxDays")}>
+              <input id="s-dmax" type="number" min={0} max={120} className={inputCls} value={v.sale.deliveryMaxDays} onChange={(e) => setSale({ deliveryMaxDays: Number(e.target.value) })} />
+            </Field>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Fornecedores (só você vê)</p>
+            {err("suppliers") && <p role="alert" className="text-sm font-medium text-ink">⚠ {err("suppliers")?.[0]}</p>}
+            {v.suppliers.length === 0 && <p className="text-sm text-mute">Nenhum fornecedor. Cadastre onde você compra este produto e quanto custa.</p>}
+            {v.suppliers.map((x, i) => (
+              <fieldset key={i} className="grid gap-3 rounded-md border border-line p-3 md:grid-cols-[1fr_2fr_1fr_auto_auto] md:items-end">
+                <legend className="sr-only">Fornecedor {i + 1}</legend>
+                <Field label="Fornecedor" htmlFor={`sup-${i}`} error={err(`suppliers.${i}.supplierId`)}>
+                  <select id={`sup-${i}`} className={inputCls} value={x.supplierId} onChange={(e) => setSupplier(i, { supplierId: e.target.value })}>
+                    <option value="">Escolha…</option>
+                    {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Link do produto no fornecedor" htmlFor={`sup-url-${i}`} error={err(`suppliers.${i}.url`)}>
+                  <input id={`sup-url-${i}`} className={inputCls} placeholder="https://" value={x.url} onChange={(e) => setSupplier(i, { url: e.target.value })} />
+                </Field>
+                <Field label="Custo (R$)" htmlFor={`sup-cost-${i}`} error={err(`suppliers.${i}.cost`)}>
+                  <input id={`sup-cost-${i}`} inputMode="decimal" className={inputCls} placeholder="165,00" value={x.cost} onChange={(e) => setSupplier(i, { cost: e.target.value })} />
+                </Field>
+                <Toggle checked={x.isPrimary} onChange={(isPrimary) => setSupplier(i, { isPrimary })} label="Principal" />
+                <button type="button" aria-label={`Remover fornecedor ${i + 1}`} onClick={() => setV({ ...v, suppliers: v.suppliers.filter((_, j) => j !== i) })} className="grid size-10 cursor-pointer place-items-center rounded-md border border-line hover:bg-soft"><Trash2 className="size-4" /></button>
+              </fieldset>
+            ))}
+            <button type="button" className={btnSecondary} onClick={() => setV({ ...v, suppliers: [...v.suppliers, { supplierId: "", url: "", cost: "", isPrimary: v.suppliers.length === 0, notes: "" }] })}>
+              <Plus className="size-4" /> Adicionar fornecedor
+            </button>
+          </div>
+
+          <p className="text-sm" data-testid="margin-estimate">
+            {margin
+              ? <>Margem estimada no cartão: <strong>{formatMoney(margin.marginMinor, "BRL", "pt-BR")}{margin.marginPct != null ? ` (${margin.marginPct}%)` : ""}</strong> <span className="text-mute">— preço − taxa Stripe estimada − custo do fornecedor principal</span></>
+              : <span className="text-mute">Informe o preço e o custo do fornecedor principal para ver a margem estimada.</span>}
+          </p>
+        </FormSection>
+      )}
+
+      {v.saleMode === "affiliate" && (
       <FormSection title="Ofertas e links de afiliados" description="Uma oferta por loja e país. O preço só aparece quando a política da loja permite; o desconto só aparece quando comprovado.">
         {v.offers.length === 0 && <p className="text-sm text-mute">Nenhuma oferta. Sem ofertas, o produto aparece como indisponível.</p>}
         {v.offers.map((o, i) => {
@@ -242,6 +330,7 @@ export function ProductForm({ initial, categories, brands, stores, markets, canA
           <Plus className="size-4" /> {stores.length ? "Adicionar oferta" : "Cadastre uma loja parceira primeiro"}
         </button>
       </FormSection>
+      )}
 
       <FormSection title="Informações adicionais" description="Avaliações só aparecem com a fonte informada e nunca para lojas que não permitem (ex.: Amazon).">
         <div className="grid gap-4 md:grid-cols-3">

@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { submitContact } from "@/actions/store/contact";
 import { inputClass } from "./auth-form";
 
-export function ContactForm({ locale }: { locale: string }) {
+export function ContactForm({ locale, ownStore = false }: { locale: string; ownStore?: boolean }) {
   const t = useTranslations("legal");
   const [state, action, pending] = useActionState(submitContact, null);
   if (state?.ok) {
@@ -41,7 +41,7 @@ export function ContactForm({ locale }: { locale: string }) {
         <label htmlFor="c-body" className={label}>{t("contactBody")}</label>
         <textarea id="c-body" name="body" required minLength={10} maxLength={5000} rows={6} className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] outline-none focus:border-black" />
       </div>
-      <p className="text-xs text-mute">{t("contactPurchaseNote")}</p>
+      <p className="text-xs text-mute">{ownStore ? t("contactOrderNote") : t("contactPurchaseNote")}</p>
       {state?.error && (
         <p role="alert" className="rounded-md border border-ink px-3 py-2 text-sm font-medium">
           {state.error}

@@ -92,7 +92,8 @@ export async function deleteAccount(_: AuthState, form: FormData): Promise<AuthS
   if (String(form.get("confirm") ?? "").trim() !== t("deleteConfirmWord")) return { fieldErrors: { confirm: t("deleteConfirmLabel") } };
   const sb = await createServerSupabase();
   await sb.auth.signOut();
-  // service role: deleting the auth user cascades profile, favorites, history; searches keep no user id
+  // service role: deleting the auth user cascades profile, favorites, history and saved addresses;
+  // orders and return requests are kept for fiscal/consumer-law records with user_id set to null
   const { error } = await createServiceSupabase().auth.admin.deleteUser(user.id);
   if (error) return { error: ta("genericError") };
   redirect(getPathname({ locale, href: "/" }));

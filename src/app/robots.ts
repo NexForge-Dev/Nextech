@@ -10,6 +10,8 @@ export default function robots(): MetadataRoute.Robots {
     localizedPath(l, "/cadastro"),
     localizedPath(l, "/recuperar-senha"),
     localizedPath(l, "/redefinir-senha"),
+    localizedPath(l, "/carrinho"),
+    localizedPath(l, "/checkout"),
   ]);
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/go/", "/api/", "/auth/", ...new Set(privatePaths)] }],

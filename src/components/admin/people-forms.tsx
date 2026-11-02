@@ -3,7 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { inviteAdmin, saveSettings, setMessageHandled, updateAdmin } from "@/actions/admin/people";
 import { SOCIAL_KEYS } from "@/lib/admin/schemas/settings";
-import { btnPrimary, btnSecondary, ConfirmButton, Field, FormSection, inputCls, LocaleTabs, textareaCls, useAdminAction, type LocaleCode } from "./form";
+import { btnPrimary, btnSecondary, ConfirmButton, Field, FormSection, inputCls, LocaleTabs, textareaCls, Toggle, useAdminAction, type LocaleCode } from "./form";
+import type { BusinessModels } from "@/lib/domain/business-models";
 import { ImageUploader } from "./image-uploader";
 
 type PerLocale<T> = Partial<Record<LocaleCode, T>>;
@@ -20,10 +21,12 @@ export type SettingsValue = {
   cookieTexts: PerLocale<{ title: string; text: string }>;
   legal: { company_name: string; tax_id: string; address: string };
   priceStaleDays: number;
+  businessModels: BusinessModels;
 };
 
 const TABS = [
   ["store", "Loja"],
+  ["models", "Modelos de negócio"],
   ["contact", "Contato e redes sociais"],
   ["seo", "SEO"],
   ["analytics", "Analytics"],
@@ -141,6 +144,34 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
         </FormSection>
       )}
 
+      {tab === "models" && (
+        <FormSection title="Modelos de negócio" description="Ligue ou desligue cada modelo sem apagar nada. Produtos de um modelo desligado ficam guardados e invisíveis na loja.">
+          <div className="space-y-4">
+            <div>
+              <Toggle checked={v.businessModels.ownStore} onChange={(ownStore) => setV({ ...v, businessModels: { ...v.businessModels, ownStore } })} label="Loja própria — carrinho, checkout Stripe e pedidos" />
+            </div>
+            <div>
+              <Toggle checked={v.businessModels.affiliates} onChange={(affiliates) => setV({ ...v, businessModels: { ...v.businessModels, affiliates } })} label="Afiliados — botões “ver na loja”, /go e páginas de afiliados" />
+              <p className="mt-1 text-xs text-mute">Com afiliados desligados, a loja funciona só em português do Brasil.</p>
+            </div>
+          </div>
+        </FormSection>
+      )}
+
+      {tab === "models" && (
+        <FormSection title="Formas de pagamento" description="Usadas no checkout da loja própria (Stripe).">
+          <div className="space-y-4">
+            <div><Toggle checked={v.businessModels.payments.card} onChange={(card) => setV({ ...v, businessModels: { ...v.businessModels, payments: { ...v.businessModels.payments, card } } })} label="Cartão de crédito e débito (à vista)" /></div>
+            <div><Toggle checked={v.businessModels.payments.boleto} onChange={(boleto) => setV({ ...v, businessModels: { ...v.businessModels, payments: { ...v.businessModels.payments, boleto } } })} label="Boleto (confirma em até 1 dia útil; reembolso feito por fora)" /></div>
+            <div>
+              <Toggle checked={v.businessModels.payments.pix} onChange={(pix) => setV({ ...v, businessModels: { ...v.businessModels, payments: { ...v.businessModels.payments, pix } } })} label="Pix" />
+              <p className="mt-1 text-xs text-mute">No Stripe Brasil o Pix é liberado por convite. Ligue só depois que o Stripe aprovar a sua conta.</p>
+            </div>
+            {e("businessModels.payments") && <p role="alert" className="text-sm font-medium text-black">{e("businessModels.payments")?.[0]}</p>}
+          </div>
+        </FormSection>
+      )}
+
       {tab === "integrations" && (
         <FormSection title="Integrações" description="Credenciais e parâmetros de cada rede ficam em Redes de afiliados.">
           <Link href="/admin/afiliados" className={btnSecondary}>Abrir redes de afiliados</Link>
@@ -151,14 +182,19 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
       )}
 
       {tab === "legal" && (
-        <FormSection title="Informações legais" description="Usadas na política de privacidade, nos termos de uso e na página Sobre. Enquanto vazias, as páginas mostram “[a definir pelo responsável]”.">
+        <FormSection title="Informações legais" description="Obrigatórias para vender (Decreto 7.962/2013): aparecem no rodapé de todas as páginas, no checkout, nos termos de venda e na política de privacidade. Campos vazios simplesmente não aparecem para o cliente, e o painel mostra um aviso até tudo estar preenchido. Use os dados exatos do seu CNPJ; o e-mail de contato fica na aba Contato.">
+          {(!v.legal.company_name.trim() || !v.legal.tax_id.trim() || !v.legal.address.trim() || !v.contactEmail.trim()) && (
+            <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">
+              Faltam dados do vendedor: {[!v.legal.company_name.trim() && "razão social", !v.legal.tax_id.trim() && "CNPJ", !v.legal.address.trim() && "endereço", !v.contactEmail.trim() && "e-mail de contato"].filter(Boolean).join(", ")}.
+            </p>
+          )}
           <Field label="Razão social" htmlFor="lg-name">
             <input id="lg-name" className={inputCls} value={v.legal.company_name} onChange={(x) => setV({ ...v, legal: { ...v.legal, company_name: x.target.value } })} />
           </Field>
-          <Field label="CNPJ / NIF / identificação fiscal" htmlFor="lg-tax">
+          <Field label="CNPJ" htmlFor="lg-tax" hint="Ex.: 12.345.678/0001-90 (o MEI também tem CNPJ).">
             <input id="lg-tax" className={inputCls} value={v.legal.tax_id} onChange={(x) => setV({ ...v, legal: { ...v.legal, tax_id: x.target.value } })} />
           </Field>
-          <Field label="Endereço" htmlFor="lg-addr">
+          <Field label="Endereço" htmlFor="lg-addr" hint="Endereço físico completo: rua, número, bairro, cidade/UF e CEP.">
             <textarea id="lg-addr" className={textareaCls} rows={2} value={v.legal.address} onChange={(x) => setV({ ...v, legal: { ...v.legal, address: x.target.value } })} />
           </Field>
         </FormSection>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LOCALES, LOCALE_PREFIX, pathnames, type InternalPathname, type Locale } from "@/i18n/routing";
+import { DEFAULT_LOCALE, LOCALES, LOCALE_PREFIX, pathnames, type InternalPathname, type Locale } from "@/i18n/routing";
 
 export type Href = InternalPathname | { pathname: InternalPathname; params?: Record<string, string> };
 
@@ -22,22 +22,29 @@ export function absoluteUrl(locale: Locale, href: Href): string {
   return `${siteUrl()}${localizedPath(locale, href)}`;
 }
 
-export function alternates(href: Href): Record<string, string> {
+/**
+ * hreflang alternates. Pass only the locales the storefront actually serves: while the own store runs
+ * alone (affiliates off) that is just pt-BR, and listing the other locales would point search engines
+ * at URLs that redirect.
+ */
+export function alternates(href: Href, locales: readonly Locale[] = LOCALES): Record<string, string> {
   const langs: Record<string, string> = {};
-  for (const l of LOCALES) langs[l] = absoluteUrl(l, href);
-  langs["x-default"] = absoluteUrl("pt-BR", href);
+  for (const l of locales) langs[l] = absoluteUrl(l, href);
+  langs["x-default"] = absoluteUrl(locales.includes(DEFAULT_LOCALE) ? DEFAULT_LOCALE : locales[0], href);
   return langs;
 }
 
 const OG_LOCALE: Record<Locale, string> = { "pt-BR": "pt_BR", "pt-PT": "pt_PT", en: "en_US", es: "es_ES" };
 
-export function buildMetadata(opts: { locale: Locale; href: Href; title: string; description?: string | null; image?: string | null; noindex?: boolean; type?: "website" | "article" }): Metadata {
-  const url = absoluteUrl(opts.locale, opts.href);
+export function buildMetadata(opts: { locale: Locale; locales?: readonly Locale[]; href: Href; title: string; description?: string | null; image?: string | null; noindex?: boolean; type?: "website" | "article" }): Metadata {
+  const locales = opts.locales ?? LOCALES;
+  // a locale the storefront does not serve redirects to the primary one: canonicalise there
+  const url = absoluteUrl(locales.includes(opts.locale) ? opts.locale : locales[0], opts.href);
   const description = opts.description ?? undefined;
   return {
     title: opts.title,
     description,
-    alternates: { canonical: url, languages: alternates(opts.href) },
+    alternates: { canonical: url, languages: alternates(opts.href, locales) },
     openGraph: {
       title: opts.title,
       description,

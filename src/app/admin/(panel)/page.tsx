@@ -6,6 +6,51 @@ import { getCatalogCounts, getMetrics } from "@/lib/data/admin/metrics";
 import { PageHeader } from "@/components/admin/page-header";
 import { PeriodFilter } from "@/components/admin/period-filter";
 import { CommissionsChart, DailyLine, KpiCard, RankBar } from "@/components/admin/charts";
+import { orderKpis } from "@/lib/data/admin/orders";
+import { formatMoney } from "@/lib/domain/money";
+import { getBusinessModels, getPublicSettings } from "@/lib/data/settings";
+import { ownStoreReadiness } from "@/lib/admin/launch-readiness";
+
+/** Launch blockers for the own store (seller identity required by law, payment and email config). */
+async function LaunchReadiness() {
+  const [s, bm] = await Promise.all([getPublicSettings(), getBusinessModels()]);
+  const issues = ownStoreReadiness({ ownStore: bm.ownStore, legal: s.legal, contactEmail: s.contactEmail, env: process.env });
+  if (!issues.length) return null;
+  return (
+    <section role="alert" className="mb-8 rounded-md border-2 border-black p-5" data-testid="launch-readiness">
+      <h2 className="text-sm font-semibold">Pendências para vender na loja própria</h2>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
+        {issues.map((i) => (
+          <li key={i.key}>
+            {i.message}
+            {i.href && (
+              <>
+                {" "}
+                <Link href={i.href} className="font-medium underline underline-offset-2">Preencher agora</Link>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+async function OwnStoreKpis() {
+  const k = await orderKpis(30);
+  const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
+  return (
+    <section className="mb-8">
+      <h2 className="mb-3 text-sm font-semibold">Loja própria — últimos 30 dias</h2>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Pedidos pagos" value={String(k.paidOrders)} />
+        <KpiCard label="Faturamento" value={money(k.revenueMinor)} hint="Pago menos reembolsos" />
+        <KpiCard label="Margem bruta" value={money(k.marginMinor)} hint={`${k.marginKnown} pedido(s) com custo registrado`} />
+        <Link href="/admin/pedidos?status=awaiting_supplier" className="block"><KpiCard label="Aguardando compra" value={String(k.awaitingSupplier)} hint="Compre no fornecedor" /></Link>
+      </div>
+    </section>
+  );
+}
 
 export const metadata = { title: "Visão geral" };
 
@@ -14,11 +59,19 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const sp = new URLSearchParams(Object.entries(await searchParams).filter((e): e is [string, string] => typeof e[1] === "string"));
   const counts = await getCatalogCounts();
   const canAnalytics = ctx.permissions.has("analytics.read");
+  const canOrders = ctx.permissions.has("orders.read");
+  const ownStore = canOrders || ctx.permissions.has("settings.write") ? (
+    <>
+      <LaunchReadiness />
+      {canOrders && <OwnStoreKpis />}
+    </>
+  ) : null;
 
   if (!canAnalytics) {
     return (
       <>
         <PageHeader title="Visão geral" description="Indicadores do catálogo." />
+        {ownStore}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard label="Total de produtos" value={String(counts.total)} />
           <KpiCard label="Produtos ativos" value={String(counts.active)} />
@@ -39,6 +92,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Visão geral" description="Dados reais do banco e das redes de afiliados. Cliques não são vendas: conversões e comissões vêm somente das redes." />
+      {ownStore}
       <PeriodFilter current={period.key} from={period.fromDate} to={period.toDate} />
       <h2 className="sr-only">Indicadores</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

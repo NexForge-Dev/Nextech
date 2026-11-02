@@ -27,7 +27,10 @@ insert into public.admin_permissions (key, description) values
   ('customers.export', 'Exportar dados de clientes'),
   ('settings.write', 'Alterar configurações gerais e informações legais'),
   ('admins.write', 'Gerenciar administradores e perfis'),
-  ('audit.read', 'Ver o log de auditoria')
+  ('audit.read', 'Ver o log de auditoria'),
+  ('orders.read', 'Ver pedidos, clientes compradores e devoluções'),
+  ('orders.write', 'Atualizar pedidos, compras no fornecedor, rastreio e notas'),
+  ('orders.refund', 'Reembolsar pedidos')
 on conflict (key) do nothing;
 
 -- Role × permission matrix (design §15.3) --------------------------------------------------
@@ -40,7 +43,7 @@ insert into public.admin_role_permissions (role_id, permission_id)
 select r.id, p.id from public.admin_roles r join public.admin_permissions p on p.key in (
   'products.write', 'products.delete', 'products.import', 'links.write', 'links.delete', 'stores.write',
   'categories.write', 'brands.write', 'networks.read', 'marketing.write', 'analytics.read',
-  'conversions.import', 'customers.read', 'audit.read'
+  'conversions.import', 'customers.read', 'audit.read', 'orders.read', 'orders.write', 'orders.refund'
 ) where r.key = 'admin'
 on conflict do nothing;
 

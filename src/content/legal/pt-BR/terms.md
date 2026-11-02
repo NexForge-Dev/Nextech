@@ -1,4 +1,4 @@
-Estes termos regulam o uso do site {{store_name}}, operado por {{company_name}} ({{tax_id}}). Ao usar o site, você concorda com eles.
+Estes termos regulam o uso do site {{store_name}}, operado por {{seller_identity}}. Ao usar o site, você concorda com eles.
 
 ## 1. O serviço
 

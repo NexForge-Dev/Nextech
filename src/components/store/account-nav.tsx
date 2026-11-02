@@ -4,6 +4,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 
 const ITEMS = [
   { href: "/minha-conta", key: "info" },
+  { href: "/minha-conta/pedidos", key: "orders" },
   { href: "/minha-conta/favoritos", key: "favorites" },
   { href: "/minha-conta/historico", key: "history" },
   { href: "/minha-conta/preferencias", key: "preferences" },
@@ -16,7 +17,7 @@ export function AccountNav() {
   return (
     <nav aria-label={t("title")} className="-mx-1 flex gap-1 overflow-x-auto lg:flex-col">
       {ITEMS.map((i) => {
-        const active = pathname === i.href;
+        const active = pathname === i.href || (i.href === "/minha-conta/pedidos" && pathname.startsWith("/minha-conta/pedidos"));
         return (
           <Link
             key={i.href}

@@ -4,7 +4,10 @@ import { createAnonSupabase } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/routing";
 import type { MarketCode } from "@/lib/domain/markets";
 import { pickTranslation } from "./translations";
-import { loadOffers, toCards, type OfferRow, type ProductCardData } from "./catalog";
+import { loadOffers, loadSaleInfo, toCards, type OfferRow, type ProductCardData } from "./catalog";
+import { getBusinessModels } from "./settings";
+import { isModeVisible, type SaleMode } from "@/lib/domain/business-models";
+import type { OwnSale } from "@/lib/domain/own-pricing";
 import { baseRow } from "./home";
 
 export type Spec = { label: string; value: string };
@@ -22,6 +25,9 @@ export type ProductDetail = {
   specs: Spec[];
   images: { path: string; alt: string }[];
   offers: OfferRow[];
+  saleMode: SaleMode;
+  /** Own-store sale data (null for affiliate products). */
+  sale: OwnSale | null;
   tagIds: string[];
   updatedAt: string;
 };
@@ -44,8 +50,13 @@ export const getProduct = cache(async (slug: string, locale: Locale): Promise<Pr
     .eq("status", "published")
     .maybeSingle();
   if (!p || !p.categories) return null;
+  const [saleInfo, bm] = await Promise.all([loadSaleInfo([p.id]), getBusinessModels()]);
+  const info = saleInfo.get(p.id);
+  const saleMode: SaleMode = info?.mode ?? "affiliate";
+  if (!isModeVisible(saleMode, bm)) return null;
+  if (saleMode === "own" && !info?.sale) return null;
   const t = pickTranslation(p.product_translations, locale);
-  const offers = (await loadOffers([p.id])).get(p.id) ?? [];
+  const offers = saleMode === "affiliate" ? ((await loadOffers([p.id])).get(p.id) ?? []) : [];
   const onlyLinkOnly = offers.length > 0 && offers.every((o) => o.policy === "link_only");
   const localizedSpecs = specList(t?.specs_i18n);
   const images = [...(p.product_images ?? [])]
@@ -64,6 +75,8 @@ export const getProduct = cache(async (slug: string, locale: Locale): Promise<Pr
     specs: localizedSpecs.length ? localizedSpecs : specList(p.specs),
     images,
     offers,
+    saleMode,
+    sale: saleMode === "own" ? (info?.sale ?? null) : null,
     tagIds: (p.product_tags ?? []).map((x) => x.tag_id),
     updatedAt: p.updated_at,
   };

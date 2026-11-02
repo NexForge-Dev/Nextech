@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import { minorDigits } from "@/lib/domain/money";
 import { PAGE_SIZE, serializeFilters, type CatalogFilters as Filters } from "@/lib/domain/filters";
 import { getFacets, type listProducts } from "@/lib/data/catalog";
+import { getBusinessModels } from "@/lib/data/settings";
 import { getCategories } from "@/lib/data/taxonomy";
 import { getFavoriteIds } from "@/lib/data/favorites";
 import { getSessionUser } from "@/lib/auth/session";
@@ -20,12 +21,14 @@ export async function CatalogView({ locale, market, filters, title, description,
   const currency = markets.find((m) => m.code === market)?.currency ?? "BRL";
   const digits = minorDigits(currency);
   const { items, total } = result;
-  const [facets, categories, favorites, user] = await Promise.all([
+  const [facets, categories, favorites, user, bm] = await Promise.all([
     getFacets(),
     getCategories(locale),
     getFavoriteIds(),
     getSessionUser(),
+    getBusinessModels(),
   ]);
+  const stores = bm.affiliates ? facets.stores : [];
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const values = {
     q: filters.q,
@@ -53,7 +56,7 @@ export async function CatalogView({ locale, market, filters, title, description,
       </header>
       <div className="grid gap-10 lg:grid-cols-[240px_1fr]">
         <aside aria-label={t("filters")}>
-          <CatalogFilters values={values} categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} brands={facets.brands} stores={facets.stores} hideCategory={!!fixedCategory} />
+          <CatalogFilters values={values} categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} brands={facets.brands} stores={stores} hideCategory={!!fixedCategory} />
         </aside>
         <section>
           <div className="mb-6 flex justify-end">

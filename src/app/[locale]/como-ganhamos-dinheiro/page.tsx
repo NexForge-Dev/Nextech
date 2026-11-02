@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getBusinessModels, getStorefrontLocales } from "@/lib/data/settings";
 import { getTranslations } from "next-intl/server";
 import { pageLocale } from "@/i18n/page-locale";
 import { resolveLocaleParam } from "@/i18n/routing";
@@ -10,10 +12,11 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = resolveLocaleParam((await params).locale) ?? "pt-BR";
   const t = await getTranslations({ locale, namespace: "legal" });
-  return buildMetadata({ locale, href: "/como-ganhamos-dinheiro", title: t("howWeEarn") });
+  return buildMetadata({ locale, locales: await getStorefrontLocales(), href: "/como-ganhamos-dinheiro", title: t("howWeEarn") });
 }
 
 export default async function Page({ params }: Props) {
+  if (!(await getBusinessModels()).affiliates) notFound();
   const locale = await pageLocale(params);
   const t = await getTranslations("legal");
   return (

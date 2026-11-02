@@ -1,4 +1,5 @@
 "use server";
+import { toStoredBusinessModels } from "@/lib/domain/business-models";
 import { updateTag } from "next/cache";
 import { z } from "zod";
 import { adminAction, ActionFailure } from "@/lib/admin/action";
@@ -25,6 +26,7 @@ const saveSettingsImpl = adminAction({ permission: "settings.write", schema: set
     { key: "public.cookie_texts", value: s.cookieTexts },
     { key: "public.legal", value: s.legal },
     { key: "ops.price_stale_days", value: s.priceStaleDays },
+    { key: "public.business_models", value: toStoredBusinessModels(s.businessModels) },
   ];
   const { error } = await sb.from("site_settings").upsert(rows.map((r) => ({ key: r.key, value: r.value as never, updated_by: ctx.userId })), { onConflict: "key" });
   if (error) throw error;

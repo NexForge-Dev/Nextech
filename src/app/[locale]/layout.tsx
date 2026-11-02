@@ -48,7 +48,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           <div id="main" className="flex flex-1 flex-col">
             {children}
           </div>
-          <Footer ctx={ctx} storeName={settings.storeName} />
+          <Footer ctx={ctx} storeName={settings.storeName} legal={settings.legal} contactEmail={settings.contactEmail} />
           <CookieBanner decided={!!ctx.consent} initial={{ analytics: ctx.consent?.analytics ?? false, marketing: ctx.consent?.marketing ?? false }} texts={settings.cookieTexts[locale]} />
           <Toaster />
           <AnalyticsScripts

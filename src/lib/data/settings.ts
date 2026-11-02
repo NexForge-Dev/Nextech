@@ -1,7 +1,9 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { createAnonSupabase } from "@/lib/supabase/server";
-import type { Locale } from "@/i18n/routing";
+import { LOCALES, type Locale } from "@/i18n/routing";
+import { cache } from "react";
+import { parseBusinessModels, storefrontLocaleLock, type BusinessModels } from "@/lib/domain/business-models";
 
 export type PublicSettings = {
   storeName: string;
@@ -59,3 +61,18 @@ export const getPublicSettings = unstable_cache(
   ["public-settings"],
   { tags: ["settings"], revalidate: 300 },
 );
+
+/**
+ * Business-model switches. Deliberately not in the 5-minute settings cache: switching a model on/off
+ * must take effect on the next request. One tiny row read, memoised per request.
+ */
+export const getBusinessModels = cache(async (): Promise<BusinessModels> => {
+  const { data } = await createAnonSupabase().from("site_settings").select("value").eq("key", "public.business_models").maybeSingle();
+  return parseBusinessModels(data?.value);
+});
+
+/** Locales the storefront serves right now (pt-BR only while the own store runs without affiliates). */
+export async function getStorefrontLocales(): Promise<readonly Locale[]> {
+  const lock = storefrontLocaleLock(await getBusinessModels());
+  return lock ? [lock] : LOCALES;
+}

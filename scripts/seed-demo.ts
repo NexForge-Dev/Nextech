@@ -17,8 +17,9 @@ const svc = createClient(url, key, { auth: { persistSession: false } });
 const ADMIN_EMAIL = "admin@nextech.local";
 const ADMIN_PASSWORD = "admin-nextech-123";
 
+/** Throws on a Supabase error. Writes without .select() legitimately return null data. */
 function must<T>(r: { data: T; error: unknown }, what: string): NonNullable<T> {
-  if (r.error || r.data == null) throw new Error(`${what}: ${JSON.stringify(r.error)}`);
+  if (r.error) throw new Error(`${what}: ${JSON.stringify(r.error)}`);
   return r.data as NonNullable<T>;
 }
 
@@ -43,7 +44,7 @@ async function main() {
     adminId = created.data.user.id;
   }
   const superRole = must(await svc.from("admin_roles").select("id").eq("key", "superadmin").single(), "role");
-  must(await svc.from("admin_users").upsert({ user_id: adminId, role_id: superRole.id, active: true }, { onConflict: "user_id" }), "admin_users");
+  must(await svc.from("admin_users").upsert({ user_id: adminId, role_id: superRole.id, active: true }, { onConflict: "user_id" }).select("user_id"), "admin_users");
 
   // brand + store --------------------------------------------------------------------------------
   const brand = must(await svc.from("brands").upsert({ slug: "marca-demo", name: "Marca Demo" }, { onConflict: "slug" }).select("id").single(), "brand");

@@ -36,7 +36,8 @@ test("sign up, favourite, export data, delete account", async ({ page }) => {
   await page.getByLabel("E-mail").fill(email);
   await page.getByLabel("Senha").fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
+  // the account no longer exists: sign-in sends the visitor to sign-up (auth_email_exists, 2026-11-01)
+  await expect(page).toHaveURL(/\/pt-br\/cadastro\?.*motivo=sem-conta/);
 });
 
 test("guest favourites live in the browser", async ({ page }) => {

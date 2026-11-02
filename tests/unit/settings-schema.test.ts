@@ -25,3 +25,23 @@ describe("settings schema", () => {
   it("requires a store name", () => expect(settingsSchema.safeParse({ ...base, storeName: "" }).success).toBe(false));
   it("bounds the stale threshold", () => expect(settingsSchema.safeParse({ ...base, priceStaleDays: 0 }).success).toBe(false));
 });
+
+describe("settings schema — business models", () => {
+  it("defaults business models when absent", () => {
+    const r = settingsSchema.safeParse(base);
+    expect(r.success && r.data.businessModels).toEqual({ ownStore: true, affiliates: false, payments: { card: true, boleto: true, pix: false } });
+  });
+  it("accepts both models enabled", () => {
+    const r = settingsSchema.safeParse({ ...base, businessModels: { ownStore: true, affiliates: true, payments: { card: true, boleto: false, pix: false } } });
+    expect(r.success).toBe(true);
+  });
+  it("requires a payment method while the own store is on", () => {
+    const r = settingsSchema.safeParse({ ...base, businessModels: { ownStore: true, affiliates: false, payments: { card: false, boleto: false, pix: false } } });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues.map((i) => i.message)).toContain("Ative ao menos uma forma de pagamento.");
+  });
+  it("allows no payment method when the own store is off", () => {
+    const r = settingsSchema.safeParse({ ...base, businessModels: { ownStore: false, affiliates: true, payments: { card: false, boleto: false, pix: false } } });
+    expect(r.success).toBe(true);
+  });
+});

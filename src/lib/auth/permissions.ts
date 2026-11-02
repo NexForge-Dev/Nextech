@@ -2,6 +2,7 @@ export const PERMISSIONS = [
   "products.write", "products.delete", "products.import", "links.write", "links.delete", "stores.write",
   "categories.write", "brands.write", "networks.read", "networks.write", "marketing.write", "analytics.read",
   "conversions.import", "customers.read", "customers.export", "settings.write", "admins.write", "audit.read",
+  "orders.read", "orders.write", "orders.refund",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 export type RoleKey = "superadmin" | "admin" | "editor";

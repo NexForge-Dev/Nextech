@@ -1,3 +1,4 @@
+import { parseBusinessModels } from "@/lib/domain/business-models";
 import Link from "next/link";
 import { ScrollText } from "lucide-react";
 import { pageGuard } from "@/lib/admin/guard";
@@ -41,6 +42,7 @@ export default async function SettingsPage() {
     cookieTexts: obj("public.cookie_texts", {}),
     legal: obj("public.legal", { company_name: "", tax_id: "", address: "" }),
     priceStaleDays: Number(m.get("ops.price_stale_days") ?? 14) || 14,
+    businessModels: parseBusinessModels(m.get("public.business_models")),
   };
   return (
     <>

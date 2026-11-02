@@ -519,6 +519,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"customer_addresses": {
+                  Row: {
+                    "cep": string,"city": string,"complement": string | null,"cpf": string,"created_at": string,"district": string,"id": string,"is_default": boolean,"number": string,"phone": string,"recipient_name": string,"state": string,"street": string,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cep": string,"city": string,"complement"?: string | null,"cpf": string,"created_at"?: string,"district": string,"id"?: string,"is_default"?: boolean,"number": string,"phone": string,"recipient_name": string,"state": string,"street": string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "cep"?: string,"city"?: string,"complement"?: string | null,"cpf"?: string,"created_at"?: string,"district"?: string,"id"?: string,"is_default"?: boolean,"number"?: string,"phone"?: string,"recipient_name"?: string,"state"?: string,"street"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"daily_rollups": {
                   Row: {
                     "campaign_id": string | null,"category_id": string | null,"day": string,"id": string,"metric": string,"network_id": string | null,"product_id": string | null,"store_id": string | null,"value": number
@@ -637,6 +651,110 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"order_events": {
+                  Row: {
+                    "actor": string,"actor_id": string | null,"at": string,"data": NonNullable<Json>,"id": string,"kind": string,"order_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor": string,"actor_id"?: string | null,"at"?: string,"data"?: NonNullable<Json>,"id"?: string,"kind": string,"order_id": string
+                  }
+                  Update: {
+                    "actor"?: string,"actor_id"?: string | null,"at"?: string,"data"?: NonNullable<Json>,"id"?: string,"kind"?: string,"order_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "order_events_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "my_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_events_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"order_items": {
+                  Row: {
+                    "created_at": string,"id": string,"image_path": string | null,"line_total_minor": number,"name": string,"order_id": string,"pix_discount_pct": number,"product_id": string | null,"quantity": number,"slug": string | null,"supplier_cost_minor": number | null,"supplier_id": string | null,"supplier_order_ref": string | null,"supplier_purchased_at": string | null,"supplier_url": string | null,"tracking_carrier": string | null,"tracking_code": string | null,"tracking_url": string | null,"unit_price_minor": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"image_path"?: string | null,"line_total_minor": number,"name": string,"order_id": string,"pix_discount_pct"?: number,"product_id"?: string | null,"quantity": number,"slug"?: string | null,"supplier_cost_minor"?: number | null,"supplier_id"?: string | null,"supplier_order_ref"?: string | null,"supplier_purchased_at"?: string | null,"supplier_url"?: string | null,"tracking_carrier"?: string | null,"tracking_code"?: string | null,"tracking_url"?: string | null,"unit_price_minor": number
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"image_path"?: string | null,"line_total_minor"?: number,"name"?: string,"order_id"?: string,"pix_discount_pct"?: number,"product_id"?: string | null,"quantity"?: number,"slug"?: string | null,"supplier_cost_minor"?: number | null,"supplier_id"?: string | null,"supplier_order_ref"?: string | null,"supplier_purchased_at"?: string | null,"supplier_url"?: string | null,"tracking_carrier"?: string | null,"tracking_code"?: string | null,"tracking_url"?: string | null,"unit_price_minor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "order_items_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "my_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_items_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_items_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_items_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"order_refunds": {
+                  Row: {
+                    "amount_minor": number,"created_at": string,"created_by": string | null,"id": string,"method": string,"note": string | null,"order_id": string,"status": string,"stripe_refund_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_minor": number,"created_at"?: string,"created_by"?: string | null,"id"?: string,"method": string,"note"?: string | null,"order_id": string,"status"?: string,"stripe_refund_id"?: string | null
+                  }
+                  Update: {
+                    "amount_minor"?: number,"created_at"?: string,"created_by"?: string | null,"id"?: string,"method"?: string,"note"?: string | null,"order_id"?: string,"status"?: string,"stripe_refund_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "order_refunds_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "my_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_refunds_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"orders": {
+                  Row: {
+                    "boleto": Json | null,"cancelled_at": string | null,"created_at": string,"currency": string,"customer": NonNullable<Json>,"discount_minor": number,"id": string,"invoice_path": string | null,"number": number,"paid_at": string | null,"payment_method": string,"payment_summary": string | null,"refunded_minor": number,"shipping": NonNullable<Json>,"status": string,"stripe_fee_minor": number | null,"stripe_payment_intent_id": string | null,"subtotal_minor": number,"total_minor": number,"updated_at": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "boleto"?: Json | null,"cancelled_at"?: string | null,"created_at"?: string,"currency"?: string,"customer": NonNullable<Json>,"discount_minor"?: number,"id"?: string,"invoice_path"?: string | null,"number"?: number,"paid_at"?: string | null,"payment_method": string,"payment_summary"?: string | null,"refunded_minor"?: number,"shipping": NonNullable<Json>,"status"?: string,"stripe_fee_minor"?: number | null,"stripe_payment_intent_id"?: string | null,"subtotal_minor": number,"total_minor": number,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "boleto"?: Json | null,"cancelled_at"?: string | null,"created_at"?: string,"currency"?: string,"customer"?: NonNullable<Json>,"discount_minor"?: number,"id"?: string,"invoice_path"?: string | null,"number"?: number,"paid_at"?: string | null,"payment_method"?: string,"payment_summary"?: string | null,"refunded_minor"?: number,"shipping"?: NonNullable<Json>,"status"?: string,"stripe_fee_minor"?: number | null,"stripe_payment_intent_id"?: string | null,"subtotal_minor"?: number,"total_minor"?: number,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"product_images": {
                   Row: {
                     "alt": string | null,"created_at": string,"id": string,"is_main": boolean,"path": string,"product_id": string,"sort_order": number,"updated_at": string
@@ -674,6 +792,52 @@ isOneToOne: false
       columns: ["link_id"]
 isOneToOne: false
       referencedRelation: "affiliate_links"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"product_sale": {
+                  Row: {
+                    "available": boolean,"compare_at_minor": number | null,"created_at": string,"delivery_max_days": number,"delivery_min_days": number,"pix_discount_pct": number,"price_minor": number,"product_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"pix_discount_pct"?: number,"price_minor": number,"product_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"pix_discount_pct"?: number,"price_minor"?: number,"product_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_sale_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: true
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"product_suppliers": {
+                  Row: {
+                    "cost_minor": number | null,"created_at": string,"id": string,"is_primary": boolean,"notes": string | null,"product_id": string,"supplier_id": string,"url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cost_minor"?: number | null,"created_at"?: string,"id"?: string,"is_primary"?: boolean,"notes"?: string | null,"product_id": string,"supplier_id": string,"url"?: string | null
+                  }
+                  Update: {
+                    "cost_minor"?: number | null,"created_at"?: string,"id"?: string,"is_primary"?: boolean,"notes"?: string | null,"product_id"?: string,"supplier_id"?: string,"url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_suppliers_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "product_suppliers_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
       referencedColumns: ["id"]
     }
                   ]
@@ -725,14 +889,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "brand_id": string | null,"category_id": string,"created_at": string,"external_id": string | null,"featured": boolean,"id": string,"published_at": string | null,"rating": number | null,"rating_count": number | null,"rating_source": string | null,"rating_source_kind": Database["public"]['Enums']["source_kind"] | null,"search_tsv": unknown,"sku": string | null,"slug": string,"specs": NonNullable<Json>,"status": string,"updated_at": string
+                    "brand_id": string | null,"category_id": string,"created_at": string,"external_id": string | null,"featured": boolean,"id": string,"published_at": string | null,"rating": number | null,"rating_count": number | null,"rating_source": string | null,"rating_source_kind": Database["public"]['Enums']["source_kind"] | null,"sale_mode": string,"search_tsv": unknown,"sku": string | null,"slug": string,"specs": NonNullable<Json>,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "brand_id"?: string | null,"category_id": string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"search_tsv"?: unknown,"sku"?: string | null,"slug": string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
+                    "brand_id"?: string | null,"category_id": string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug": string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "brand_id"?: string | null,"category_id"?: string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"search_tsv"?: unknown,"sku"?: string | null,"slug"?: string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
+                    "brand_id"?: string | null,"category_id"?: string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug"?: string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -803,6 +967,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"return_requests": {
+                  Row: {
+                    "created_at": string,"id": string,"message": string,"order_id": string,"outcome": string | null,"outcome_note": string | null,"photo_paths": (string)[],"reason": string,"resolved_at": string | null,"status": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"message": string,"order_id": string,"outcome"?: string | null,"outcome_note"?: string | null,"photo_paths"?: (string)[],"reason": string,"resolved_at"?: string | null,"status"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"message"?: string,"order_id"?: string,"outcome"?: string | null,"outcome_note"?: string | null,"photo_paths"?: (string)[],"reason"?: string,"resolved_at"?: string | null,"status"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "my_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "return_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"searches": {
                   Row: {
                     "id": string,"locale": string | null,"occurred_at": string,"query": string,"results": number,"user_id": string | null
@@ -871,6 +1061,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"stripe_events": {
+                  Row: {
+                    "id": string,"processed_at": string | null,"received_at": string,"type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id": string,"processed_at"?: string | null,"received_at"?: string,"type": string
+                  }
+                  Update: {
+                    "id"?: string,"processed_at"?: string | null,"received_at"?: string,"type"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"suppliers": {
+                  Row: {
+                    "active": boolean,"created_at": string,"id": string,"name": string,"slug": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"created_at"?: string,"id"?: string,"name": string,"slug": string
+                  }
+                  Update: {
+                    "active"?: boolean,"created_at"?: string,"id"?: string,"name"?: string,"slug"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"tags": {
                   Row: {
                     "created_at": string,"id": string,"name": string,"slug": string,"updated_at": string
@@ -888,17 +1106,85 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "my_order_items": {
+                  Row: {
+                    "id": string,"image_path": string | null,"line_total_minor": number,"name": string,"order_id": string,"product_id": string | null,"quantity": number,"slug": string | null,"tracking_carrier": string | null,"tracking_code": string | null,"tracking_url": string | null,"unit_price_minor": number
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "order_items_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "my_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_items_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "order_items_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"my_orders": {
+                  Row: {
+                    "any_purchased": boolean | null,"boleto": Json | null,"cancelled_at": string | null,"created_at": string,"currency": string,"discount_minor": number,"has_invoice": boolean | null,"id": string,"number": number,"paid_at": string | null,"payment_method": string,"payment_summary": string | null,"refunded_minor": number,"shipping": NonNullable<Json>,"status": string,"subtotal_minor": number,"total_minor": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "any_purchased"?: never,"boleto"?: Json | null,"cancelled_at"?: string | null,"created_at"?: string | null,"currency"?: string | null,"discount_minor"?: number | null,"has_invoice"?: never,"id"?: string | null,"number"?: number | null,"paid_at"?: string | null,"payment_method"?: string | null,"payment_summary"?: string | null,"refunded_minor"?: number | null,"shipping"?: Json | null,"status"?: string | null,"subtotal_minor"?: number | null,"total_minor"?: number | null
+                         }
+                        Update: {
+                           "any_purchased"?: never,"boleto"?: Json | null,"cancelled_at"?: string | null,"created_at"?: string | null,"currency"?: string | null,"discount_minor"?: number | null,"has_invoice"?: never,"id"?: string | null,"number"?: number | null,"paid_at"?: string | null,"payment_method"?: string | null,"payment_summary"?: string | null,"refunded_minor"?: number | null,"shipping"?: Json | null,"status"?: string | null,"subtotal_minor"?: number | null,"total_minor"?: number | null
+                         }
+                        Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
-            "auth_email_exists":
+            "admin_save_product":
+{ Args: { "p": Json }; Returns: string
+                           },
+"admin_save_product_full":
+{ Args: { "p": Json }; Returns: string
+                           },
+"admin_set_order_status":
+{ Args: { "p_actor": string,"p_data": Json,"p_expected": string,"p_order": string,"p_to": string }; Returns: undefined
+                           },
+"admin_update_order_item":
+{ Args: { "p_actor": string,"p_item": string,"p_patch": Json }; Returns: string
+                           },
+"auth_email_exists":
 { Args: { "p_email": string }; Returns: boolean
                            },
-"admin_save_product":
-{ Args: { "p": Json }; Returns: string
+"business_model_enabled":
+{ Args: { "p_mode": string }; Returns: boolean
                            },
 "campaign_is_live":
 { Args: { "c": string }; Returns: boolean
+                           },
+"claim_stripe_event":
+{ Args: { "p_id": string,"p_type": string }; Returns: boolean
+                           },
+"create_order_from_cart":
+{ Args: { "p_address": Json,"p_expected_total"?: number,"p_items": Json,"p_method": string,"p_save_address"?: boolean }; Returns: {
+              "order_id": string,"order_number": number,"total_minor": number
+            }[]
+                           },
+"create_return_request":
+{ Args: { "p_message": string,"p_number": number,"p_photos": (string)[],"p_reason": string }; Returns: string
+                           },
+"customer_cancel_order":
+{ Args: { "p_number": number }; Returns: {
+              "order_id": string,"payment_intent": string,"payment_method": string,"previous_status": string,"total_minor": number
+            }[]
                            },
 "f_unaccent":
 { Args: { "": string }; Returns: string
@@ -932,11 +1218,42 @@ isOneToOne: false
               "active": boolean,"permissions": (string)[],"role_key": string
             }[]
                            },
+"my_order_timeline":
+{ Args: { "p_number": number }; Returns: {
+              "at": string,"data": Json,"kind": string
+            }[]
+                           },
 "offer_display_price":
 { Args: { "p_link": string }; Returns: number
                            },
 "offer_proven_previous":
 { Args: { "p_link": string }; Returns: number
+                           },
+"order_add_event_by_pi":
+{ Args: { "p_data": Json,"p_kind": string,"p_pi": string }; Returns: {
+              "order_id": string
+            }[]
+                           },
+"order_cancel_by_pi":
+{ Args: { "p_pi": string }; Returns: {
+              "order_id": string
+            }[]
+                           },
+"order_cancel_unpaid":
+{ Args: { "p_order": string }; Returns: boolean
+                           },
+"order_mark_paid":
+{ Args: { "p_fee": number,"p_order": string,"p_pi": string,"p_summary": string }; Returns: {
+              "order_id": string,"transitioned": boolean,"was_cancelled": boolean
+            }[]
+                           },
+"order_record_refund":
+{ Args: { "p_actor": string,"p_amount": number,"p_method": string,"p_note": string,"p_order": string,"p_pi": string,"p_status": string,"p_stripe_refund": string }; Returns: {
+              "changed": boolean,"fully_refunded": boolean,"order_id": string
+            }[]
+                           },
+"pix_price_minor":
+{ Args: { "p_pct": number,"p_price": number }; Returns: number
                            },
 "prefix_tsquery":
 { Args: { "q": string }; Returns: unknown
@@ -948,6 +1265,9 @@ isOneToOne: false
 { Args: { "p_market": string,"p_product": string }; Returns: {
               "currency": string,"discount": number,"link_id": string,"previous_minor": number,"price_minor": number
             }[]
+                           },
+"product_mode_enabled":
+{ Args: { "p": string }; Returns: boolean
                            },
 "product_offers":
 { Args: { "p_ids": (string)[] }; Returns: {
@@ -969,6 +1289,11 @@ isOneToOne: false
 "search_products":
 { Args: { "p_brand"?: string,"p_category"?: string,"p_limit"?: number,"p_locale": string,"p_market": string,"p_max_minor"?: number,"p_min_minor"?: number,"p_min_rating"?: number,"p_offset"?: number,"p_proven_discount"?: boolean,"p_sort"?: string,"p_store"?: string,"q": string }; Returns: {
               "best_price_minor": number,"brand_name": string,"category_id": string,"discount": number,"id": string,"name": string,"popularity": number,"published_at": string,"rank": number,"rating": number,"rating_count": number,"rating_source": string,"slug": string,"total_count": number
+            }[]
+                           },
+"stale_unpaid_orders":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "order_id": string,"payment_intent": string,"payment_method": string
             }[]
                            },
 "storage_bucket_permission":
