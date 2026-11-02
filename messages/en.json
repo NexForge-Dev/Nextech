@@ -352,6 +352,7 @@
     "editAddress": "Change address",
     "processing": "Processing…",
     "cardError": "The payment was not approved. Check your card details or use another card.",
+    "networkError": "We could not reach the store. Check your connection and try again.",
     "reviewCart": "Review cart",
     "doneTitle": "Order #{number}",
     "doneProcessing": "We received your order and are waiting for payment confirmation…",

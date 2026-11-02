@@ -64,7 +64,13 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
     setErrors({});
     setMessage(null);
     trackAdEvent("InitiateCheckout", { valueMinor: totals.totalMinor, currency: "BRL", contentIds: cart.lines.map((l) => l.productId) });
-    const r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, expectedTotalMinor: totals.totalMinor });
+    let r: Awaited<ReturnType<typeof startCheckout>>;
+    try {
+      r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, expectedTotalMinor: totals.totalMinor });
+    } catch {
+      // network drop / server action failure: never leave the button stuck on "processing"
+      r = { ok: false, error: t("networkError") };
+    }
     setPending(false);
     if (!r.ok) {
       setMessage(r.error);

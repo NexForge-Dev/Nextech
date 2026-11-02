@@ -352,6 +352,7 @@
     "editAddress": "Cambiar dirección",
     "processing": "Procesando…",
     "cardError": "El pago no fue aprobado. Revisa los datos o usa otra tarjeta.",
+    "networkError": "No pudimos conectar con la tienda. Revisa tu conexión e inténtalo de nuevo.",
     "reviewCart": "Revisar carrito",
     "doneTitle": "Pedido #{number}",
     "doneProcessing": "Recibimos tu pedido y esperamos la confirmación del pago…",

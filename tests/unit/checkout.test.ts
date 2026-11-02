@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { checkoutInputSchema, startCheckoutWith, type CheckoutDeps } from "@/lib/orders/checkout";
+import { checkoutInputSchema, paymentErrorMessage, startCheckoutWith, GENERIC_PAYMENT_ERROR, type CheckoutDeps } from "@/lib/orders/checkout";
 
 const P = "11111111-1111-4111-8111-111111111111";
 const ORDER = "99999999-9999-4999-8999-999999999999";
@@ -11,10 +11,11 @@ const input = {
 };
 
 function deps(over: Partial<CheckoutDeps> = {}) {
-  const calls: { create: unknown[]; attach: unknown[] } = { create: [], attach: [] };
+  const calls: { create: unknown[]; attach: unknown[]; abandon: unknown[] } = { create: [], attach: [], abandon: [] };
   const d: CheckoutDeps = {
     createOrder: async () => ({ orderId: ORDER, orderNumber: 1001, totalMinor: 49980 }),
     attachPaymentIntent: async (...a) => void calls.attach.push(a),
+    abandonOrder: async (...a) => void calls.abandon.push(a),
     customerEmail: "ana@example.com",
     stripe: {
       createPaymentIntent: async (params, opts) => {
@@ -87,5 +88,36 @@ describe("startCheckoutWith", () => {
     const { d } = deps({ createOrder: async (i) => ((seen = i.expectedTotalMinor), { orderId: ORDER, orderNumber: 1001, totalMinor: 49980 }) });
     await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, expectedTotalMinor: 49980 }));
     expect(seen).toBe(49980);
+  });
+
+  it("cancels the order and explains when Stripe refuses the boleto CPF", async () => {
+    const stripeErr = Object.assign(new Error("The boleto tax id cannot match your legal entity tax id."), { type: "StripeInvalidRequestError", code: "parameter_invalid_string", param: "payment_method_data[boleto][tax_id]" });
+    const { d, calls } = deps({ stripe: { createPaymentIntent: async () => { throw stripeErr; } } });
+    const r = await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, method: "boleto" }));
+    expect(r).toEqual({ ok: false, error: "Este CPF não pode ser usado para boleto nesta loja. Use outro CPF ou pague com cartão.", paymentFailed: true });
+    expect(calls.attach).toHaveLength(0);
+    expect(calls.abandon).toEqual([[ORDER, { code: "parameter_invalid_string", message: "The boleto tax id cannot match your legal entity tax id.", paymentIntentId: null }]]);
+  });
+  it("cancels a PaymentIntent Stripe created before the confirmation failed", async () => {
+    const stripeErr = Object.assign(new Error("Your card was declined."), { type: "StripeCardError", code: "card_declined", payment_intent: { id: "pi_9" } });
+    const { d, calls } = deps({ stripe: { createPaymentIntent: async () => { throw stripeErr; } } });
+    const r = await startCheckoutWith(d, checkoutInputSchema.parse(input));
+    expect(r).toMatchObject({ ok: false, error: GENERIC_PAYMENT_ERROR, paymentFailed: true });
+    expect((calls.abandon[0] as unknown[])[1]).toMatchObject({ paymentIntentId: "pi_9" });
+  });
+  it("still answers the customer when the cleanup itself fails", async () => {
+    const { d } = deps({ stripe: { createPaymentIntent: async () => { throw new Error("boom"); } }, abandonOrder: async () => { throw new Error("db down"); } });
+    expect(await startCheckoutWith(d, checkoutInputSchema.parse(input))).toEqual({ ok: false, error: GENERIC_PAYMENT_ERROR, paymentFailed: true });
+  });
+});
+
+describe("paymentErrorMessage", () => {
+  it("maps known Stripe errors to clear messages", () => {
+    expect(paymentErrorMessage({ message: "Invalid tax id", param: "payment_method_data[boleto][tax_id]" }, "boleto")).toMatch(/CPF informado não foi aceito/);
+    expect(paymentErrorMessage({ message: "x", param: "payment_method_data[billing_details][address][postal_code]" }, "boleto")).toMatch(/endereço de cobrança/);
+    expect(paymentErrorMessage({ code: "amount_too_small" }, "card")).toMatch(/valor do pedido/);
+    expect(paymentErrorMessage({ message: "The payment method type \"boleto\" is invalid." }, "boleto")).toMatch(/não está disponível/);
+    expect(paymentErrorMessage({ type: "StripeConnectionError", rawType: "api_connection_error" }, "card")).toMatch(/instável/);
+    expect(paymentErrorMessage(new Error("weird"), "card")).toBe(GENERIC_PAYMENT_ERROR);
   });
 });
