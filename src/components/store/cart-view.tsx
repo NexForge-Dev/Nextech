@@ -9,17 +9,31 @@ import { getLocalCart, MAX_QTY, onCartChange, removeFromLocalCart, setLocalCartQ
 import { formatMoney } from "@/lib/domain/money";
 import { storagePublicUrl } from "@/lib/supabase/env";
 
-export function CartView() {
+export function CartView({ signedIn = false }: { signedIn?: boolean }) {
   const t = useTranslations("cart");
   const [data, setData] = useState<CartData | null>(null);
+  const [failed, setFailed] = useState(false);
   const refresh = useCallback(() => {
-    loadCart(getLocalCart()).then(setData, () => setData({ lines: [], subtotalMinor: 0, totalMinor: 0, checkoutable: false }));
+    loadCart(getLocalCart()).then(
+      (d) => (setFailed(false), setData(d)),
+      () => setFailed(true),
+    );
   }, []);
   useEffect(() => {
     refresh();
     return onCartChange(refresh);
   }, [refresh]);
 
+  if (failed && !data) {
+    return (
+      <div role="alert" className="rounded-md border border-line px-6 py-14 text-center">
+        <p className="font-semibold">{t("loadError")}</p>
+        <button type="button" onClick={refresh} className="mt-6 inline-flex h-10 cursor-pointer items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">
+          {t("retry")}
+        </button>
+      </div>
+    );
+  }
   if (!data) return <p className="py-10 text-sm text-mute">{t("loading")}</p>;
   if (!data.lines.length) {
     return (
@@ -33,7 +47,7 @@ export function CartView() {
     );
   }
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
-  const qtyBtn = "grid size-8 cursor-pointer place-items-center rounded-md border border-line hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40";
+  const qtyBtn = "grid size-10 md:size-8 cursor-pointer place-items-center rounded-md border border-line hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40";
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
       <ul className="divide-y divide-line border-y border-line">
@@ -83,7 +97,7 @@ export function CartView() {
             {t("checkout")}
           </button>
         )}
-        <p className="text-center text-xs text-mute">{t("signInNote")}</p>
+        {!signedIn && <p className="text-center text-xs text-mute">{t("signInNote")}</p>}
       </aside>
     </div>
   );

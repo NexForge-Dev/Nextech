@@ -9,12 +9,15 @@ export type CarouselBanner = { id: string; title: string; subtitle: string | nul
 /** A single, restrained banner carousel. `frame` forces a layout (used by the admin preview). */
 export function BannerCarousel({ banners, labels, frame }: { banners: CarouselBanner[]; labels: { previous: string; next: string }; frame?: "desktop" | "mobile" }) {
   const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
   const n = banners.length;
+  // WCAG 2.2.2: pauses while hovered/focused and for reduced motion; manual navigation restarts the timer
   useEffect(() => {
-    if (n < 2) return;
-    const id = setInterval(() => setI((x) => (x + 1) % n), 7000);
-    return () => clearInterval(id);
-  }, [n]);
+    if (n < 2 || paused) return;
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setTimeout(() => setI((x) => (x + 1) % n), 7000);
+    return () => clearTimeout(id);
+  }, [n, paused, i]);
   if (!n) return null;
   const b = banners[Math.min(i, n - 1)];
   const mobile = frame === "mobile";
@@ -36,7 +39,7 @@ export function BannerCarousel({ banners, labels, frame }: { banners: CarouselBa
     </div>
   );
   return (
-    <div className="relative">
+    <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       {b.linkUrl ? (
         <a href={b.linkUrl} className="block" {...(b.linkUrl.startsWith("https://") ? { rel: "noopener", target: "_blank" } : {})}>
           {content}

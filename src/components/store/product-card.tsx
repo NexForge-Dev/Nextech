@@ -13,7 +13,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
   const src = storagePublicUrl("products", product.mainImage?.path);
   return (
     <article data-testid="product-card" className="group relative flex flex-col">
-      <Link href={{ pathname: "/produto/[slug]", params: { slug: product.slug } }} className="flex flex-1 flex-col" aria-label={`${t("seeProduct")}: ${product.name}`}>
+      <Link href={{ pathname: "/produto/[slug]", params: { slug: product.slug } }} className="flex flex-1 flex-col">
         <div className="relative aspect-square overflow-hidden rounded-md bg-soft">
           {src ? (
             <Image

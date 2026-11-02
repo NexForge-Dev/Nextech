@@ -61,7 +61,7 @@ export async function Header({ locale, storeName, logoUrl }: { locale: Locale; s
               <CartLink label={tc("headerLabel")} />
             </div>
           )}
-          <Link href={accountHref} className={`${navLink} hidden items-center gap-1.5 md:inline-flex`}>
+          <Link href={accountHref} aria-label={user ? t("account") : t("signIn")} className={`${navLink} hidden items-center gap-1.5 md:inline-flex`}>
             <User className="size-[18px]" strokeWidth={1.75} aria-hidden />
             <span className="hidden lg:inline">{user ? t("account") : t("signIn")}</span>
           </Link>
