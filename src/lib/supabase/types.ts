@@ -967,6 +967,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"return_requests": {
+                  Row: {
+                    "created_at": string,"id": string,"message": string,"order_id": string,"outcome": string | null,"outcome_note": string | null,"photo_paths": (string)[],"reason": string,"resolved_at": string | null,"status": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"message": string,"order_id": string,"outcome"?: string | null,"outcome_note"?: string | null,"photo_paths"?: (string)[],"reason": string,"resolved_at"?: string | null,"status"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"message"?: string,"order_id"?: string,"outcome"?: string | null,"outcome_note"?: string | null,"photo_paths"?: (string)[],"reason"?: string,"resolved_at"?: string | null,"status"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "my_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "return_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"searches": {
                   Row: {
                     "id": string,"locale": string | null,"occurred_at": string,"query": string,"results": number,"user_id": string | null
@@ -1141,6 +1167,14 @@ isOneToOne: false
 "create_order_from_cart":
 { Args: { "p_address": Json,"p_items": Json,"p_method": string,"p_save_address"?: boolean }; Returns: {
               "order_id": string,"order_number": number,"total_minor": number
+            }[]
+                           },
+"create_return_request":
+{ Args: { "p_message": string,"p_number": number,"p_photos": (string)[],"p_reason": string }; Returns: string
+                           },
+"customer_cancel_order":
+{ Args: { "p_number": number }; Returns: {
+              "order_id": string,"payment_intent": string,"payment_method": string,"previous_status": string,"total_minor": number
             }[]
                            },
 "f_unaccent":
