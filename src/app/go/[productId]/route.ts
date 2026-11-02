@@ -107,7 +107,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prod
     if (result.reason === "own_product" && result.slug) {
       return NextResponse.redirect(new URL(`${LOCALE_PREFIX["pt-BR"]}/produto/${result.slug}`, req.nextUrl.origin), { status: 302, headers: { "Cache-Control": "no-store" } });
     }
-    if (result.reason.startsWith("blocked_")) {
+    // throttled like clicks so anonymous traffic cannot flood the audit log
+    if (result.reason.startsWith("blocked_") && (await rateLimit("go", ip))) {
       after(async () => {
         await createServiceSupabase()
           .from("admin_audit_log")

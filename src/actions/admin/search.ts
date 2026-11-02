@@ -10,7 +10,8 @@ export async function adminSearch(q: string): Promise<AdminSearchHit[]> {
   const ctx = await getAdminContext();
   const term = z.string().trim().min(2).max(80).safeParse(q);
   if (!ctx || !term.success) return [];
-  const like = `%${term.data.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
+  // PostgREST .or() filter syntax: , ( ) " would add or break conditions, so they become spaces
+  const like = `%${term.data.replace(/[,()"]/g, " ").replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
   const sb = await createServerSupabase();
   const [byName, byCode, cats, stores, brands, camps] = await Promise.all([
     sb.from("product_translations").select("product_id, name, products(slug, sku)").eq("locale", "pt-BR").ilike("name", like).limit(8),

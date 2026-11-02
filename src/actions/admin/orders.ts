@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { adminAction, ActionFailure, writeAudit } from "@/lib/admin/action";
 import { requirePermission } from "@/lib/auth/session";
 import { createServiceSupabase } from "@/lib/supabase/service";
@@ -184,6 +185,8 @@ export async function attachInvoice(form: FormData): Promise<{ ok: boolean; erro
   if (!parsed.success || !(file instanceof File)) return { ok: false, error: "Envie um arquivo PDF." };
   if (file.type !== "application/pdf") return { ok: false, error: "A nota precisa ser um PDF." };
   if (file.size > 5 * 1024 * 1024) return { ok: false, error: "O PDF pode ter até 5 MB." };
+  // the declared type comes from the browser: check the PDF signature too
+  if (new TextDecoder().decode(new Uint8Array(await file.slice(0, 5).arrayBuffer())) !== "%PDF-") return { ok: false, error: "A nota precisa ser um PDF." };
   const svc = createServiceSupabase();
   const o = await loadOrder(parsed.data.orderId).catch(() => null);
   if (!o) return { ok: false, error: "Pedido não encontrado." };
@@ -198,8 +201,13 @@ export async function attachInvoice(form: FormData): Promise<{ ok: boolean; erro
 }
 
 /** Signed link (5 min) for the admin to view an attached invoice or a return photo. */
+const fileRefSchema = z.object({ bucket: z.enum(["invoices", "returns"]), path: z.string().max(300).regex(/^[0-9a-f-]{36}\/[\w.-]+$/) });
+
 export async function adminFileUrl(bucket: "invoices" | "returns", path: string): Promise<string | null> {
   await requirePermission("orders.read");
+  // server actions are public endpoints: the TypeScript union is not a runtime check
+  const ref = fileRefSchema.safeParse({ bucket, path });
+  if (!ref.success) return null;
   const { data } = await createServiceSupabase().storage.from(bucket).createSignedUrl(path, 300);
   return data?.signedUrl ?? null;
 }
