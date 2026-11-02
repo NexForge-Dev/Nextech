@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 
@@ -14,8 +15,15 @@ const ITEMS = [
 export function AccountNav() {
   const t = useTranslations("account");
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+  // on mobile the tabs scroll sideways: keep the current one visible
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>("[aria-current=page]");
+    if (nav && active && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = active.offsetLeft - nav.offsetLeft - 16;
+  }, [pathname]);
   return (
-    <nav aria-label={t("title")} className="-mx-1 flex gap-1 overflow-x-auto lg:flex-col">
+    <nav ref={navRef} aria-label={t("title")} className="-mx-1 flex gap-1 overflow-x-auto lg:flex-col">
       {ITEMS.map((i) => {
         const active = pathname === i.href || (i.href === "/minha-conta/pedidos" && pathname.startsWith("/minha-conta/pedidos"));
         return (
@@ -23,7 +31,7 @@ export function AccountNav() {
             key={i.href}
             href={i.href}
             aria-current={active ? "page" : undefined}
-            className={`shrink-0 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${active ? "bg-black font-medium text-white" : "hover:bg-soft"}`}
+            className={`shrink-0 rounded-md px-3 py-2.5 text-sm lg:py-2 transition-colors duration-150 ${active ? "bg-black font-medium text-white" : "hover:bg-soft"}`}
           >
             {t(i.key)}
           </Link>

@@ -33,7 +33,7 @@ export default async function AccountLayout({ children, params }: { children: Re
       {profile && !profile.historyPrompted && !profile.historyEnabled && <HistoryPrompt />}
       <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
         <AccountNav />
-        <section>{children}</section>
+        <section className="min-w-0">{children}</section>
       </div>
     </main>
   );

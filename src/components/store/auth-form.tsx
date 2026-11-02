@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import type { AuthState } from "@/actions/store/auth";
 
 type Field = { name: string; label: string; type?: string; autoComplete?: string; defaultValue?: string; required?: boolean };
@@ -21,7 +21,13 @@ export function AuthForm({
   hidden?: Record<string, string>;
   footer?: ReactNode;
 }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  // React resets the form after an action; feed the submitted values back as defaults so a
+  // failed attempt does not wipe what the user typed (passwords are never kept)
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [state, formAction, pending] = useActionState(async (s: AuthState, fd: FormData) => {
+    setValues(Object.fromEntries(fields.filter((f) => f.type !== "password").map((f) => [f.name, String(fd.get(f.name) ?? "")])));
+    return action(s, fd);
+  }, null);
   return (
     <form action={formAction} className="space-y-5" noValidate>
       <input type="hidden" name="locale" value={locale} />
@@ -40,7 +46,7 @@ export function AuthForm({
               name={f.name}
               type={f.type ?? "text"}
               autoComplete={f.autoComplete}
-              defaultValue={f.defaultValue}
+              defaultValue={values[f.name] ?? f.defaultValue}
               required={f.required ?? true}
               aria-invalid={!!err}
               aria-describedby={err ? `e-${f.name}` : undefined}

@@ -50,7 +50,7 @@ export function CartView({ signedIn = false }: { signedIn?: boolean }) {
   const qtyBtn = "grid size-10 md:size-8 cursor-pointer place-items-center rounded-md border border-line hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40";
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
-      <ul className="divide-y divide-line border-y border-line">
+      <ul className="min-w-0 divide-y divide-line border-y border-line">
         {data.lines.map((l) => {
           const img = storagePublicUrl("products", l.imagePath ?? undefined);
           return (
@@ -65,7 +65,7 @@ export function CartView({ signedIn = false }: { signedIn?: boolean }) {
                   <p className="font-medium text-mute">{l.name ?? "—"}</p>
                 )}
                 {l.problem && <p role="alert" className="mt-1 text-sm font-medium">{l.problem === "unavailable" ? t("unavailable") : t("hidden")}</p>}
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="sr-only">{t("quantity")}</span>
                   <button type="button" className={qtyBtn} aria-label={t("decrease")} disabled={l.quantity <= 1 || !!l.problem} onClick={() => setLocalCartQuantity(l.productId, l.quantity - 1)}>
                     <Minus className="size-3.5" />
@@ -74,12 +74,12 @@ export function CartView({ signedIn = false }: { signedIn?: boolean }) {
                   <button type="button" className={qtyBtn} aria-label={t("increase")} disabled={l.quantity >= MAX_QTY || !!l.problem} onClick={() => setLocalCartQuantity(l.productId, l.quantity + 1)}>
                     <Plus className="size-3.5" />
                   </button>
-                  <button type="button" className="ml-3 inline-flex cursor-pointer items-center gap-1 text-sm text-mute hover:text-black" onClick={() => removeFromLocalCart(l.productId)}>
+                  <button type="button" className="inline-flex h-10 cursor-pointer items-center gap-1 text-sm md:ml-3 md:h-8 text-mute hover:text-black" onClick={() => removeFromLocalCart(l.productId)}>
                     <Trash2 className="size-3.5" /> {t("remove")}
                   </button>
                 </div>
               </div>
-              {!l.problem && <p className="tabular font-semibold">{money(l.lineTotalMinor)}</p>}
+              {!l.problem && <p className="tabular shrink-0 whitespace-nowrap font-semibold">{money(l.lineTotalMinor)}</p>}
             </li>
           );
         })}

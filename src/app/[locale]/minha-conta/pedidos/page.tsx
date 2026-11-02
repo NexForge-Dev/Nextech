@@ -33,8 +33,8 @@ export default async function MyOrdersPage({ params }: { params: Promise<{ local
                     </p>
                     <p className="truncate text-sm text-mute">{o.firstItem?.name} · {t("items", { count: o.itemCount })}</p>
                   </div>
-                  <div className="text-right">
-                    <span className="rounded-full border border-black px-2 py-0.5 text-xs font-medium">{t(`stage_${o.stage}`)}</span>
+                  <div className="shrink-0 text-right">
+                    <span className="whitespace-nowrap rounded-full border border-black px-2 py-0.5 text-xs font-medium">{t(`stage_${o.stage}`)}</span>
                     <p className="tabular mt-1 text-sm font-semibold">{formatMoney(o.totalMinor, "BRL", "pt-BR")}</p>
                   </div>
                 </Link>
