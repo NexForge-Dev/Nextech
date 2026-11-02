@@ -3,7 +3,7 @@ import { createServiceSupabase } from "@/lib/supabase/service";
 import { sendEmail } from "@/lib/email/send";
 import { renderEmail, type EmailKind, type EmailOrder } from "@/lib/email/templates";
 
-const OWNER_KINDS: EmailKind[] = ["ownerNewOrder", "ownerDispute", "ownerManualRefund"];
+const OWNER_KINDS: EmailKind[] = ["ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"];
 
 /** Send an order email (customer or owner) and record it in the order history. Never throws. */
 export async function notifyOrder(kind: EmailKind, orderId: string, extra: Partial<EmailOrder> = {}): Promise<void> {

@@ -23,7 +23,8 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
         if (error) throw new Error(error.message);
         const row = data?.[0];
         if (!row) throw new Error("order_not_found");
-        return { ...row, total_minor: Number(row.total_minor) };
+        const { data: o } = await svc.from("orders").select("refunded_minor").eq("id", row.order_id).maybeSingle();
+        return { ...row, total_minor: Number(row.total_minor), refunded_minor: Number(o?.refunded_minor ?? 0) };
       },
       async refund(pi, amount, key) {
         try {
@@ -38,11 +39,13 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
             p_note: "Cancelado pelo cliente" as never,
             p_actor: null as never,
           });
+          return true;
         } catch (e) {
           // the order is cancelled; the failed refund shows in the history and the owner refunds from the admin
           log.error("orders.cancel_refund_failed", e, { pi });
           const { data: o } = await svc.from("orders").select("id").eq("stripe_payment_intent_id", pi).maybeSingle();
           if (o) await svc.from("order_events").insert({ order_id: o.id, actor: "system", kind: "refund_failed", data: { amount } });
+          return false;
         }
       },
       async cancelPaymentIntent(pi) {

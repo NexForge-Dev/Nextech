@@ -14,17 +14,32 @@ export type AdEventData = { valueMinor: number; currency: "BRL"; contentIds: str
  * loaded (window.fbq / window.gtag exist). A purchase is sent once per order (sessionStorage guard)
  * with eventID "order-<n>" so Meta can de-duplicate it.
  */
+const checkoutKey = (orderNumber: number) => `nx_checkout_${orderNumber}`;
+
+/**
+ * Called when this browser starts paying for an order. A Purchase is sent only for an order
+ * marked here, and the mark is spent on the first send, so reopening the order later (a new
+ * session, the link in an email, another device) never counts the sale twice.
+ */
+export function markCheckoutStarted(orderNumber: number) {
+  try {
+    localStorage.setItem(checkoutKey(orderNumber), String(Date.now()));
+  } catch {
+    /* storage unavailable: the purchase is simply not reported */
+  }
+}
+
 export function trackAdEvent(name: AdEvent, data: AdEventData) {
   if (typeof window === "undefined") return;
   const w = window as MarketingWindow;
   if (name === "Purchase") {
     if (data.orderNumber == null) return;
-    const key = `nx_purchase_${data.orderNumber}`;
     try {
-      if (sessionStorage.getItem(key)) return;
-      sessionStorage.setItem(key, "1");
+      const key = checkoutKey(data.orderNumber);
+      if (!localStorage.getItem(key)) return;
+      localStorage.removeItem(key);
     } catch {
-      /* storage unavailable: send anyway */
+      return;
     }
   }
   const value = data.valueMinor / 100;

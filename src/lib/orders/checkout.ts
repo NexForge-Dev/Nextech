@@ -61,6 +61,7 @@ const ERRORS: Record<string, string> = {
   invalid_quantity: "Quantidade inválida no carrinho.",
   duplicate_item: "Revise o carrinho e tente novamente.",
   cart_too_large: "O carrinho tem itens demais.",
+  too_many_orders: "Você criou muitos pedidos sem pagamento na última hora. Pague um deles em Meus pedidos ou tente mais tarde.",
 };
 
 const isoFromUnix = (s: unknown) => (typeof s === "number" ? new Date(s * 1000).toISOString() : null);

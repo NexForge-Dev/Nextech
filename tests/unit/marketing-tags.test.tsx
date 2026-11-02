@@ -92,7 +92,7 @@ describe("trackAdEvent", () => {
     const fb: Call[] = [];
     const g: Call[] = [];
     const store = new Map<string, string>();
-    (globalThis as Record<string, unknown>).sessionStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v) };
+    (globalThis as Record<string, unknown>).localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), removeItem: (k: string) => store.delete(k) };
     (globalThis as Record<string, unknown>).window = withTags
       ? { fbq: (...a: unknown[]) => fb.push(a), gtag: (...a: unknown[]) => g.push(a), __nxAdsSendTo: "AW-1/abc" }
       : {};
@@ -110,9 +110,26 @@ describe("trackAdEvent", () => {
     trackAdEvent("AddToCart", { valueMinor: 43980, currency: "BRL", contentIds: ["x"] });
     expect(fb[0]).toEqual(["track", "AddToCart", { value: 439.8, currency: "BRL", content_ids: ["x"], content_type: "product" }]);
   });
-  it("sends a purchase once per order, with the Google Ads conversion", async () => {
+  it("never sends a purchase for an order that was not just checked out on this device", async () => {
     const { fb, g } = setup();
     const { trackAdEvent } = await import("@/components/store/marketing-tracker");
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1002 });
+    expect(fb).toHaveLength(0);
+    expect(g).toHaveLength(0);
+  });
+  it("does not resend the purchase when the order page is reopened in a new session", async () => {
+    const { fb } = setup();
+    const { trackAdEvent, markCheckoutStarted } = await import("@/components/store/marketing-tracker");
+    markCheckoutStarted(1003);
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1003 });
+    (globalThis as Record<string, unknown>).sessionStorage = { getItem: () => null, setItem: () => undefined }; // a new browser session
+    trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1003 });
+    expect(fb).toHaveLength(1);
+  });
+  it("sends a purchase once per order, with the Google Ads conversion", async () => {
+    const { fb, g } = setup();
+    const { trackAdEvent, markCheckoutStarted } = await import("@/components/store/marketing-tracker");
+    markCheckoutStarted(1001);
     trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1001 });
     trackAdEvent("Purchase", { valueMinor: 43980, currency: "BRL", contentIds: ["x"], orderNumber: 1001 });
     expect(fb).toHaveLength(1);

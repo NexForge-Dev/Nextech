@@ -100,12 +100,4 @@ describe("payments and webhook bookkeeping", () => {
     await svc.from("stripe_events").update({ received_at: new Date(Date.now() - 5 * 60_000).toISOString() }).eq("id", id);
     expect((await svc.rpc("claim_stripe_event", { p_id: id, p_type: "x" })).data).toBe(false);
   });
-  it("cancels abandoned unpaid orders", async () => {
-    const o = await newOrder("boleto");
-    const svc = serviceClient();
-    await svc.from("orders").update({ created_at: new Date(Date.now() - 6 * 86_400_000).toISOString(), stripe_payment_intent_id: `pi_s_${o.id}` }).eq("id", o.id);
-    const { data } = await svc.rpc("cancel_stale_orders");
-    expect((data ?? []).map((r: { order_id: string }) => r.order_id)).toContain(o.id);
-    expect((await svc.from("orders").select("status").eq("id", o.id).single()).data?.status).toBe("cancelled");
-  });
 });

@@ -121,4 +121,15 @@ describe("handleStripeEvent", () => {
     expect(state.refunds.get("re_listed")).toBe(43980);
     expect(state.status).toBe("refunded");
   });
+  it("a refund larger than what the order still holds is recorded for the owner instead of failing forever", async () => {
+    const { d, state } = fake();
+    d.recordRefund = async () => {
+      throw new Error("refund_exceeds_total");
+    };
+    const refund = { id: "re_big", object: "refund", payment_intent: "pi_1", amount: 43980, status: "succeeded" };
+    expect(await handleStripeEvent(ev("evt_big", "refund.created", refund) as never, d)).toBe("processed");
+    expect(state.claimed.has("evt_big")).toBe(true);
+    expect(state.events).toEqual(["refund_mismatch"]);
+    expect(state.notes).toEqual(["ownerAlert"]);
+  });
 });

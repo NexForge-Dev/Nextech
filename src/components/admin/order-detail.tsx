@@ -29,6 +29,7 @@ const EVENT: Record<string, string> = {
   refunded: "Reembolso total",
   refund_failed: "Falha ao reembolsar — reembolse manualmente",
   manual_refund_pending: "Reembolso por fora pendente (boleto)",
+  refund_mismatch: "Reembolso do Stripe maior que o saldo do pedido — confira",
   return_requested: "Cliente abriu devolução/suporte",
   return_resolved: "Devolução/suporte resolvido",
   invoice_attached: "Nota fiscal anexada",

@@ -1170,11 +1170,6 @@ isOneToOne: false
 "campaign_is_live":
 { Args: { "c": string }; Returns: boolean
                            },
-"cancel_stale_orders":
-{ Args: Record<PropertyKey, never>; Returns: {
-              "order_id": string,"payment_intent": string
-            }[]
-                           },
 "claim_stripe_event":
 { Args: { "p_id": string,"p_type": string }; Returns: boolean
                            },
@@ -1244,6 +1239,9 @@ isOneToOne: false
               "order_id": string
             }[]
                            },
+"order_cancel_unpaid":
+{ Args: { "p_order": string }; Returns: boolean
+                           },
 "order_mark_paid":
 { Args: { "p_fee": number,"p_order": string,"p_pi": string,"p_summary": string }; Returns: {
               "order_id": string,"transitioned": boolean,"was_cancelled": boolean
@@ -1291,6 +1289,11 @@ isOneToOne: false
 "search_products":
 { Args: { "p_brand"?: string,"p_category"?: string,"p_limit"?: number,"p_locale": string,"p_market": string,"p_max_minor"?: number,"p_min_minor"?: number,"p_min_rating"?: number,"p_offset"?: number,"p_proven_discount"?: boolean,"p_sort"?: string,"p_store"?: string,"q": string }; Returns: {
               "best_price_minor": number,"brand_name": string,"category_id": string,"discount": number,"id": string,"name": string,"popularity": number,"published_at": string,"rank": number,"rating": number,"rating_count": number,"rating_source": string,"slug": string,"total_count": number
+            }[]
+                           },
+"stale_unpaid_orders":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "order_id": string,"payment_intent": string,"payment_method": string
             }[]
                            },
 "storage_bucket_permission":

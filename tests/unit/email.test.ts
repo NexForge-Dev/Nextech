@@ -54,8 +54,13 @@ describe("email templates", () => {
     expect(m.text).toContain("Correios");
     expect(m.html.toLowerCase()).not.toContain("amazon");
   });
+  it("an owner alert carries the reason", () => {
+    const m = renderEmail("ownerAlert", { ...order, alert: "O reembolso automático de R$ 439,80 falhou no Stripe." });
+    expect(m.subject).toBe("Atenção: pedido #1001");
+    expect(m.text).toContain("O reembolso automático de R$ 439,80 falhou no Stripe.");
+  });
   it("renders every kind with a subject and a text version", () => {
-    for (const k of ["orderConfirmed", "boletoIssued", "paymentFailed", "orderShipped", "orderDelivered", "orderCancelled", "orderRefunded", "returnReceived", "returnResolved", "ownerNewOrder", "ownerDispute", "ownerManualRefund"] as const) {
+    for (const k of ["orderConfirmed", "boletoIssued", "paymentFailed", "orderShipped", "orderDelivered", "orderCancelled", "orderRefunded", "returnReceived", "returnResolved", "ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"] as const) {
       const m = renderEmail(k, { ...order, refundMinor: 1000, boletoUrl: "https://payments.stripe.com/b", outcome: "Reembolso total" });
       expect(m.subject.length).toBeGreaterThan(5);
       expect(m.text.length).toBeGreaterThan(10);

@@ -20,7 +20,7 @@ export type WebhookDeps = {
   recordRefund(r: { paymentIntentId: string; stripeRefundId: string; amountMinor: number; status: string }): Promise<{ orderId: string; fullyRefunded: boolean; changed: boolean } | null>;
   /** Append to the order history; null when no order uses this payment intent. */
   addEvent(paymentIntentId: string, kind: string, data: Record<string, unknown>): Promise<{ orderId: string } | null>;
-  notify(kind: EmailKind, orderId: string, extra?: { refundMinor?: number }): Promise<void>;
+  notify(kind: EmailKind, orderId: string, extra?: { refundMinor?: number; alert?: string }): Promise<void>;
 };
 
 export type WebhookOutcome = "processed" | "duplicate" | "ignored";
@@ -92,13 +92,26 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
       const refunds = o.object === "refund" ? [o] : (embedded ?? (str(o.id) ? await d.listRefunds(str(o.id)!) : []));
       let last: { orderId: string; fullyRefunded: boolean; changed: boolean } | null = null;
       let changedAny = false;
+      let mismatch = false;
       for (const rf of refunds) {
         const id = str(rf.id);
         if (!id) continue;
-        last = (await d.recordRefund({ paymentIntentId: piId, stripeRefundId: id, amountMinor: Number(rf.amount ?? 0), status: str(rf.status) ?? "pending" })) ?? last;
+        const amountMinor = Number(rf.amount ?? 0);
+        try {
+          last = (await d.recordRefund({ paymentIntentId: piId, stripeRefundId: id, amountMinor, status: str(rf.status) ?? "pending" })) ?? last;
+        } catch (e) {
+          // the books disagree (e.g. a manual refund plus a Stripe one): retrying would fail forever
+          if (!(e instanceof Error && e.message === "refund_exceeds_total")) throw e;
+          const r = await d.addEvent(piId, "refund_mismatch", { stripeRefundId: id, amount: amountMinor });
+          if (r) {
+            await d.notify("ownerAlert", r.orderId, { alert: `O Stripe registrou o reembolso ${id}, que passa do valor ainda não reembolsado do pedido (por exemplo, somado a um reembolso por fora). Confira os reembolsos do pedido.` });
+            mismatch = true;
+          }
+          continue;
+        }
         changedAny ||= !!last?.changed;
       }
-      if (!last) return "ignored";
+      if (!last) return mismatch ? "processed" : "ignored";
       if (changedAny) await d.notify("orderRefunded", last.orderId, { refundMinor: Number(o.amount_refunded ?? o.amount ?? 0) || undefined });
       return "processed";
     }

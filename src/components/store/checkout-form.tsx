@@ -10,7 +10,7 @@ import { getLocalCart } from "@/lib/cart/local-cart";
 import { cartTotals, type PaymentMethod } from "@/lib/domain/own-pricing";
 import { formatMoney } from "@/lib/domain/money";
 import { lookupCep } from "@/lib/cep";
-import { trackAdEvent } from "./marketing-tracker";
+import { markCheckoutStarted, trackAdEvent } from "./marketing-tracker";
 import { inputClass } from "./auth-form";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, { locale: "pt-BR" }) : null;
@@ -70,6 +70,7 @@ export function CheckoutForm({ saved, payments }: { saved: SavedAddress[]; payme
       return;
     }
     setChargedTotal(r.totalMinor);
+    markCheckoutStarted(r.orderNumber);
     if (r.kind === "card") return setCard({ clientSecret: r.clientSecret, orderNumber: r.orderNumber });
     try {
       sessionStorage.setItem(BOLETO_SESSION_KEY(r.orderNumber), JSON.stringify(r.kind === "boleto" ? { boleto: r.boleto } : { pix: r.pix }));

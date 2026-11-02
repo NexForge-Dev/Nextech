@@ -11,6 +11,8 @@ export type EmailOrder = {
   refundMinor?: number;
   boletoUrl?: string | null;
   outcome?: string;
+  /** Owner alerts: what went wrong and what to do. */
+  alert?: string;
 };
 
 export type EmailKind =
@@ -25,7 +27,8 @@ export type EmailKind =
   | "returnResolved"
   | "ownerNewOrder"
   | "ownerDispute"
-  | "ownerManualRefund";
+  | "ownerManualRefund"
+  | "ownerAlert";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
@@ -61,6 +64,8 @@ function copy(kind: EmailKind, o: EmailOrder): Copy {
       return { subject: `Contestação no pedido #${o.number}`, lead: `O cliente ${o.customerName} contestou o pagamento do pedido #${o.number} (${money(o.totalMinor)}). Responda no painel do Stripe dentro do prazo.`, cta: { label: "Abrir no painel", href: adminUrl } };
     case "ownerManualRefund":
       return { subject: `Reembolso manual pendente — pedido #${o.number}`, lead: `O pedido #${o.number} (boleto) foi cancelado. Peça a chave Pix ao cliente ${o.customerName}, devolva ${money(o.refundMinor ?? o.totalMinor)} pelo seu banco e registre como "reembolsado por fora" no painel.`, cta: { label: "Abrir no painel", href: adminUrl } };
+    case "ownerAlert":
+      return { subject: `Atenção: pedido #${o.number}`, lead: `${o.alert ?? "Um pedido precisa da sua atenção."} Confira o histórico do pedido #${o.number} no painel.`, cta: { label: "Abrir no painel", href: adminUrl } };
   }
 }
 
