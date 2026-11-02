@@ -8,6 +8,7 @@ import { checkoutInputSchema, startCheckoutWith, type CheckoutResult } from "@/l
 import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/order-status";
 import { log } from "@/lib/log";
 import { notifyOrder } from "@/lib/orders/notify";
+import { analytics } from "@/lib/analytics";
 
 export async function startCheckout(input: unknown): Promise<CheckoutResult & { fieldErrors?: Record<string, string[]> }> {
   const user = await getSessionUser();
@@ -25,7 +26,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
   const svc = createServiceSupabase();
   const stripe = getStripe();
   try {
-    return await startCheckoutWith(
+    const result = await startCheckoutWith(
       {
         customerEmail: user.email,
         async createOrder(i) {
@@ -65,6 +66,11 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
       },
       parsed.data,
     );
+    if (result.ok) {
+      analytics.checkoutStarted(user.id);
+      if (result.kind === "boleto") analytics.feature(user.id, "boleto_emitido");
+    }
+    return result;
   } catch (e) {
     log.error("checkout.failed", e);
     return { ok: false, error: "Não foi possível iniciar o pagamento. Tente novamente em instantes." };

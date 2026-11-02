@@ -5,11 +5,27 @@ import { verifyStripeEvent } from "@/lib/stripe/verify";
 import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
+import { analytics } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function deps(): WebhookDeps {
+/**
+ * NexForge panel metrics for a paid / failed order (account id + total only; no order data).
+ * Both carry a fixed event id (order id / Stripe event id), so a webhook retry never counts twice.
+ */
+async function trackOrder(svc: ReturnType<typeof createServiceSupabase>, kind: "paid" | "failed", orderId: string, stripeEventId: string) {
+  try {
+    const { data: o } = await svc.from("orders").select("user_id, total_minor").eq("id", orderId).maybeSingle();
+    if (!o?.user_id) return;
+    if (kind === "paid") analytics.orderPaid(o.user_id, orderId, Number(o.total_minor));
+    else analytics.paymentFailed(o.user_id, stripeEventId);
+  } catch (e) {
+    log.info("nexforge.order_lookup_failed", { reason: e instanceof Error ? e.message.slice(0, 80) : "unknown" });
+  }
+}
+
+function deps(stripeEventId: string): WebhookDeps {
   const svc = createServiceSupabase();
   return {
     async claimEvent(id, type) {
@@ -83,11 +99,14 @@ function deps(): WebhookDeps {
     async addEvent(piId, kind, data) {
       const { data: rows, error } = await svc.rpc("order_add_event_by_pi", { p_pi: piId, p_kind: kind, p_data: data as never });
       if (error) throw new Error(error.message);
-      return rows?.[0] ? { orderId: rows[0].order_id } : null;
+      const orderId = rows?.[0]?.order_id;
+      if (orderId && kind === "payment_failed") await trackOrder(svc, "failed", orderId, stripeEventId);
+      return orderId ? { orderId } : null;
     },
     async notify(kind, orderId, extra) {
       // emails go out after the 2xx so Stripe never waits on the email provider
       after(() => notifyOrder(kind, orderId, extra));
+      if (kind === "orderConfirmed") await trackOrder(svc, "paid", orderId, stripeEventId);
     },
   };
 }
@@ -97,7 +116,7 @@ export async function POST(req: NextRequest) {
   const v = verifyStripeEvent(body, req.headers.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET);
   if (!v.ok) return NextResponse.json({ error: "invalid signature" }, { status: 400 });
   try {
-    const outcome = await handleStripeEvent(v.event, deps());
+    const outcome = await handleStripeEvent(v.event, deps(v.event.id));
     return NextResponse.json({ received: true, outcome });
   } catch (e) {
     log.error("stripe.webhook_failed", e, { type: v.event.type, id: v.event.id });
