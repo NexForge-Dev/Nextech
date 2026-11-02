@@ -39,6 +39,11 @@ function deps(): WebhookDeps {
         return { feeMinor: null, summary: null };
       }
     },
+    async orderAmount(orderId) {
+      const { data, error } = await svc.from("orders").select("total_minor, currency").eq("id", orderId).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? { totalMinor: Number(data.total_minor), currency: data.currency } : null;
+    },
     async markPaid(piId, orderId, fee, summary) {
       const { data, error } = await svc.rpc("order_mark_paid", { p_pi: piId, p_order: orderId, p_fee: fee as never, p_summary: summary as never });
       if (error) throw new Error(error.message);

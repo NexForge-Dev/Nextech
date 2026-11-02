@@ -10,6 +10,8 @@ export type WebhookDeps = {
   markProcessed(id: string): Promise<void>;
   /** Real Stripe fee (balance transaction) and a customer-safe summary such as "Cartão final 4242". */
   paymentDetails(paymentIntent: Record<string, unknown>): Promise<{ feeMinor: number | null; summary: string | null }>;
+  /** What the order must be paid with (from the database), or null when the order does not exist. */
+  orderAmount(orderId: string): Promise<{ totalMinor: number; currency: string } | null>;
   /** awaiting_payment → awaiting_supplier (via paid). transitioned=false when already paid/cancelled. */
   markPaid(paymentIntentId: string, orderId: string, feeMinor: number | null, summary: string | null): Promise<{ orderId: string; transitioned: boolean; wasCancelled?: boolean } | null>;
   /** A payment succeeded on an order that was already cancelled: give the money back (or alert the owner). */
@@ -53,6 +55,18 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
     case "payment_intent.succeeded": {
       const orderId = str((o.metadata as Record<string, unknown> | undefined)?.order_id);
       if (!orderId) return "ignored";
+      // never trust the payment blindly: it must cover exactly this order's total, in its currency
+      const expected = await d.orderAmount(orderId);
+      if (!expected) return "ignored";
+      const received = Number(o.amount_received ?? o.amount);
+      const currency = String(o.currency ?? "").toLowerCase();
+      if (received !== expected.totalMinor || currency !== expected.currency.toLowerCase()) {
+        const r = await d.addEvent(piId, "amount_mismatch", { received, currency, expected: expected.totalMinor });
+        await d.notify("ownerAlert", r?.orderId ?? orderId, {
+          alert: `O Stripe confirmou o pagamento ${piId} com valor ${received} ${currency.toUpperCase()} (centavos), diferente do total do pedido (${expected.totalMinor} ${expected.currency}). O pedido NÃO foi marcado como pago. Confira no Stripe.`,
+        });
+        return "processed";
+      }
       const { feeMinor, summary } = await d.paymentDetails(o);
       const r = await d.markPaid(piId, orderId, feeMinor, summary);
       if (!r) return "ignored";
