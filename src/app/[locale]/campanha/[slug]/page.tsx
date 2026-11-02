@@ -10,6 +10,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { ProductGrid, Section } from "@/components/store/product-grid";
 import { BannerCarousel } from "@/components/store/banner-carousel";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { getStorefrontLocales } from "@/lib/data/settings";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = resolveLocaleParam(p.locale) ?? "pt-BR";
   const ctx = await getStoreContext(locale);
   const c = await getCampaign(p.slug, locale, ctx.market);
-  return c ? buildMetadata({ locale, href: { pathname: "/campanha/[slug]", params: { slug: c.slug } }, title: c.title, description: c.description }) : {};
+  return c ? buildMetadata({ locale, locales: await getStorefrontLocales(), href: { pathname: "/campanha/[slug]", params: { slug: c.slug } }, title: c.title, description: c.description }) : {};
 }
 
 export default async function CampaignPage({ params }: Props) {
