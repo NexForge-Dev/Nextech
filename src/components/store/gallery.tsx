@@ -9,6 +9,7 @@ type Img = { src: string; alt: string };
 
 export function Gallery({ images, name }: { images: Img[]; name: string }) {
   const t = useTranslations("product");
+  const tc = useTranslations("common");
   const [i, setI] = useState(0);
   const [zoom, setZoom] = useState(false);
   const touchX = useRef<number | null>(null);
@@ -74,7 +75,7 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
         </div>
       )}
       <Dialog open={zoom} onOpenChange={setZoom}>
-        <DialogContent className="max-w-[min(92vw,1100px)] rounded-md border-0 bg-white p-0 shadow-none ring-0 sm:max-w-[min(92vw,1100px)]" onKeyDown={onKey}>
+        <DialogContent closeLabel={tc("close")} className="max-w-[min(92vw,1100px)] rounded-md border-0 bg-white p-0 shadow-none ring-0 sm:max-w-[min(92vw,1100px)]" onKeyDown={(e) => { onKey(e); e.stopPropagation(); /* React bubbles through the portal to the outer handler */ }}>
           <DialogTitle className="sr-only">{name}</DialogTitle>
           <div className="relative aspect-square max-h-[85vh] w-full">
             <Image src={current.src} alt={current.alt || name} fill sizes="92vw" className="object-contain p-6" unoptimized={current.src.endsWith(".svg")} />

@@ -20,7 +20,7 @@ A confirmação chega em até 1 dia útil depois do pagamento. O boleto vence em
 
 ## Posso cancelar o pedido?
 
-Sim, em Minha conta → Pedidos, enquanto o pedido ainda não estiver sendo preparado. O reembolso é integral. Se ele já estiver em preparação ou a caminho, você ainda pode desistir: recuse a entrega ou peça a devolução depois de receber (veja a pergunta abaixo).
+Sim, em Minha conta → Pedidos, enquanto o produto ainda não foi comprado no fornecedor (o botão **Cancelar pedido** aparece no pedido). O reembolso é integral. Depois disso, ou se ele já estiver a caminho, você ainda pode desistir: abra uma solicitação no pedido, recuse a entrega ou peça a devolução em até 7 dias depois de receber (veja a pergunta abaixo).
 
 ## E se eu me arrepender depois de receber?
 

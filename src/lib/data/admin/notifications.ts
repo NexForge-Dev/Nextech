@@ -1,5 +1,6 @@
 import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createServiceSupabase } from "@/lib/supabase/service";
 import { computeNotifications, type AdminNotification } from "@/lib/domain/notifications";
 import type { AdminContext } from "@/lib/auth/permissions";
 
@@ -10,7 +11,8 @@ export async function getAdminNotifications(ctx: AdminContext): Promise<{ items:
   const soon = new Date(now.getTime() + 48 * 3_600_000).toISOString();
   const nowIso = now.toISOString();
   const canMarketing = ctx.permissions.has("marketing.write");
-  const [stale, offers, promos, banners, campaigns, syncs, msgs, products, reads] = await Promise.all([
+  const canOrders = ctx.permissions.has("orders.read");
+  const [stale, offers, promos, banners, campaigns, syncs, msgs, products, reads, toBuy, returns] = await Promise.all([
     sb.from("site_settings").select("value").eq("key", "ops.price_stale_days").maybeSingle(),
     sb.from("affiliate_links").select("id, product_id, price_minor, price_updated_at, stores(price_display_policy, affiliate_networks(price_display_policy)), products(status, product_translations(locale, name))").eq("active", true).not("price_minor", "is", null).limit(500),
     canMarketing ? sb.from("promotions").select("id, starts_at, ends_at, products(product_translations(locale, name))").eq("active", true).or(`starts_at.lte.${soon},ends_at.lte.${soon}`).gte("ends_at", nowIso) : Promise.resolve({ data: [] }),
@@ -18,8 +20,12 @@ export async function getAdminNotifications(ctx: AdminContext): Promise<{ items:
     canMarketing ? sb.from("campaigns").select("id, name, starts_at, ends_at").in("status", ["scheduled", "active"]) : Promise.resolve({ data: [] }),
     ctx.permissions.has("networks.read") ? sb.from("network_sync_runs").select("network_id, started_at, ok, affiliate_networks(name)").eq("ok", false).gte("started_at", new Date(now.getTime() - 7 * 86_400_000).toISOString()).order("started_at", { ascending: false }).limit(10) : Promise.resolve({ data: [] }),
     ctx.permissions.has("customers.read") ? sb.from("contact_messages").select("id", { count: "exact", head: true }).eq("handled", false) : Promise.resolve({ count: 0 }),
-    sb.from("products").select("id, product_translations(locale, name), affiliate_links(id, active)").eq("status", "published").limit(500),
+    // own-store products are sold here and never have affiliate offers
+    sb.from("products").select("id, product_translations(locale, name), affiliate_links(id, active)").eq("status", "published").eq("sale_mode", "affiliate").limit(500),
     sb.from("admin_notification_reads").select("notification_key"),
+    // order tables have no browser policies: counted with the service role after the permission check
+    canOrders ? createServiceSupabase().from("orders").select("id", { count: "exact", head: true }).in("status", ["paid", "awaiting_supplier"]) : Promise.resolve({ count: 0 }),
+    canOrders ? createServiceSupabase().from("return_requests").select("id", { count: "exact", head: true }).eq("status", "open") : Promise.resolve({ count: 0 }),
   ]);
   type T = { locale: string; name?: string; title?: string }[];
   const nameOf = (t: T | undefined) => t?.find((x) => x.locale === "pt-BR")?.name ?? t?.[0]?.name ?? "—";
@@ -43,6 +49,8 @@ export async function getAdminNotifications(ctx: AdminContext): Promise<{ items:
     ],
     failedSyncs: ((syncs.data ?? []) as unknown as { network_id: string; started_at: string; affiliate_networks: { name: string } | null }[]).map((s) => ({ networkId: s.network_id, networkName: s.affiliate_networks?.name ?? "Rede", at: s.started_at })),
     unhandledMessages: (msgs as { count: number | null }).count ?? 0,
+    ordersToBuy: (toBuy as { count: number | null }).count ?? 0,
+    openReturns: (returns as { count: number | null }).count ?? 0,
     productsWithoutOffer: ((products.data ?? []) as unknown as { id: string; product_translations: T; affiliate_links: { active: boolean }[] }[])
       .filter((p) => !p.affiliate_links.some((l) => l.active))
       .slice(0, 20)

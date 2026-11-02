@@ -13,7 +13,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const { rows, total } = await listCustomers({ q: sp.q, page, pageSize: PAGE });
-  const date = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
+  const date = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—");
   return (
     <>
       <PageHeader

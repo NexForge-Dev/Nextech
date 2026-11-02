@@ -1,16 +1,18 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { adminSignIn } from "@/actions/admin/session";
 
 export function AdminLoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(adminSignIn, null);
+  // React resets uncontrolled fields after a form action; keep the e-mail so a wrong password only needs the password retyped.
+  const [email, setEmail] = useState("");
   const input = "h-11 w-full rounded-md border border-line px-3 text-[15px] outline-none focus:border-black";
   return (
     <form action={action} className="mt-6 space-y-4">
       <input type="hidden" name="next" value={next} />
       <div>
         <label htmlFor="a-email" className="mb-1.5 block text-sm font-medium">E-mail</label>
-        <input id="a-email" name="email" type="email" autoComplete="email" required className={input} />
+        <input id="a-email" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
       </div>
       <div>
         <label htmlFor="a-password" className="mb-1.5 block text-sm font-medium">Senha</label>

@@ -109,6 +109,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
           {
             key: "name",
             header: "Nome",
+            className: "min-w-56",
             cell: (r) => (
               <div className="min-w-0">
                 <Link href={`/admin/produtos/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
@@ -123,7 +124,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
           { key: "store", header: "Loja", cell: (r) => <span className="text-xs">{r.stores || <span className="text-mute">Sem oferta</span>}</span> },
           { key: "clicks", header: "Cliques (30d)", cell: (r) => <span className="tabular">{clicks.get(r.id) ?? 0}</span> },
           { key: "status", header: "Status", cell: (r) => <StatusPill active={r.status === "published"} on={STATUS_LABEL[r.status]} off={STATUS_LABEL[r.status]} /> },
-          { key: "updated", header: "Atualização", sortKey: "updated", cell: (r) => <span className="tabular text-xs text-mute">{new Date(r.updated).toLocaleDateString("pt-BR")}</span> },
+          { key: "updated", header: "Atualização", sortKey: "updated", cell: (r) => <span className="tabular text-xs text-mute">{new Date(r.updated).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span> },
           { key: "actions", header: "", className: "text-right", cell: (r) => <ProductRowActions id={r.id} slug={r.slug} name={r.name} status={r.status} featured={r.featured} canDelete={ctx.permissions.has("products.delete")} /> },
         ]}
       />

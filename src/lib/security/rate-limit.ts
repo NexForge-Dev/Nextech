@@ -13,12 +13,16 @@ export const LIMITS = {
 } as const;
 export type LimitBucket = keyof typeof LIMITS;
 
+/** Abuse-sensitive buckets refuse when the limiter itself is down; tracking/search ones stay open. */
+const FAIL_CLOSED: ReadonlySet<LimitBucket> = new Set(["auth", "contact", "checkout", "orders"]);
+
 export async function clientIp(): Promise<string> {
   const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  // platform-set headers first (Vercel overwrites these; a client cannot spoof them there)
+  return h.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip")?.trim() || h.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }
 
-/** Fixed-window limit in Postgres (works across serverless instances). Fails open on DB errors. */
+/** Fixed-window limit in Postgres (works across serverless instances). On DB errors only FAIL_CLOSED buckets refuse. */
 export async function rateLimit(bucket: LimitBucket, ip?: string): Promise<boolean> {
   const addr = ip ?? (await clientIp());
   // local development / automated tests on loopback are not throttled; production always is
@@ -27,9 +31,9 @@ export async function rateLimit(bucket: LimitBucket, ip?: string): Promise<boole
   const { windowSeconds, max } = LIMITS[bucket];
   try {
     const { data, error } = await createServiceSupabase().rpc("rate_limit_hit", { p_key: key, p_window_seconds: windowSeconds, p_max: max });
-    if (error) return true;
+    if (error) return !FAIL_CLOSED.has(bucket);
     return data !== false;
   } catch {
-    return true;
+    return !FAIL_CLOSED.has(bucket);
   }
 }

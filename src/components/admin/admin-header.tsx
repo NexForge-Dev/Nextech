@@ -52,7 +52,7 @@ function GlobalSearch() {
         <kbd className="hidden rounded border border-line bg-white px-1.5 text-[10px] font-medium sm:inline">Ctrl K</kbd>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="top-24 max-w-xl translate-y-0 gap-0 rounded-md border border-line p-0 shadow-none ring-0 sm:max-w-xl">
+        <DialogContent closeLabel="Fechar" className="top-24 max-w-[calc(100%-2rem)] translate-y-0 gap-0 rounded-md border border-line p-0 shadow-none ring-0 sm:max-w-xl">
           <DialogTitle className="sr-only">Pesquisa administrativa</DialogTitle>
           <div className="flex items-center gap-2 border-b border-line px-4">
             <Search className="size-4 text-mute" aria-hidden />
@@ -89,7 +89,7 @@ function Notifications({ items, unread }: { items: Notification[]; unread: numbe
   const [, start] = useTransition();
   return (
     <Popover>
-      <PopoverTrigger aria-label={`Notificações${unread ? ` (${unread} não lidas)` : ""}`} className="relative grid size-10 cursor-pointer place-items-center rounded-md hover:bg-soft">
+      <PopoverTrigger aria-label={`Notificações${unread ? ` (${unread} não lidas)` : ""}`} className="relative grid size-10 shrink-0 cursor-pointer place-items-center rounded-md hover:bg-soft">
         <Bell className="size-[18px]" strokeWidth={1.75} aria-hidden />
         {unread > 0 && <span className="tabular absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">{unread}</span>}
       </PopoverTrigger>
@@ -128,12 +128,12 @@ export function AdminHeader({ nav, email, roleLabel, notifications, unread }: { 
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-white/95 px-4 backdrop-blur md:px-6">
       <MobileSidebar items={nav} />
       <p className="hidden min-w-0 shrink-0 truncate text-base font-semibold md:block md:w-48">{title}</p>
-      <div className="flex flex-1 justify-center">
+      <div className="flex min-w-0 flex-1 justify-center">
         <GlobalSearch />
       </div>
       <Notifications items={notifications} unread={unread} />
       <Popover>
-        <PopoverTrigger aria-label="Perfil" className="grid size-10 cursor-pointer place-items-center rounded-full border border-line hover:bg-soft">
+        <PopoverTrigger aria-label="Perfil" className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border border-line hover:bg-soft">
           <UserRound className="size-[18px]" strokeWidth={1.75} aria-hidden />
         </PopoverTrigger>
         <PopoverContent align="end" className="w-64 rounded-md border border-line p-0 shadow-[0_8px_24px_rgba(0,0,0,0.06)] ring-0">

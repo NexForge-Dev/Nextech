@@ -81,7 +81,7 @@ export default async function NetworkPage({ params }: { params: Promise<{ id: st
             <ul className="divide-y divide-line rounded-md border border-line text-sm">
               {runs.map((r) => (
                 <li key={r.id} className="flex flex-wrap justify-between gap-2 px-4 py-2">
-                  <span>{new Date(r.started_at).toLocaleString("pt-BR")} · {r.kind === "csv" ? "Importação CSV" : r.kind === "prices" ? "Preços" : "API"}</span>
+                  <span>{new Date(r.started_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {r.kind === "csv" ? "Importação CSV" : r.kind === "prices" ? "Preços" : "API"}</span>
                   <span className={r.ok === false ? "font-semibold" : "text-mute"}>{r.ok === false ? `Falhou: ${r.error ?? ""}` : r.ok ? `${r.inserted} novas · ${r.updated} atualizadas` : "Em andamento"}</span>
                 </li>
               ))}

@@ -54,14 +54,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
               <option value="paid">Pagos</option>
               <option value="unpaid">Não pagos</option>
             </select>
-            <input type="date" name="from" defaultValue={sp.from ?? ""} aria-label="De" className={select} />
-            <input type="date" name="to" defaultValue={sp.to ?? ""} aria-label="Até" className={select} />
+            <label className="flex items-center gap-2 text-sm text-mute">De <input type="date" name="from" defaultValue={sp.from ?? ""} aria-label="De" className={select} /></label>
+            <label className="flex items-center gap-2 text-sm text-mute">Até <input type="date" name="to" defaultValue={sp.to ?? ""} aria-label="Até" className={select} /></label>
           </>
         }
-        empty={<EmptyPanel title={sp.q || sp.status || sp.payment ? "Nenhum pedido encontrado" : "Nenhum pedido ainda"} text="Os pedidos aparecem aqui assim que um cliente finaliza a compra." />}
+        empty={<EmptyPanel title={sp.q || sp.status || sp.payment || sp.from || sp.to ? "Nenhum pedido encontrado" : "Nenhum pedido ainda"} text="Os pedidos aparecem aqui assim que um cliente finaliza a compra." />}
         columns={[
-          { key: "n", header: "#", cell: (r) => <Link href={`/admin/pedidos/${r.number}`} className="font-mono font-medium hover:underline">{r.number}</Link> },
-          { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span> },
+          { key: "n", header: "#", cell: (r) => <Link href={`/admin/pedidos/${r.number}`} className="inline-flex min-h-10 items-center font-mono font-medium hover:underline">{r.number}</Link> },
+          { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</span> },
           { key: "cust", header: "Cliente", cell: (r) => <div><p className="font-medium">{r.customer}</p><p className="text-xs text-mute">{r.email}</p></div> },
           { key: "total", header: "Total", cell: (r) => <span className="tabular">{money(r.totalMinor)}</span> },
           { key: "pay", header: "Pagamento", cell: (r) => <span className="text-xs">{METHOD[r.paymentMethod] ?? r.paymentMethod} {r.paid ? "✓" : "⏳"}</span> },

@@ -5,6 +5,7 @@ import { adminAction, ActionFailure } from "@/lib/admin/action";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { productInputSchema, validateOfferUrls, type ProductParsed } from "@/lib/admin/schemas/product";
 import { parseProductsCsv, type CsvProduct } from "@/lib/domain/csv";
+import { fetchPublicHttps } from "@/lib/security/safe-fetch";
 
 async function storeDomains(storeIds: string[]) {
   const sb = await createServerSupabase();
@@ -92,11 +93,13 @@ export async function deleteProduct(input: unknown) {
 export type ImportPreview = { products: number; offers: number; errors: { line: number; message: string }[]; created: number; updated: number; committed: boolean };
 
 async function downloadImage(url: string): Promise<string | null> {
-  if (!url.startsWith("https://")) return null;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(10000), redirect: "follow" });
+    // SSRF guard: public https hosts only, every redirect hop re-checked
+    const res = await fetchPublicHttps(url);
+    if (!res) return null;
     const type = res.headers.get("content-type")?.split(";")[0] ?? "";
     if (!res.ok || !["image/jpeg", "image/png", "image/webp", "image/avif"].includes(type)) return null;
+    if (Number(res.headers.get("content-length") ?? 0) > 5 * 1024 * 1024) return null;
     const buf = await res.arrayBuffer();
     if (buf.byteLength > 5 * 1024 * 1024) return null;
     const ext = type.split("/")[1].replace("jpeg", "jpg");

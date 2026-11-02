@@ -34,10 +34,15 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
   const [pending, setPending] = useState(false);
   const [cepState, setCepState] = useState<"idle" | "loading" | "notfound">("idle");
   const [card, setCard] = useState<{ clientSecret: string; orderNumber: number } | null>(null);
+  const [cartFailed, setCartFailed] = useState(false);
 
-  useEffect(() => {
-    loadCart(getLocalCart()).then(setCart, () => setCart({ lines: [], subtotalMinor: 0, totalMinor: 0, checkoutable: false }));
-  }, []);
+  const reloadCart = () => {
+    loadCart(getLocalCart()).then(
+      (c) => (setCartFailed(false), setCart(c)),
+      () => setCartFailed(true),
+    );
+  };
+  useEffect(reloadCart, []);
 
   const totals = useMemo(() => cartTotals(cart?.lines.filter((l) => !l.problem) ?? [], method), [cart, method]);
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
@@ -64,11 +69,22 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
     setErrors({});
     setMessage(null);
     trackAdEvent("InitiateCheckout", { valueMinor: totals.totalMinor, currency: "BRL", contentIds: cart.lines.map((l) => l.productId) });
-    const r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, expectedTotalMinor: totals.totalMinor });
+    let r: Awaited<ReturnType<typeof startCheckout>>;
+    try {
+      r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, expectedTotalMinor: totals.totalMinor });
+    } catch {
+      // network drop / server action failure: never leave the button stuck on "processing"
+      r = { ok: false, error: t("networkError") };
+    }
     setPending(false);
     if (!r.ok) {
       setMessage(r.error);
       setErrors(r.fieldErrors ?? {});
+      // a saved address that no longer validates: open it in the form so the highlighted fields are visible
+      if (addressId !== "new" && Object.keys(r.fieldErrors ?? {}).some((k) => k.startsWith("address."))) {
+        setAddr(address);
+        setAddressId("new");
+      }
       if (r.priceChanged) loadCart(getLocalCart()).then(setCart, () => undefined);
       return;
     }
@@ -83,6 +99,16 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
     router.push({ pathname: "/checkout/concluido", query: { pedido: String(r.orderNumber) } });
   }
 
+  if (!cart && cartFailed) {
+    return (
+      <div role="alert" className="rounded-md border border-line px-6 py-14 text-center">
+        <p className="font-semibold">{tc("loadError")}</p>
+        <button type="button" onClick={reloadCart} className="mt-6 inline-flex h-10 cursor-pointer items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">
+          {tc("retry")}
+        </button>
+      </div>
+    );
+  }
   if (!cart) return <p className="py-10 text-sm text-mute">{tc("loading")}</p>;
   if (!cart.lines.length || !cart.checkoutable) {
     return (
@@ -193,8 +219,8 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
           <ul className="space-y-2 text-sm">
             {cart.lines.map((l) => (
               <li key={l.productId} className="flex justify-between gap-3">
-                <span>{l.quantity}× {l.name}</span>
-                <span className="tabular">{money(l.lineTotalMinor)}</span>
+                <span className="min-w-0 break-words">{l.quantity}× {l.name}</span>
+                <span className="tabular shrink-0">{money(l.lineTotalMinor)}</span>
               </li>
             ))}
           </ul>
@@ -204,6 +230,7 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
           {maxDeliveryDays != null && <p className="text-xs text-mute">{t("deliveryEstimate", { days: maxDeliveryDays })}</p>}
           {seller && <p className="border-t border-line pt-3 text-xs text-mute" data-testid="checkout-seller">{t("soldBy", { seller })}</p>}
         </div>
+        {card && !stripePromise && <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">{t("notConfigured")}</p>}
         {card && stripePromise && (
           <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>
             <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(chargedTotal ?? totals.totalMinor) })} />

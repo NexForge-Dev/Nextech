@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -15,6 +15,17 @@ export function OrderActions({ orderNumber, cancellable, canRequestReturn, hasIn
   const [showReturn, setShowReturn] = useState(false);
   const [pending, start] = useTransition();
   const [state, action, sending] = useActionState<ReturnState, FormData>(requestReturn, null);
+  const noRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (confirming) noRef.current?.focus();
+  }, [confirming]);
+
+  async function openInvoice() {
+    // navigate in this tab: a window.open after an await is blocked by Safari/iOS popup blockers
+    const url = await myInvoiceUrl(orderNumber).catch(() => null);
+    if (url) window.location.assign(url);
+    else toast.error(t("invoiceError"));
+  }
 
   function cancel() {
     start(async () => {
@@ -30,7 +41,7 @@ export function OrderActions({ orderNumber, cancellable, canRequestReturn, hasIn
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3">
         {hasInvoice && (
-          <button type="button" className={btn} onClick={async () => { const url = await myInvoiceUrl(orderNumber); if (url) window.open(url, "_blank", "noopener"); }}>
+          <button type="button" className={btn} onClick={openInvoice}>
             {t("invoice")}
           </button>
         )}
@@ -47,11 +58,11 @@ export function OrderActions({ orderNumber, cancellable, canRequestReturn, hasIn
       </div>
 
       {confirming && (
-        <div role="alertdialog" aria-label={t("cancel")} className="space-y-3 rounded-md border border-black p-4">
+        <div role="alertdialog" aria-label={t("cancel")} onKeyDown={(e) => e.key === "Escape" && setConfirming(false)} className="space-y-3 rounded-md border border-black p-4">
           <p className="text-sm">{t("cancelConfirm")}</p>
           <div className="flex gap-3">
             <button type="button" disabled={pending} onClick={cancel} className="inline-flex h-10 cursor-pointer items-center rounded-md bg-black px-4 text-sm font-semibold text-white hover:bg-ink disabled:opacity-50">{t("cancelYes")}</button>
-            <button type="button" onClick={() => setConfirming(false)} className="inline-flex h-10 cursor-pointer items-center rounded-md border border-line px-4 text-sm">{t("cancelNo")}</button>
+            <button ref={noRef} type="button" onClick={() => setConfirming(false)} className="inline-flex h-10 cursor-pointer items-center rounded-md border border-line px-4 text-sm">{t("cancelNo")}</button>
           </div>
         </div>
       )}

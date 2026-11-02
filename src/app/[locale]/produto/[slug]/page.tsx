@@ -134,7 +134,11 @@ export default async function ProductPage({ params }: Props) {
                 <span className="tabular text-4xl font-semibold tracking-tight" data-testid="price-main">{formatMoney(own.priceMinor, "BRL", locale)}</span>
                 {ownDiscount != null && <span className="rounded-full bg-black px-2 py-0.5 text-xs font-semibold text-white">-{ownDiscount}%</span>}
               </p>
-              <p className="mt-1 text-sm text-mute">{t("cardOrBoleto")}</p>
+              {(ctx.businessModels.payments.card || ctx.businessModels.payments.boleto) && (
+                <p className="mt-1 text-sm text-mute">
+                  {ctx.businessModels.payments.card && ctx.businessModels.payments.boleto ? t("cardOrBoleto") : ctx.businessModels.payments.card ? t("cardOnly") : t("boletoOnly")}
+                </p>
+              )}
               {pixOn && (
                 <p className="mt-1 text-sm">
                   <strong className="tabular">{t("pixPrice", { price: formatMoney(pixPriceMinor(own.priceMinor, own.pixDiscountPct), "BRL", locale) })}</strong>{" "}
@@ -160,7 +164,7 @@ export default async function ProductPage({ params }: Props) {
               ) : (
                 <p className="mt-6 text-sm font-medium">{t("onlyBrazil")}</p>
               )}
-              <p className="mt-5 text-xs text-mute">{t("ownSeller")}</p>
+              <p className="mt-5 text-xs text-mute">{t("ownSeller", { store: settings.storeName })}</p>
             </div>
           ) : (
           <div className="mt-8 border-t border-line pt-8">

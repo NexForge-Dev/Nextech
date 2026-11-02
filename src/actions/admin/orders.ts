@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { adminAction, ActionFailure, writeAudit } from "@/lib/admin/action";
 import { requirePermission } from "@/lib/auth/session";
 import { createServiceSupabase } from "@/lib/supabase/service";
@@ -51,12 +52,28 @@ const statusImpl = adminAction({ permission: "orders.write", schema: statusSchem
   if (error) throw dbFailure(error.message);
   if (status === "shipped" && o.status !== "in_transit") await notifyOrder("orderShipped", orderId);
   if (status === "delivered") await notifyOrder("orderDelivered", orderId);
+  let refundNote: string | undefined;
   if (status === "cancelled") {
     if (!o.paid_at && o.stripe_payment_intent_id) await getStripe().paymentIntents.cancel(o.stripe_payment_intent_id).catch(() => undefined);
-    await notifyOrder("orderCancelled", orderId);
+    // a paid order that is cancelled must give the money back (same rule as the customer's cancellation)
+    const remaining = refundableMinor({ totalMinor: Number(o.total_minor), refundedMinor: Number(o.refunded_minor), paid: !!o.paid_at });
+    if (remaining > 0 && o.payment_method === "boleto") {
+      await createServiceSupabase().from("order_events").insert({ order_id: orderId, actor: "system", kind: "manual_refund_pending", data: { amount: remaining, reason: "admin_cancel" } });
+      await notifyOrder("ownerManualRefund", orderId, { refundMinor: remaining });
+      refundNote = "manual_refund_pending";
+    } else if (remaining > 0) {
+      try {
+        await refundCore(orderId, remaining, "Cancelado pela loja", false, ctx.userId);
+        refundNote = "stripe_refund";
+      } catch {
+        await notifyOrder("ownerAlert", orderId, { alert: `O pedido foi cancelado mas o reembolso automático de ${formatMoney(remaining, "BRL", "pt-BR")} falhou. Use “Reembolsar” no painel.` });
+        refundNote = "refund_failed";
+      }
+    }
+    await notifyOrder("orderCancelled", orderId, refundNote === "stripe_refund" ? { refundMinor: remaining } : undefined);
   }
   touch(Number(o.number));
-  return { id: orderId, audit: { from: o.status, to: status } };
+  return { id: orderId, audit: { from: o.status, to: status, ...(refundNote ? { refund: refundNote } : {}) } };
 });
 export async function updateOrderStatus(input: unknown) {
   return statusImpl(input);
@@ -126,12 +143,25 @@ const resolveImpl = adminAction({ permission: "orders.write", schema: resolveRet
   const { data: rr } = await svc.from("return_requests").select("id, order_id, status, orders(payment_method, total_minor, refunded_minor)").eq("id", v.returnId).maybeSingle();
   if (!rr || !rr.orders) throw new ActionFailure("invalid", "Solicitação não encontrada.");
   if (rr.status === "resolved") throw new ActionFailure("invalid", "Esta solicitação já foi resolvida.");
+  // claim the request first (conditional on still open) so two clicks can never refund twice
+  const { data: claimed, error } = await svc
+    .from("return_requests")
+    .update({ status: "resolved", outcome: v.outcome, outcome_note: v.note || null, resolved_at: new Date().toISOString() })
+    .eq("id", v.returnId)
+    .eq("status", "open")
+    .select("id");
+  if (error) throw error;
+  if (!claimed?.length) throw new ActionFailure("invalid", "Esta solicitação já foi resolvida.");
   if (v.outcome === "refund_full" || v.outcome === "refund_partial") {
     const amount = v.outcome === "refund_full" ? Number(rr.orders.total_minor) - Number(rr.orders.refunded_minor) : v.refundAmountMinor!;
-    await refundCore(rr.order_id, amount, v.note || "Devolução", rr.orders.payment_method === "boleto", ctx.userId);
+    try {
+      await refundCore(rr.order_id, amount, v.note || "Devolução", rr.orders.payment_method === "boleto", ctx.userId);
+    } catch (e) {
+      // reopen so the admin can try again
+      await svc.from("return_requests").update({ status: "open", outcome: null, outcome_note: null, resolved_at: null }).eq("id", v.returnId);
+      throw e;
+    }
   }
-  const { error } = await svc.from("return_requests").update({ status: "resolved", outcome: v.outcome, outcome_note: v.note || null, resolved_at: new Date().toISOString() }).eq("id", v.returnId);
-  if (error) throw error;
   await svc.from("order_events").insert({ order_id: rr.order_id, actor: "admin", actor_id: ctx.userId, kind: "return_resolved", data: { outcome: v.outcome } });
   const label = { refund_full: "reembolso total", refund_partial: "reembolso parcial", replacement: "troca do produto", refused: "solicitação não aprovada" }[v.outcome];
   await notifyOrder("returnResolved", rr.order_id, { outcome: v.note ? `${label} — ${v.note}` : label });
@@ -155,6 +185,8 @@ export async function attachInvoice(form: FormData): Promise<{ ok: boolean; erro
   if (!parsed.success || !(file instanceof File)) return { ok: false, error: "Envie um arquivo PDF." };
   if (file.type !== "application/pdf") return { ok: false, error: "A nota precisa ser um PDF." };
   if (file.size > 5 * 1024 * 1024) return { ok: false, error: "O PDF pode ter até 5 MB." };
+  // the declared type comes from the browser: check the PDF signature too
+  if (new TextDecoder().decode(new Uint8Array(await file.slice(0, 5).arrayBuffer())) !== "%PDF-") return { ok: false, error: "A nota precisa ser um PDF." };
   const svc = createServiceSupabase();
   const o = await loadOrder(parsed.data.orderId).catch(() => null);
   if (!o) return { ok: false, error: "Pedido não encontrado." };
@@ -169,8 +201,13 @@ export async function attachInvoice(form: FormData): Promise<{ ok: boolean; erro
 }
 
 /** Signed link (5 min) for the admin to view an attached invoice or a return photo. */
+const fileRefSchema = z.object({ bucket: z.enum(["invoices", "returns"]), path: z.string().max(300).regex(/^[0-9a-f-]{36}\/[\w.-]+$/) });
+
 export async function adminFileUrl(bucket: "invoices" | "returns", path: string): Promise<string | null> {
   await requirePermission("orders.read");
+  // server actions are public endpoints: the TypeScript union is not a runtime check
+  const ref = fileRefSchema.safeParse({ bucket, path });
+  if (!ref.success) return null;
   const { data } = await createServiceSupabase().storage.from(bucket).createSignedUrl(path, 300);
   return data?.signedUrl ?? null;
 }

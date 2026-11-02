@@ -68,14 +68,14 @@ export function MobileSidebar({ items }: { items: NavItem[] }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger aria-label="Abrir menu" className="grid size-10 cursor-pointer place-items-center rounded-md hover:bg-soft lg:hidden">
+      <SheetTrigger aria-label="Abrir menu" className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-md hover:bg-soft lg:hidden">
         <Menu className="size-5" strokeWidth={1.75} aria-hidden />
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 gap-0 border-line p-0 shadow-none">
+      <SheetContent side="left" closeLabel="Fechar menu" className="w-72 gap-0 border-line p-0 shadow-none">
         <SheetTitle className="border-b border-line px-5 py-5">
           <span className="wordmark text-lg">NEXTECH</span> <span className="text-[10px] font-medium uppercase tracking-widest text-mute">Admin</span>
         </SheetTitle>
-        <div className="overflow-y-auto p-3">
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
           <NavLinks items={items} collapsed={false} onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>

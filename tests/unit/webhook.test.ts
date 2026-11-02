@@ -3,7 +3,7 @@ import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
 
 type Ev = { id: string; type: string; data: { object: Record<string, unknown> } };
 const ev = (id: string, type: string, object: Record<string, unknown>): Ev => ({ id, type, data: { object } });
-const pi = (status = "succeeded") => ({ id: "pi_1", object: "payment_intent", status, metadata: { order_id: "o1" }, latest_charge: "ch_1", last_payment_error: { message: "Cartão recusado" } });
+const pi = (status = "succeeded") => ({ id: "pi_1", object: "payment_intent", status, amount: 43980, amount_received: 43980, currency: "brl", metadata: { order_id: "o1" }, latest_charge: "ch_1", last_payment_error: { message: "Cartão recusado" } });
 
 function fake() {
   const state = {
@@ -18,6 +18,7 @@ function fake() {
     releaseEvent: async (id) => void state.claimed.delete(id),
     markProcessed: async () => {},
     paymentDetails: async () => ({ feeMinor: 1794, summary: "Cartão final 4242" }),
+    orderAmount: async () => ({ totalMinor: 43980, currency: "BRL" }),
     markPaid: async () => {
       if (state.status === "cancelled") return { orderId: "o1", transitioned: false, wasCancelled: true };
       if (state.status !== "awaiting_payment") return { orderId: "o1", transitioned: false };
@@ -44,6 +45,21 @@ function fake() {
 }
 
 describe("handleStripeEvent", () => {
+  it("refuses to mark paid a payment that does not match the order total or currency", async () => {
+    for (const bad of [{ amount_received: 100 }, { currency: "usd" }]) {
+      const { d, state } = fake();
+      expect(await handleStripeEvent(ev("evt_x", "payment_intent.succeeded", { ...pi(), ...bad }) as never, d)).toBe("processed");
+      expect(state.status).toBe("awaiting_payment");
+      expect(state.events).toEqual(["amount_mismatch"]);
+      expect(state.notes).toEqual(["ownerAlert"]);
+    }
+  });
+  it("ignores a success for an order that does not exist", async () => {
+    const { d, state } = fake();
+    d.orderAmount = async () => null;
+    expect(await handleStripeEvent(ev("evt_y", "payment_intent.succeeded", pi()) as never, d)).toBe("ignored");
+    expect(state.status).toBe("awaiting_payment");
+  });
   it("marks the order paid once and sends one confirmation for duplicate deliveries", async () => {
     const { d, state } = fake();
     const e = ev("evt_1", "payment_intent.succeeded", pi());

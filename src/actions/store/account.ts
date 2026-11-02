@@ -8,6 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import { isLocale, LOCALES, type Locale } from "@/i18n/routing";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createServiceSupabase } from "@/lib/supabase/service";
+import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { MARKET_COOKIE } from "@/lib/domain/markets";
 import { getAvailableMarkets } from "@/lib/data/taxonomy";
@@ -90,11 +91,29 @@ export async function deleteAccount(_: AuthState, form: FormData): Promise<AuthS
   const user = await getSessionUser();
   if (!user) return { error: ta("genericError") };
   if (String(form.get("confirm") ?? "").trim() !== t("deleteConfirmWord")) return { fieldErrors: { confirm: t("deleteConfirmLabel") } };
-  const sb = await createServerSupabase();
-  await sb.auth.signOut();
   // service role: deleting the auth user cascades profile, favorites, history and saved addresses;
   // orders and return requests are kept for fiscal/consumer-law records with user_id set to null
-  const { error } = await createServiceSupabase().auth.admin.deleteUser(user.id);
+  const svc = createServiceSupabase();
+  // unpaid orders would otherwise stay payable (e.g. a printed boleto) for an account that no longer exists
+  const { data: unpaid } = await svc.from("orders").select("id, stripe_payment_intent_id").eq("user_id", user.id).eq("status", "awaiting_payment");
+  for (const o of unpaid ?? []) {
+    if (o.stripe_payment_intent_id && isStripeConfigured()) await getStripe().paymentIntents.cancel(o.stripe_payment_intent_id).catch(() => undefined);
+    await svc.rpc("order_cancel_unpaid", { p_order: o.id });
+  }
+  const { error } = await svc.auth.admin.deleteUser(user.id);
+  // delete first: signing out before a failed deletion would leave the user logged out with the account intact
   if (error) return { error: ta("genericError") };
+  await (await createServerSupabase()).auth.signOut({ scope: "local" }).catch(() => undefined);
   redirect(getPathname({ locale, href: "/" }));
+}
+
+/** LGPD: a customer removes a saved delivery address (with its CPF) without deleting the account. */
+export async function deleteMyAddress(id: string): Promise<{ ok: boolean }> {
+  const user = await getSessionUser();
+  if (!user || !z.string().uuid().safeParse(id).success) return { ok: false };
+  const sb = await createServerSupabase();
+  // RLS (customer_addresses_own) limits the delete to the caller's own rows
+  const { error } = await sb.from("customer_addresses").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/", "layout");
+  return { ok: !error };
 }

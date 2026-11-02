@@ -42,3 +42,16 @@ describe("robots", () => {
     expect(r.sitemap).toBe("https://nextech.example/sitemap.xml");
   });
 });
+
+describe("listing metadata", () => {
+  it("treats paging and ad-click ids as non-filters and canonicalises deeper pages to themselves", async () => {
+    const { buildMetadata, isFilteredQuery, pageParam } = await import("@/lib/seo/metadata");
+    expect(isFilteredQuery({ page: "2", utm_source: "x", gclid: "y", fbclid: "z" })).toBe(false);
+    expect(isFilteredQuery({ sort: "price_asc" })).toBe(true);
+    expect(pageParam({ page: "3" })).toBe(3);
+    expect(pageParam({ page: "abc" })).toBe(1);
+    const m = buildMetadata({ locale: "pt-BR", locales: ["pt-BR"], href: "/produtos", title: "P", page: 2 });
+    expect(String(m.alternates?.canonical)).toMatch(/\/produtos\?page=2$/);
+    expect(String(buildMetadata({ locale: "pt-BR", locales: ["pt-BR"], href: "/produtos", title: "P", page: 1 }).alternates?.canonical)).toMatch(/\/produtos$/);
+  });
+});

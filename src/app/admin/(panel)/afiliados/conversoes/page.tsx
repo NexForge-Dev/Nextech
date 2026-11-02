@@ -66,7 +66,7 @@ export default async function ConversionsPage({ searchParams }: { searchParams: 
         }
         empty={<EmptyPanel title="Nenhuma conversão reportada" text="Conversões aparecem aqui quando uma rede é sincronizada ou um relatório é importado." />}
         columns={[
-          { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.occurred_at).toLocaleDateString("pt-BR")}</span> },
+          { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.occurred_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</span> },
           { key: "network", header: "Rede", cell: (r) => r.affiliate_networks?.name ?? "—" },
           { key: "id", header: "ID externo", cell: (r) => <span className="font-mono text-xs">{r.external_id.slice(0, 24)}</span> },
           { key: "product", header: "Produto (via clique)", cell: (r) => (r.product_id ? <Link href={`/admin/produtos/${r.product_id}`} className="hover:underline">{r.productName ?? "—"}</Link> : <span className="text-xs text-mute">Não atribuído</span>) },
