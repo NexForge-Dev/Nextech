@@ -954,6 +954,9 @@ isOneToOne: false
             "admin_save_product":
 { Args: { "p": Json }; Returns: string
                            },
+"admin_save_product_full":
+{ Args: { "p": Json }; Returns: string
+                           },
 "auth_email_exists":
 { Args: { "p_email": string }; Returns: boolean
                            },

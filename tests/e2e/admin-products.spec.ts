@@ -17,6 +17,7 @@ test("admin creates a store and a product; it appears in the store with its pric
     await page.getByLabel("Nome do produto").fill(productName);
     await expect(page.getByLabel("Slug")).toHaveValue(slug);
     await page.getByLabel("Categoria").selectOption({ label: "Eletrônicos" });
+    await page.getByLabel("Modo de venda").selectOption("affiliate");
     await page.getByRole("button", { name: "Adicionar oferta" }).click();
     await page.getByLabel("Loja parceira").selectOption({ label: `Loja Teste ${stamp}` });
     await page.getByLabel("Link original do produto").fill("http://loja-teste.com/p/1");
@@ -40,5 +41,34 @@ test("admin creates a store and a product; it appears in the store with its pric
   } finally {
     await s.from("products").delete().eq("slug", slug);
     await s.from("stores").delete().eq("id", store!.id);
+  }
+});
+
+test("admin creates an own-store product with a private supplier and sees the margin", async ({ page }) => {
+  const s = svc();
+  const stamp = Date.now();
+  const slug = `fone-proprio-${stamp}`;
+  try {
+    await acceptCookies(page);
+    await adminLogin(page);
+    await page.goto("/admin/produtos/novo");
+    await expect(page.getByLabel("Modo de venda")).toHaveValue("own");
+    await page.getByLabel("Nome do produto").fill(`Fone Próprio ${stamp}`);
+    await page.getByLabel("Slug").fill(slug);
+    await page.getByLabel("Categoria").selectOption({ label: "Eletrônicos" });
+    await page.getByRole("button", { name: "Salvar produto" }).click();
+    await expect(page.getByText("Informe o preço de venda.")).toBeVisible();
+
+    await page.getByLabel("Preço de venda (R$)").fill("249,90");
+    await page.getByRole("button", { name: "Adicionar fornecedor" }).click();
+    await page.getByLabel("Fornecedor", { exact: true }).selectOption({ label: "Amazon BR" });
+    await page.getByLabel("Custo (R$)").fill("165,00");
+    await expect(page.getByTestId("margin-estimate")).toContainText("R$ 74,53");
+    await page.getByRole("button", { name: "Salvar produto" }).click();
+    await expect(page).toHaveURL(/\/admin\/produtos\/[0-9a-f-]{36}$/);
+    await expect(page.getByLabel("Preço de venda (R$)")).toHaveValue("249,90");
+    await expect(page.getByLabel("Custo (R$)")).toHaveValue("165,00");
+  } finally {
+    await s.from("products").delete().eq("slug", slug);
   }
 });

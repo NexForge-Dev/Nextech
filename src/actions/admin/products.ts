@@ -30,6 +30,9 @@ function rpcPayload(p: ProductParsed, extra: { priceSource?: "manual" | "import"
     translations: p.translations,
     images: p.images,
     replaceOffers: extra.replaceOffers ?? true,
+    saleMode: p.saleMode,
+    sale: p.sale,
+    suppliers: p.suppliers,
     offers: p.offers.map((o) => ({ ...o, priceSource: extra.priceSource ?? "manual", sourceRef: extra.sourceRef ?? null })),
   };
 }
@@ -38,10 +41,10 @@ const saveProductImpl = adminAction({ permission: "products.write", schema: prod
   const errors = validateOfferUrls(p.offers, await storeDomains([...new Set(p.offers.map((o) => o.storeId))]));
   if (Object.keys(errors).length) throw new ActionFailure("invalid", "Há links de oferta com domínio não autorizado.", errors);
   const sb = await createServerSupabase();
-  const { data: id, error } = await sb.rpc("admin_save_product", { p: rpcPayload(p) as never });
+  const { data: id, error } = await sb.rpc("admin_save_product_full", { p: rpcPayload(p) as never });
   if (error) throw error;
   updateTag("catalog");
-  return { id: id as string, audit: { slug: p.slug, status: p.status, offers: p.offers.length } };
+  return { id: id as string, audit: { slug: p.slug, status: p.status, saleMode: p.saleMode, offers: p.offers.length, suppliers: p.suppliers.length } };
 });
 export async function saveProduct(input: unknown) {
   return saveProductImpl(input);

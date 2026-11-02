@@ -1,5 +1,5 @@
 import { pageGuard } from "@/lib/admin/guard";
-import { getProductFormOptions } from "@/lib/data/admin/products";
+import { EMPTY_SALE, getProductFormOptions } from "@/lib/data/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductForm } from "@/components/admin/product-form";
 
@@ -30,6 +30,9 @@ export default async function NewProductPage() {
           translations: { "pt-BR": { name: "", shortDescription: "", descriptionMd: "", specs: [] } },
           images: [],
           offers: [],
+          saleMode: "own",
+          sale: EMPTY_SALE,
+          suppliers: [],
         }}
       />
     </>

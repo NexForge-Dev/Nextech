@@ -25,7 +25,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
 
   let query = sb
     .from("products")
-    .select("id, slug, status, featured, updated_at, sku, categories(category_translations(locale, name)), product_translations!inner(locale, name), product_images(path, is_main), affiliate_links(price_minor, currency, active, stores(name))", { count: "exact" })
+    .select("id, slug, status, featured, updated_at, sku, categories(category_translations(locale, name)), product_translations!inner(locale, name), product_images(path, is_main), affiliate_links(price_minor, currency, active, stores(name)), sale_mode, product_sale(price_minor)", { count: "exact" })
     .eq("product_translations.locale", "pt-BR");
   if (sp.q) {
     const term = sp.q.replace(/[%_\\]/g, (c) => `\\${c}`).trim();
@@ -50,8 +50,9 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
       name: p.product_translations[0]?.name ?? p.slug,
       category: p.categories?.category_translations.find((t) => t.locale === "pt-BR")?.name ?? "—",
       image: storagePublicUrl("products", main?.path),
-      price: priced ? formatMoney(priced.price_minor!, priced.currency, "pt-BR") : null,
-      stores: [...new Set(active.map((l) => l.stores?.name).filter(Boolean))].join(", "),
+      own: p.sale_mode === "own",
+      price: p.sale_mode === "own" ? (p.product_sale ? formatMoney(p.product_sale.price_minor, "BRL", "pt-BR") : null) : priced ? formatMoney(priced.price_minor!, priced.currency, "pt-BR") : null,
+      stores: p.sale_mode === "own" ? "NEXTECH" : [...new Set(active.map((l) => l.stores?.name).filter(Boolean))].join(", "),
     };
   });
   const clicks = await clicks30d(rows.map((r) => r.id));
@@ -112,6 +113,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
               <div className="min-w-0">
                 <Link href={`/admin/produtos/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
                 {r.featured && <Star className="ml-1.5 inline size-3.5 fill-black" aria-label="Destaque" />}
+                <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium">{r.own ? "Própria" : "Afiliado"}</span>
                 {r.sku && <p className="font-mono text-xs text-mute">{r.sku}</p>}
               </div>
             ),
