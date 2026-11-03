@@ -33,6 +33,7 @@ export const settingsSchema = z.object({
   logoPath: storagePath,
   faviconPath: storagePath,
   heroImage: storagePath,
+  flagshipProductId: z.string().uuid("Escolha um produto da lista.").nullable().optional().transform((v) => v ?? null),
   institutional: perLocale(z.string().trim().max(2000)),
   socials: z.partialRecord(z.enum(SOCIAL_KEYS), httpsOrEmpty).transform((s) => Object.fromEntries(Object.entries(s).filter(([, v]) => v))),
   seo: perLocale(z.object({ title: z.string().trim().max(70).optional().default(""), description: z.string().trim().max(170).optional().default("") })),

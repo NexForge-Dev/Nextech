@@ -80,7 +80,9 @@
     "discover": "Descubra por categoria",
     "comingSoonTitle": "Novos produtos em breve",
     "comingSoonText": "Estamos selecionando com cuidado os primeiros produtos da NEXTECH. Volte em breve.",
-    "dealsTile": "Ofertas"
+    "dealsTile": "Ofertas",
+    "flagshipEyebrow": "O carro-chefe da {store}",
+    "flagshipDetails": "Ver detalhes do produto"
   },
   "catalog": {
     "title": "Produtos",

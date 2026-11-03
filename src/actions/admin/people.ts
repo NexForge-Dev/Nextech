@@ -19,6 +19,7 @@ const saveSettingsImpl = adminAction({ permission: "settings.write", schema: set
     { key: "public.logo_path", value: s.logoPath ?? "" },
     { key: "public.favicon_path", value: s.faviconPath ?? "" },
     { key: "public.hero_image", value: s.heroImage ?? "" },
+    { key: "public.flagship_product", value: s.flagshipProductId ?? "" },
     { key: "public.institutional", value: s.institutional },
     { key: "public.socials", value: s.socials },
     { key: "public.seo", value: s.seo },
