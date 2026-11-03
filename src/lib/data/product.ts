@@ -53,7 +53,7 @@ export const getProduct = cache(async (slug: string, locale: Locale): Promise<Pr
   const [saleInfo, bm] = await Promise.all([loadSaleInfo([p.id]), getBusinessModels()]);
   const info = saleInfo.get(p.id);
   const saleMode: SaleMode = info?.mode ?? "affiliate";
-  if (!isModeVisible(saleMode, bm)) return null;
+  if (!isModeVisible(saleMode, bm, info?.sale?.fulfillment)) return null;
   if (saleMode === "own" && !info?.sale) return null;
   const t = pickTranslation(p.product_translations, locale);
   const offers = saleMode === "affiliate" ? ((await loadOffers([p.id])).get(p.id) ?? []) : [];

@@ -148,11 +148,14 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
         <FormSection title="Modelos de negócio" description="Ligue ou desligue cada modelo sem apagar nada. Produtos de um modelo desligado ficam guardados e invisíveis na loja.">
           <div className="space-y-4">
             <div>
-              <Toggle checked={v.businessModels.ownStore} onChange={(ownStore) => setV({ ...v, businessModels: { ...v.businessModels, ownStore } })} label="Loja própria — carrinho, checkout Stripe e pedidos" />
+              <Toggle checked={v.businessModels.ownStock} onChange={(ownStock) => setV({ ...v, businessModels: { ...v.businessModels, ownStock } })} label="Venda própria — produtos do seu estoque, com baixa automática a cada venda" />
+            </div>
+            <div>
+              <Toggle checked={v.businessModels.dropshipping} onChange={(dropshipping) => setV({ ...v, businessModels: { ...v.businessModels, dropshipping } })} label="Dropshipping — o cliente paga na loja e o fornecedor envia" />
             </div>
             <div>
               <Toggle checked={v.businessModels.affiliates} onChange={(affiliates) => setV({ ...v, businessModels: { ...v.businessModels, affiliates } })} label="Afiliados — botões “ver na loja”, /go e páginas de afiliados" />
-              <p className="mt-1 text-xs text-mute">Com afiliados desligados, a loja funciona só em português do Brasil.</p>
+              <p className="mt-1 text-xs text-mute">Com afiliados desligados, a loja funciona só em português do Brasil. Para escolher quais lojas parceiras aparecem, como só o AliExpress, ative ou desative cada uma em Lojas.</p>
             </div>
           </div>
         </FormSection>

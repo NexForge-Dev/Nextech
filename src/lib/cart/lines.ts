@@ -1,3 +1,4 @@
+import { isModeVisible } from "@/lib/domain/business-models";
 import type { OwnSale } from "@/lib/domain/own-pricing";
 import type { CartItem } from "./local-cart";
 
@@ -31,7 +32,7 @@ export function buildCartLines(items: CartItem[], rows: CartProductRow[], bm: { 
   const byId = new Map(rows.map((r) => [r.id, r]));
   return items.map((it) => {
     const r = byId.get(it.productId);
-    const sellable = !!r && bm.ownStore && r.published && r.saleMode === "own" && !!r.sale;
+    const sellable = !!r && isModeVisible("own", bm, r.sale?.fulfillment) && r.published && r.saleMode === "own" && !!r.sale;
     const sale = sellable ? r!.sale! : null;
     const problem: CartLineProblem = !sellable ? "hidden" : sale!.available ? null : "unavailable";
     const priceMinor = sale?.priceMinor ?? 0;

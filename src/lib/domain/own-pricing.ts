@@ -8,6 +8,8 @@ export type OwnSale = {
   available: boolean;
   deliveryMinDays: number;
   deliveryMaxDays: number;
+  fulfillment?: "stock" | "dropship";
+  stockQuantity?: number | null;
 };
 
 export type PaymentMethod = "card" | "boleto" | "pix";
