@@ -7,6 +7,7 @@ import { pickTranslation } from "./translations";
 import { toCards, type ProductCardData } from "./catalog";
 import { getBusinessModels } from "./settings";
 import { visibleModes } from "@/lib/domain/business-models";
+import { flagshipCandidates } from "@/lib/domain/flagship";
 
 export type FlagshipData = { product: ProductCardData; shortDescription: string | null };
 
@@ -49,26 +50,34 @@ export async function getActiveBanners(locale: Locale): Promise<BannerData[]> {
   });
 }
 
+const FLAGSHIP_FIELDS = "id, slug, rating, rating_count, rating_source, brands(name), product_translations(locale, name, short_description)";
+
+type FlagshipRow = Omit<ProductRow, "product_translations"> & {
+  product_translations: { locale: string; name: string; short_description: string | null }[];
+};
+
 /**
- * The flagship picked in the admin. Read per request (not in the 5-minute settings cache) so a change
- * shows on the next visit. Anything that makes it unsellable here (unpublished, deleted, hidden model,
- * another market) returns null and the home falls back to the standard hero.
+ * The product at the top of the home: the one picked in Admin → Produtos, otherwise the most recent
+ * highlighted one, otherwise the most recent published. Read per request, so a change shows on the
+ * next visit, and only null when nothing can be sold here.
  */
 async function getFlagship(locale: Locale, market: MarketCode): Promise<FlagshipData | null> {
   const sb = createAnonSupabase();
-  const { data: setting } = await sb.from("site_settings").select("value").eq("key", "public.flagship_product").maybeSingle();
-  const id = typeof setting?.value === "string" ? setting.value : "";
-  if (!id) return null;
-  const { data } = await sb
-    .from("products")
-    .select("id, slug, rating, rating_count, rating_source, brands(name), product_translations(locale, name, short_description)")
-    .eq("id", id)
-    .eq("status", "published")
-    .maybeSingle();
-  if (!data) return null;
-  const row = data as unknown as ProductRow & { product_translations: { locale: string; name: string; short_description: string | null }[] };
-  const [product] = await toCards([baseRow(row, locale)], market);
+  const [{ data: setting }, { data: recent }] = await Promise.all([
+    sb.from("site_settings").select("value").eq("key", "public.flagship_product").maybeSingle(),
+    sb.from("products").select(FLAGSHIP_FIELDS).eq("status", "published").order("featured", { ascending: false }).order("published_at", { ascending: false }).limit(12),
+  ]);
+  const pickedId = typeof setting?.value === "string" ? setting.value : "";
+  let rows = (recent ?? []) as unknown as FlagshipRow[];
+  if (pickedId && !rows.some((r) => r.id === pickedId)) {
+    const { data: picked } = await sb.from("products").select(FLAGSHIP_FIELDS).eq("id", pickedId).eq("status", "published").maybeSingle();
+    if (picked) rows = [picked as unknown as FlagshipRow, ...rows];
+  }
+  const ordered = flagshipCandidates(rows, pickedId);
+  const cards = await toCards(ordered.map((r) => baseRow(r, locale)), market);
+  const product = cards[0];
   if (!product) return null;
+  const row = ordered.find((r) => r.id === product.id)!;
   return { product, shortDescription: pickTranslation(row.product_translations, locale)?.short_description ?? null };
 }
 

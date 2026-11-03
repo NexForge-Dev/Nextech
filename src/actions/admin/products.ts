@@ -3,6 +3,7 @@ import { updateTag } from "next/cache";
 import { z } from "zod";
 import { adminAction, ActionFailure } from "@/lib/admin/action";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createServiceSupabase } from "@/lib/supabase/service";
 import { productInputSchema, validateOfferUrls, type ProductParsed } from "@/lib/admin/schemas/product";
 import { parseProductsCsv, type CsvProduct } from "@/lib/domain/csv";
 import { fetchPublicHttps } from "@/lib/security/safe-fetch";
@@ -38,12 +39,25 @@ function rpcPayload(p: ProductParsed, extra: { priceSource?: "manual" | "import"
   };
 }
 
+/**
+ * "Destaque" means one thing to the admin: removing it from a product also takes that product off the
+ * top of the home. Service client because site_settings is writable with settings.write only.
+ */
+async function releaseFlagship(productId: string) {
+  const svc = createServiceSupabase();
+  const { data } = await svc.from("site_settings").select("value").eq("key", "public.flagship_product").maybeSingle();
+  if (data?.value !== productId) return;
+  const { error } = await svc.from("site_settings").update({ value: "" }).eq("key", "public.flagship_product");
+  if (error) throw error;
+}
+
 const saveProductImpl = adminAction({ permission: "products.write", schema: productInputSchema, audit: { action: "save", entity: "products" } }, async (p) => {
   const errors = validateOfferUrls(p.offers, await storeDomains([...new Set(p.offers.map((o) => o.storeId))]));
   if (Object.keys(errors).length) throw new ActionFailure("invalid", "Há links de oferta com domínio não autorizado.", errors);
   const sb = await createServerSupabase();
   const { data: id, error } = await sb.rpc("admin_save_product_full", { p: rpcPayload(p) as never });
   if (error) throw error;
+  if (!p.featured) await releaseFlagship(id as string);
   updateTag("catalog");
   return { id: id as string, audit: { slug: p.slug, status: p.status, saleMode: p.saleMode, offers: p.offers.length, suppliers: p.suppliers.length } };
 });
@@ -70,11 +84,31 @@ const featuredImpl = adminAction({ permission: "products.write", schema: z.objec
   const sb = await createServerSupabase();
   const { error } = await sb.from("products").update({ featured }).eq("id", id);
   if (error) throw error;
+  if (!featured) await releaseFlagship(id);
   updateTag("catalog");
   return { id, audit: { featured } };
 });
 export async function setFeatured(input: unknown) {
   return featuredImpl(input);
+}
+
+// site_settings is writable with settings.write only; this one key belongs to whoever manages products
+const flagshipImpl = adminAction({ permission: "products.write", schema: z.object({ id: z.string().uuid().nullable() }), audit: { action: "flagship", entity: "products" } }, async ({ id }, ctx) => {
+  const svc = createServiceSupabase();
+  if (id) {
+    const { data } = await svc.from("products").select("status").eq("id", id).single();
+    if (data?.status !== "published") throw new ActionFailure("invalid", "Publique o produto antes de colocá-lo em destaque.");
+    // the pick and the product's own highlight stay in step, so saving the product doesn't release it
+    const { error: featuredError } = await svc.from("products").update({ featured: true }).eq("id", id);
+    if (featuredError) throw featuredError;
+  }
+  const { error } = await svc.from("site_settings").upsert({ key: "public.flagship_product", value: id ?? "", updated_by: ctx.userId }, { onConflict: "key" });
+  if (error) throw error;
+  updateTag("catalog");
+  return { id: id ?? "auto", audit: { flagship: id } };
+});
+export async function setFlagshipProduct(input: unknown) {
+  return flagshipImpl(input);
 }
 
 const deleteImpl = adminAction({ permission: "products.delete", schema: z.object({ id: z.string().uuid() }), audit: { action: "delete", entity: "products" } }, async ({ id }) => {

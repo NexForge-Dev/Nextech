@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ScrollText } from "lucide-react";
 import { pageGuard } from "@/lib/admin/guard";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { pickTranslation } from "@/lib/data/translations";
 import { PageHeader } from "@/components/admin/page-header";
 import { SettingsForm, type SettingsValue } from "@/components/admin/people-forms";
 
@@ -23,11 +22,7 @@ export default async function SettingsPage() {
     await pageGuard("settings.write");
   }
   const sb = await createServerSupabase();
-  const [{ data }, { data: published }] = await Promise.all([
-    sb.from("site_settings").select("key, value"),
-    sb.from("products").select("id, slug, product_translations(locale, name)").eq("status", "published").order("published_at", { ascending: false }).limit(200),
-  ]);
-  const products = (published ?? []).map((p) => ({ id: p.id, name: pickTranslation(p.product_translations, "pt-BR")?.name ?? p.slug }));
+  const { data } = await sb.from("site_settings").select("key, value");
   const m = new Map((data ?? []).map((r) => [r.key, r.value as unknown]));
   const obj = <T,>(k: string, d: T): T => {
     const v = m.get(k);
@@ -40,7 +35,6 @@ export default async function SettingsPage() {
     logoPath: str("public.logo_path") || null,
     faviconPath: str("public.favicon_path") || null,
     heroImage: str("public.hero_image") || null,
-    flagshipProductId: str("public.flagship_product") || null,
     institutional: obj("public.institutional", {}),
     socials: obj("public.socials", {}),
     seo: obj("public.seo", {}),
@@ -57,7 +51,7 @@ export default async function SettingsPage() {
         description="Dados gerais da loja. As alterações aparecem na loja em alguns segundos."
         actions={ctx.permissions.has("audit.read") && <Link href="/admin/configuracoes/logs" className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><ScrollText className="size-4" /> Log de auditoria</Link>}
       />
-      <SettingsForm initial={initial} products={products} />
+      <SettingsForm initial={initial} />
     </>
   );
 }

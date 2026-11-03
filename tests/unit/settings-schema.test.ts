@@ -26,19 +26,6 @@ describe("settings schema", () => {
   it("bounds the stale threshold", () => expect(settingsSchema.safeParse({ ...base, priceStaleDays: 0 }).success).toBe(false));
 });
 
-describe("settings schema — flagship product", () => {
-  it("defaults to no flagship", () => {
-    const r = settingsSchema.safeParse(base);
-    expect(r.success && r.data.flagshipProductId).toBeNull();
-  });
-  it("accepts a product id", () => {
-    const id = "ba97c60d-fa8e-4e45-8d63-3b59f23a00ab";
-    const r = settingsSchema.safeParse({ ...base, flagshipProductId: id });
-    expect(r.success && r.data.flagshipProductId).toBe(id);
-  });
-  it("rejects anything else", () => expect(settingsSchema.safeParse({ ...base, flagshipProductId: "m25" }).success).toBe(false));
-});
-
 describe("settings schema — business models", () => {
   it("defaults business models when absent", () => {
     const r = settingsSchema.safeParse(base);

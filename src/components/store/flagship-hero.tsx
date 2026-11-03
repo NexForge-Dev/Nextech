@@ -8,7 +8,7 @@ import { storagePublicUrl } from "@/lib/supabase/env";
 import { AddToCart } from "./add-to-cart";
 import { PriceView } from "./price";
 
-/** Top-of-home spotlight for the product picked in Configurações → Loja. */
+/** Top-of-home spotlight for the product picked in Admin → Produtos. */
 export async function FlagshipHero({ flagship, locale, storeName }: { flagship: FlagshipData; locale: Locale; storeName: string }) {
   const [t, tp, tcart] = await Promise.all([getTranslations("home"), getTranslations("product"), getTranslations("cart")]);
   const { product, shortDescription } = flagship;
