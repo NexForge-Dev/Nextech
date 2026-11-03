@@ -17,8 +17,15 @@ export const META_PIXEL_ID = /^\d{8,20}$/;
 export const businessModelsSchema = z
   .object({
     ownStore: z.boolean(),
+    ownStock: z.boolean().optional(),
+    dropshipping: z.boolean().optional(),
     affiliates: z.boolean(),
     payments: z.object({ card: z.boolean(), boleto: z.boolean(), pix: z.boolean() }),
+  })
+  .transform((b) => {
+    const ownStock = b.ownStock ?? false;
+    const dropshipping = b.dropshipping ?? b.ownStore;
+    return { ...b, ownStock, dropshipping, ownStore: ownStock || dropshipping };
   })
   .refine((b) => !b.ownStore || b.payments.card || b.payments.boleto || b.payments.pix, {
     message: "Ative ao menos uma forma de pagamento.",

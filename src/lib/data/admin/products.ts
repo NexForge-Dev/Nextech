@@ -4,7 +4,7 @@ import { minorDigits } from "@/lib/domain/money";
 import type { ProductFormValue } from "@/components/admin/product-form";
 import { getMarketOptions } from "./options";
 
-export const EMPTY_SALE = { price: "", compareAt: "", pixDiscountPct: "0", available: true, deliveryMinDays: 3, deliveryMaxDays: 7 };
+export const EMPTY_SALE = { price: "", compareAt: "", pixDiscountPct: "0", available: true, deliveryMinDays: 3, deliveryMaxDays: 7, fulfillment: "dropship" as "stock" | "dropship", stock: "" };
 
 export async function getProductFormOptions() {
   const sb = await createServerSupabase();
@@ -34,7 +34,7 @@ export async function getProductForEdit(id: string): Promise<ProductFormValue | 
   const sb = await createServerSupabase();
   const { data: p } = await sb
     .from("products")
-    .select("id, slug, brand_id, category_id, status, featured, sku, external_id, rating, rating_count, rating_source, specs, product_translations(locale, name, short_description, description_md, specs_i18n), product_images(path, alt, is_main, sort_order), product_tags(tags(slug)), affiliate_links(id, store_id, network_id, market, currency, original_url, affiliate_url, external_id, price_minor, price_updated_at, previous_price_minor, previous_verified, previous_evidence, active, created_at), sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days), product_suppliers(supplier_id, url, cost_minor, is_primary, notes, created_at)")
+    .select("id, slug, brand_id, category_id, status, featured, sku, external_id, rating, rating_count, rating_source, specs, product_translations(locale, name, short_description, description_md, specs_i18n), product_images(path, alt, is_main, sort_order), product_tags(tags(slug)), affiliate_links(id, store_id, network_id, market, currency, original_url, affiliate_url, external_id, price_minor, price_updated_at, previous_price_minor, previous_verified, previous_evidence, active, created_at), sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days, fulfillment, stock_quantity), product_suppliers(supplier_id, url, cost_minor, is_primary, notes, created_at)")
     .eq("id", id)
     .maybeSingle();
   if (!p) return null;
@@ -90,6 +90,8 @@ export async function getProductForEdit(id: string): Promise<ProductFormValue | 
           available: p.product_sale.available,
           deliveryMinDays: p.product_sale.delivery_min_days,
           deliveryMaxDays: p.product_sale.delivery_max_days,
+          fulfillment: p.product_sale.fulfillment === "stock" ? ("stock" as const) : ("dropship" as const),
+          stock: p.product_sale.stock_quantity == null ? "" : String(p.product_sale.stock_quantity),
         }
       : EMPTY_SALE,
     suppliers: [...p.product_suppliers]

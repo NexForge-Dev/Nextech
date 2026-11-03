@@ -52,7 +52,7 @@ export type ProductFormValue = {
   sale: SaleValue;
   suppliers: SupplierValue[];
 };
-export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number };
+export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number; fulfillment: "stock" | "dropship"; stock: string };
 export type SupplierValue = { supplierId: string; url: string; cost: string; isPrimary: boolean; notes: string };
 type Store = { id: string; name: string; networkId: string | null; markets: string[] };
 type Opt = { id: string; name: string };
@@ -157,17 +157,18 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
         </Field>
       </FormSection>
 
-      <FormSection title="Modo de venda" description="Venda própria: o cliente compra e paga na NEXTECH e você compra no fornecedor. Afiliado: o botão leva à loja parceira.">
+      <FormSection title="Modo de venda" description="Venda própria: sai do seu estoque. Dropshipping: o cliente paga na NEXTECH e você compra no fornecedor. Afiliado: o botão leva à loja parceira e você ganha comissão.">
         <Field label="Modo de venda" htmlFor="p-mode">
-          <select id="p-mode" className={inputCls} value={v.saleMode} onChange={(e) => setV({ ...v, saleMode: e.target.value === "own" ? "own" : "affiliate" })}>
-            <option value="own">Venda própria (checkout NEXTECH)</option>
+          <select id="p-mode" className={inputCls} value={v.saleMode === "own" ? v.sale.fulfillment : "affiliate"} onChange={(e) => setV({ ...v, saleMode: e.target.value === "affiliate" ? "affiliate" : "own", sale: e.target.value === "affiliate" ? v.sale : { ...v.sale, fulfillment: e.target.value === "stock" ? "stock" : "dropship" } })}>
+            <option value="stock">Venda própria (meu estoque)</option>
+            <option value="dropship">Dropshipping (fornecedor envia)</option>
             <option value="affiliate">Afiliado (link para loja parceira)</option>
           </select>
         </Field>
       </FormSection>
 
       {v.saleMode === "own" && (
-        <FormSection title="Venda própria" description="Preço que o cliente paga na NEXTECH, com frete grátis embutido. Fornecedores e custos só aparecem para você.">
+        <FormSection title={v.sale.fulfillment === "stock" ? "Venda própria" : "Dropshipping"} description="Preço que o cliente paga na NEXTECH, com frete grátis embutido. Fornecedores e custos só aparecem para você.">
           <div className="grid gap-4 md:grid-cols-3">
             <Field label="Preço de venda (R$)" htmlFor="s-price" error={err("sale.price")}>
               <input id="s-price" inputMode="decimal" className={inputCls} placeholder="249,90" value={v.sale.price} onChange={(e) => setSale({ price: e.target.value })} />
@@ -180,6 +181,11 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
             </Field>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
+            {v.sale.fulfillment === "stock" && (
+              <Field label="Quantidade em estoque" htmlFor="s-stock" error={err("sale.stock")} hint="Baixa a cada venda e volta se o pedido for cancelado. Em zero, o produto aparece esgotado.">
+                <input id="s-stock" inputMode="numeric" className={inputCls} value={v.sale.stock} onChange={(e) => setSale({ stock: e.target.value })} />
+              </Field>
+            )}
             <Field label="Disponibilidade" htmlFor="s-av">
               <select id="s-av" className={inputCls} value={v.sale.available ? "1" : "0"} onChange={(e) => setSale({ available: e.target.value === "1" })}>
                 <option value="1">Em estoque</option>

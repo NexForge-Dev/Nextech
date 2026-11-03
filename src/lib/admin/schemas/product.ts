@@ -65,6 +65,8 @@ const saleInputSchema = z.object({
   available: z.boolean().default(true),
   deliveryMinDays: z.coerce.number().int().min(0, "Mínimo 0 dia.").max(120).default(3),
   deliveryMaxDays: z.coerce.number().int().min(0).max(120, "Máximo 120 dias.").default(7),
+  fulfillment: z.enum(["stock", "dropship"]).default("dropship"),
+  stock: z.string().trim().optional().default(""),
 });
 
 const supplierInputSchema = z.object({
@@ -115,6 +117,7 @@ export const productInputSchema = z
       }
       const pct = Number((s?.pixDiscountPct || "0").replace(",", "."));
       if (!Number.isFinite(pct) || pct < 0 || pct > 50) ctx.addIssue({ code: "custom", path: ["sale", "pixDiscountPct"], message: "Desconto no Pix entre 0 e 50%." });
+      if (s?.fulfillment === "stock" && !/^\d{1,6}$/.test(s.stock)) ctx.addIssue({ code: "custom", path: ["sale", "stock"], message: "Informe a quantidade em estoque." });
       if (s && s.deliveryMaxDays < s.deliveryMinDays) ctx.addIssue({ code: "custom", path: ["sale", "deliveryMaxDays"], message: "O prazo máximo precisa ser maior ou igual ao mínimo." });
     }
     if (p.suppliers.filter((x) => x.isPrimary).length > 1) ctx.addIssue({ code: "custom", path: ["suppliers"], message: "Marque no máximo um fornecedor principal." });
@@ -147,6 +150,8 @@ export const productInputSchema = z
             available: p.sale.available,
             deliveryMinDays: p.sale.deliveryMinDays,
             deliveryMaxDays: p.sale.deliveryMaxDays,
+            fulfillment: p.sale.fulfillment,
+            stockQuantity: p.sale.fulfillment === "stock" ? Number(p.sale.stock) : null,
           }
         : null,
     suppliers: p.suppliers.map((x) => ({ supplierId: x.supplierId, url: x.url || null, costMinor: x.cost ? toMinor(x.cost, "BRL") : null, isPrimary: x.isPrimary, notes: x.notes || null })),

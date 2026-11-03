@@ -679,14 +679,14 @@ isOneToOne: false
                   ]
                 },"order_items": {
                   Row: {
-                    "created_at": string,"id": string,"image_path": string | null,"line_total_minor": number,"name": string,"order_id": string,"pix_discount_pct": number,"product_id": string | null,"quantity": number,"slug": string | null,"supplier_cost_minor": number | null,"supplier_id": string | null,"supplier_order_ref": string | null,"supplier_purchased_at": string | null,"supplier_url": string | null,"tracking_carrier": string | null,"tracking_code": string | null,"tracking_url": string | null,"unit_price_minor": number
+                    "created_at": string,"id": string,"image_path": string | null,"line_total_minor": number,"name": string,"order_id": string,"pix_discount_pct": number,"product_id": string | null,"quantity": number,"slug": string | null,"stock_taken": number,"supplier_cost_minor": number | null,"supplier_id": string | null,"supplier_order_ref": string | null,"supplier_purchased_at": string | null,"supplier_url": string | null,"tracking_carrier": string | null,"tracking_code": string | null,"tracking_url": string | null,"unit_price_minor": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"image_path"?: string | null,"line_total_minor": number,"name": string,"order_id": string,"pix_discount_pct"?: number,"product_id"?: string | null,"quantity": number,"slug"?: string | null,"supplier_cost_minor"?: number | null,"supplier_id"?: string | null,"supplier_order_ref"?: string | null,"supplier_purchased_at"?: string | null,"supplier_url"?: string | null,"tracking_carrier"?: string | null,"tracking_code"?: string | null,"tracking_url"?: string | null,"unit_price_minor": number
+                    "created_at"?: string,"id"?: string,"image_path"?: string | null,"line_total_minor": number,"name": string,"order_id": string,"pix_discount_pct"?: number,"product_id"?: string | null,"quantity": number,"slug"?: string | null,"stock_taken"?: number,"supplier_cost_minor"?: number | null,"supplier_id"?: string | null,"supplier_order_ref"?: string | null,"supplier_purchased_at"?: string | null,"supplier_url"?: string | null,"tracking_carrier"?: string | null,"tracking_code"?: string | null,"tracking_url"?: string | null,"unit_price_minor": number
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"image_path"?: string | null,"line_total_minor"?: number,"name"?: string,"order_id"?: string,"pix_discount_pct"?: number,"product_id"?: string | null,"quantity"?: number,"slug"?: string | null,"supplier_cost_minor"?: number | null,"supplier_id"?: string | null,"supplier_order_ref"?: string | null,"supplier_purchased_at"?: string | null,"supplier_url"?: string | null,"tracking_carrier"?: string | null,"tracking_code"?: string | null,"tracking_url"?: string | null,"unit_price_minor"?: number
+                    "created_at"?: string,"id"?: string,"image_path"?: string | null,"line_total_minor"?: number,"name"?: string,"order_id"?: string,"pix_discount_pct"?: number,"product_id"?: string | null,"quantity"?: number,"slug"?: string | null,"stock_taken"?: number,"supplier_cost_minor"?: number | null,"supplier_id"?: string | null,"supplier_order_ref"?: string | null,"supplier_purchased_at"?: string | null,"supplier_url"?: string | null,"tracking_carrier"?: string | null,"tracking_code"?: string | null,"tracking_url"?: string | null,"unit_price_minor"?: number
                   }
                   Relationships: [
                     {
@@ -797,14 +797,14 @@ isOneToOne: false
                   ]
                 },"product_sale": {
                   Row: {
-                    "available": boolean,"compare_at_minor": number | null,"created_at": string,"delivery_max_days": number,"delivery_min_days": number,"pix_discount_pct": number,"price_minor": number,"product_id": string,"updated_at": string
+                    "available": boolean,"compare_at_minor": number | null,"created_at": string,"delivery_max_days": number,"delivery_min_days": number,"fulfillment": string,"pix_discount_pct": number,"price_minor": number,"product_id": string,"stock_quantity": number | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"pix_discount_pct"?: number,"price_minor": number,"product_id": string,"updated_at"?: string
+                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"fulfillment"?: string,"pix_discount_pct"?: number,"price_minor": number,"product_id": string,"stock_quantity"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"pix_discount_pct"?: number,"price_minor"?: number,"product_id"?: string,"updated_at"?: string
+                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"fulfillment"?: string,"pix_discount_pct"?: number,"price_minor"?: number,"product_id"?: string,"stock_quantity"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1188,6 +1188,9 @@ isOneToOne: false
                            },
 "f_unaccent":
 { Args: { "": string }; Returns: string
+                           },
+"fulfillment_enabled":
+{ Args: { "p_fulfillment": string }; Returns: boolean
                            },
 "has_admin_permission":
 { Args: { "p": string }; Returns: boolean

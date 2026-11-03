@@ -39,7 +39,7 @@ export async function loadSaleInfo(productIds: string[]): Promise<Map<string, Sa
   if (!productIds.length) return map;
   const { data, error } = await createAnonSupabase()
     .from("products")
-    .select("id, sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days)")
+    .select("id, sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days, fulfillment, stock_quantity)")
     .in("id", productIds.slice(0, 200));
   if (error) throw new Error(`sale info: ${error.message}`);
   for (const r of data ?? []) {
@@ -51,7 +51,10 @@ export async function loadSaleInfo(productIds: string[]): Promise<Map<string, Sa
             priceMinor: Number(s.price_minor),
             compareAtMinor: s.compare_at_minor == null ? null : Number(s.compare_at_minor),
             pixDiscountPct: Number(s.pix_discount_pct),
-            available: s.available,
+            // own stock sells out by itself when it reaches zero
+            available: s.available && (s.fulfillment !== "stock" || (s.stock_quantity ?? 0) > 0),
+            fulfillment: s.fulfillment === "stock" ? "stock" : "dropship",
+            stockQuantity: s.stock_quantity,
             deliveryMinDays: s.delivery_min_days,
             deliveryMaxDays: s.delivery_max_days,
           }
@@ -129,7 +132,7 @@ export async function toCards(rows: BaseRow[], market: MarketCode, now = new Dat
   const [offers, images, saleInfo, bm] = await Promise.all([loadOffers(ids), loadMainImages(ids), loadSaleInfo(ids), getBusinessModels()]);
   return rows.flatMap((r): ProductCardData[] => {
     const info = saleInfo.get(r.id) ?? { mode: "affiliate" as const, sale: null };
-    if (!isModeVisible(info.mode, bm)) return [];
+    if (!isModeVisible(info.mode, bm, info.sale?.fulfillment)) return [];
     if (info.mode === "own") {
       if (!info.sale || market !== "BR") return [];
       const rating = r.rating != null && r.rating_source ? { value: Number(r.rating), count: r.rating_count, source: r.rating_source } : null;

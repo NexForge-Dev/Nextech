@@ -29,7 +29,11 @@ describe("settings schema", () => {
 describe("settings schema — business models", () => {
   it("defaults business models when absent", () => {
     const r = settingsSchema.safeParse(base);
-    expect(r.success && r.data.businessModels).toEqual({ ownStore: true, affiliates: false, payments: { card: true, boleto: true, pix: false } });
+    expect(r.success && r.data.businessModels).toEqual({ ownStore: true, ownStock: false, dropshipping: true, affiliates: false, payments: { card: true, boleto: true, pix: false } });
+  });
+  it("closes the checkout when both own modes are off", () => {
+    const r = settingsSchema.safeParse({ ...base, businessModels: { ownStore: true, ownStock: false, dropshipping: false, affiliates: true, payments: { card: false, boleto: false, pix: false } } });
+    expect(r.success && r.data.businessModels.ownStore).toBe(false);
   });
   it("accepts both models enabled", () => {
     const r = settingsSchema.safeParse({ ...base, businessModels: { ownStore: true, affiliates: true, payments: { card: true, boleto: false, pix: false } } });
