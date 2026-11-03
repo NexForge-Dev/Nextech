@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 import { ProductGrid, Section } from "@/components/store/product-grid";
 import { BannerCarousel } from "@/components/store/banner-carousel";
+import { FlagshipHero } from "@/components/store/flagship-hero";
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const locale = await pageLocale(params);
@@ -51,21 +52,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
-      <section className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 pb-12 pt-14 md:grid-cols-12 md:px-6 md:pb-20 md:pt-24">
-        <div className={heroSrc ? "md:col-span-7" : "md:col-span-10"}>
-          <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.035em] text-black md:text-6xl lg:text-7xl">{t("heroTitle")}</h1>
-          <p className="mt-6 max-w-xl text-lg text-mute md:text-xl">{t("heroSubtitle")}</p>
-          <Link href="/produtos" className="mt-10 inline-flex h-12 items-center gap-2 rounded-md bg-black px-6 text-[0.95rem] font-medium text-white transition-colors duration-150 hover:bg-ink">
-            {t("heroCta")}
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
-        </div>
-        {heroSrc && (
-          <div className="relative aspect-square overflow-hidden rounded-md bg-soft md:col-span-5">
-            <Image src={heroSrc} alt="" fill priority sizes="(min-width: 768px) 40vw, 100vw" className="object-contain p-8" unoptimized={heroSrc.endsWith(".svg")} />
+      {home.flagship ? (
+        <FlagshipHero flagship={home.flagship} locale={locale} storeName={settings.storeName} />
+      ) : (
+        <section className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 pb-12 pt-14 md:grid-cols-12 md:px-6 md:pb-20 md:pt-24">
+          <div className={heroSrc ? "md:col-span-7" : "md:col-span-10"}>
+            <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.035em] text-black md:text-6xl lg:text-7xl">{t("heroTitle")}</h1>
+            <p className="mt-6 max-w-xl text-lg text-mute md:text-xl">{t("heroSubtitle")}</p>
+            <Link href="/produtos" className="mt-10 inline-flex h-12 items-center gap-2 rounded-md bg-black px-6 text-[0.95rem] font-medium text-white transition-colors duration-150 hover:bg-ink">
+              {t("heroCta")}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
           </div>
-        )}
-      </section>
+          {heroSrc && (
+            <div className="relative aspect-square overflow-hidden rounded-md bg-soft md:col-span-5">
+              <Image src={heroSrc} alt="" fill priority sizes="(min-width: 768px) 40vw, 100vw" className="object-contain p-8" unoptimized={heroSrc.endsWith(".svg")} />
+            </div>
+          )}
+        </section>
+      )}
 
       {home.banners.length > 0 && (
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
