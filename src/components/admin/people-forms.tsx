@@ -14,7 +14,6 @@ export type SettingsValue = {
   logoPath: string | null;
   faviconPath: string | null;
   heroImage: string | null;
-  flagshipProductId: string | null;
   institutional: PerLocale<string>;
   socials: Partial<Record<(typeof SOCIAL_KEYS)[number], string>>;
   seo: PerLocale<{ title: string; description: string }>;
@@ -36,7 +35,7 @@ const TABS = [
   ["legal", "Informações legais"],
 ] as const;
 
-export function SettingsForm({ initial, products }: { initial: SettingsValue; products: { id: string; name: string }[] }) {
+export function SettingsForm({ initial }: { initial: SettingsValue }) {
   const { pending, run } = useAdminAction();
   const [v, setV] = useState(initial);
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("store");
@@ -72,13 +71,7 @@ export function SettingsForm({ initial, products }: { initial: SettingsValue; pr
             <Field label="Favicon" hint="PNG quadrado (ex.: 512×512).">
               <ImageUploader bucket="site" multiple={false} label="Enviar favicon" value={v.faviconPath ? [{ path: v.faviconPath, alt: "", isMain: true }] : []} onChange={(i) => setV({ ...v, faviconPath: i[0]?.path ?? null })} />
             </Field>
-            <Field label="Produto carro-chefe" htmlFor="st-flagship" error={e("flagshipProductId")} hint="Aparece no topo da página inicial, com foto, preço e botão de compra. Se ficar vazio, ou se o produto sair do ar, volta o topo padrão.">
-              <select id="st-flagship" className={inputCls} value={v.flagshipProductId ?? ""} onChange={(x) => setV({ ...v, flagshipProductId: x.target.value || null })}>
-                <option value="">Nenhum (topo padrão)</option>
-                {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </Field>
-            <Field label="Imagem do topo padrão da página inicial (opcional)" hint="Só aparece quando não há produto carro-chefe.">
+            <Field label="Imagem do destaque da página inicial (opcional)">
               <ImageUploader bucket="site" multiple={false} label="Enviar imagem" value={v.heroImage ? [{ path: v.heroImage, alt: "", isMain: true }] : []} onChange={(i) => setV({ ...v, heroImage: i[0]?.path ?? null })} />
             </Field>
           </FormSection>

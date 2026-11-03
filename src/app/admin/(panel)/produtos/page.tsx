@@ -8,6 +8,7 @@ import { clicks30d } from "@/lib/data/admin/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ButtonLink, DataTable, EmptyPanel, StatusPill } from "@/components/admin/data-table";
 import { ProductRowActions } from "@/components/admin/product-row-actions";
+import { FlagshipPicker } from "@/components/admin/flagship-picker";
 
 export const metadata = { title: "Produtos" };
 
@@ -56,6 +57,13 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
     };
   });
   const clicks = await clicks30d(rows.map((r) => r.id));
+  const [{ data: flagshipSetting }, { data: published }] = await Promise.all([
+    sb.from("site_settings").select("value").eq("key", "public.flagship_product").maybeSingle(),
+    sb.from("products").select("id, slug, featured, product_translations(locale, name)").eq("status", "published").order("featured", { ascending: false }).order("published_at", { ascending: false }).limit(200),
+  ]);
+  const publishedOptions = (published ?? []).map((p) => ({ id: p.id, name: p.product_translations.find((t) => t.locale === "pt-BR")?.name ?? p.slug }));
+  const pickedFlagship = typeof flagshipSetting?.value === "string" && publishedOptions.some((p) => p.id === flagshipSetting.value) ? flagshipSetting.value : null;
+  const shownFlagship = pickedFlagship ?? publishedOptions[0]?.id ?? null;
   const canImport = ctx.permissions.has("products.import");
 
   return (
@@ -71,6 +79,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
           </>
         }
       />
+      <FlagshipPicker products={publishedOptions} value={pickedFlagship} shownName={publishedOptions.find((p) => p.id === shownFlagship)?.name ?? null} />
       <DataTable
         rows={rows}
         total={count ?? 0}
@@ -114,6 +123,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
               <div className="min-w-0">
                 <Link href={`/admin/produtos/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
                 {r.featured && <Star className="ml-1.5 inline size-3.5 fill-black" aria-label="Destaque" />}
+                {r.id === shownFlagship && <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-[11px] font-medium text-white">Topo da loja</span>}
                 <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium">{r.own ? "Própria" : "Afiliado"}</span>
                 {r.sku && <p className="font-mono text-xs text-mute">{r.sku}</p>}
               </div>
