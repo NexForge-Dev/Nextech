@@ -52,8 +52,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
-      {home.flagship ? (
-        <FlagshipHero flagship={home.flagship} locale={locale} storeName={settings.storeName} />
+      {home.flagships.length > 0 ? (
+        <FlagshipHero flagships={home.flagships} locale={locale} storeName={settings.storeName} />
       ) : (
         <section className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 pb-12 pt-14 md:grid-cols-12 md:px-6 md:pb-20 md:pt-24">
           <div className={heroSrc ? "md:col-span-7" : "md:col-span-10"}>

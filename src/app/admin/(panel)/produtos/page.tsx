@@ -63,7 +63,8 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
   ]);
   const publishedOptions = (published ?? []).map((p) => ({ id: p.id, name: p.product_translations.find((t) => t.locale === "pt-BR")?.name ?? p.slug }));
   const pickedFlagship = typeof flagshipSetting?.value === "string" && publishedOptions.some((p) => p.id === flagshipSetting.value) ? flagshipSetting.value : null;
-  const shownFlagship = pickedFlagship ?? publishedOptions[0]?.id ?? null;
+  const highlighted = (published ?? []).filter((p) => p.featured || p.id === pickedFlagship).map((p) => p.id);
+  const onTop = new Set(highlighted.length ? highlighted : publishedOptions.slice(0, 1).map((p) => p.id));
   const canImport = ctx.permissions.has("products.import");
 
   return (
@@ -79,7 +80,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
           </>
         }
       />
-      <FlagshipPicker products={publishedOptions} value={pickedFlagship} shownName={publishedOptions.find((p) => p.id === shownFlagship)?.name ?? null} />
+      <FlagshipPicker products={publishedOptions} value={pickedFlagship} shownNames={publishedOptions.filter((p) => onTop.has(p.id)).map((p) => p.name)} />
       <DataTable
         rows={rows}
         total={count ?? 0}
@@ -123,7 +124,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
               <div className="min-w-0">
                 <Link href={`/admin/produtos/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
                 {r.featured && <Star className="ml-1.5 inline size-3.5 fill-black" aria-label="Destaque" />}
-                {r.id === shownFlagship && <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-[11px] font-medium text-white">Topo da loja</span>}
+                {onTop.has(r.id) && <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-[11px] font-medium text-white">Topo da loja</span>}
                 <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium">{r.own ? "Própria" : "Afiliado"}</span>
                 {r.sku && <p className="font-mono text-xs text-mute">{r.sku}</p>}
               </div>

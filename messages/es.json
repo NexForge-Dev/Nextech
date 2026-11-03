@@ -82,7 +82,9 @@
     "comingSoonText": "Estamos seleccionando con cuidado los primeros productos de NEXTECH. Vuelve pronto.",
     "dealsTile": "Ofertas",
     "flagshipEyebrow": "El producto estrella de {store}",
-    "flagshipDetails": "Ver detalles del producto"
+    "flagshipDetails": "Ver detalles del producto",
+    "flagshipCarousel": "Productos destacados",
+    "flagshipGoTo": "Ver {name}"
   },
   "catalog": {
     "title": "Productos",
