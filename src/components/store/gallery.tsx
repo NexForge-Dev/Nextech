@@ -39,7 +39,7 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
         }}
       >
         <button type="button" onClick={() => setZoom(true)} className="absolute inset-0 cursor-zoom-in" aria-label={t("zoom")}>
-          <Image src={current.src} alt={current.alt || name} fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain p-8 md:p-12" unoptimized={current.src.endsWith(".svg")} />
+          <Image src={current.src} alt={current.alt || name} fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain p-8 mix-blend-multiply md:p-12" unoptimized={current.src.endsWith(".svg")} />
         </button>
         <span className="pointer-events-none absolute bottom-3 right-3 grid size-9 place-items-center rounded-full bg-white/90 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           <ZoomIn className="size-4" aria-hidden />
@@ -69,7 +69,7 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
               aria-current={idx === i}
               className={`relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-soft md:size-20 ${idx === i ? "border-black" : "border-line"}`}
             >
-              <Image src={img.src} alt="" fill sizes="80px" className="object-contain p-1.5" unoptimized={img.src.endsWith(".svg")} />
+              <Image src={img.src} alt="" fill sizes="80px" className="object-contain p-1.5 mix-blend-multiply" unoptimized={img.src.endsWith(".svg")} />
             </button>
           ))}
         </div>

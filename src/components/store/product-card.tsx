@@ -21,7 +21,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
               alt={product.mainImage?.alt || product.name}
               fill
               sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 50vw"
-              className="object-contain p-6 transition-transform duration-200 group-hover:scale-[1.02]"
+              className="object-contain p-6 mix-blend-multiply transition-transform duration-200 group-hover:scale-[1.02]"
               priority={priority}
               unoptimized={src.endsWith(".svg")}
             />
