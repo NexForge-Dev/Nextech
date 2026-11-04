@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sellerIdentityGaps, sellerIdentityParts } from "@/lib/domain/seller";
+import { DEFAULT_CONTACT_EMAIL, resolveContactEmail, sellerContactLine, sellerIdentityGaps, sellerIdentityParts } from "@/lib/domain/seller";
 import { ownStoreReadiness } from "@/lib/admin/launch-readiness";
 
 const full = { company_name: "Loja X LTDA", tax_id: "12.345.678/0001-90", address: "Rua A, 1 — São Paulo/SP" };
@@ -19,6 +19,23 @@ describe("seller identity", () => {
     expect(sellerIdentityParts({ ...full, tax_id: "CNPJ 12.345.678/0001-90" })[1]).toBe("CNPJ 12.345.678/0001-90");
     expect(sellerIdentityParts({ company_name: "", tax_id: "", address: "Rua B" })).toEqual(["Rua B"]);
     expect(sellerIdentityParts(null)).toEqual([]);
+  });
+  it("labels 11 digits as CPF, and never relabels", () => {
+    expect(sellerIdentityParts({ tax_id: "123.456.789-09" })).toEqual(["CPF 123.456.789-09"]);
+    expect(sellerIdentityParts({ tax_id: "12345678909" })).toEqual(["CPF 12345678909"]);
+    expect(sellerIdentityParts({ tax_id: "CPF 123.456.789-09" })).toEqual(["CPF 123.456.789-09"]);
+    expect(sellerIdentityParts({ tax_id: "123" }, "NIF")).toEqual(["NIF 123"]);
+  });
+  it("the contact defaults only when the setting is blank", () => {
+    expect(resolveContactEmail("")).toBe(DEFAULT_CONTACT_EMAIL);
+    expect(resolveContactEmail("  ")).toBe(DEFAULT_CONTACT_EMAIL);
+    expect(resolveContactEmail(null)).toBe(DEFAULT_CONTACT_EMAIL);
+    expect(resolveContactEmail(" sac@loja.example ")).toBe("sac@loja.example");
+    expect(DEFAULT_CONTACT_EMAIL).toBe("nexforge.d4v29@gmail.com");
+  });
+  it("the seller line always carries the contact", () => {
+    expect(sellerContactLine(null, "")).toBe(DEFAULT_CONTACT_EMAIL);
+    expect(sellerContactLine(full, "sac@loja.example")).toBe("Loja X LTDA · CNPJ 12.345.678/0001-90 · Rua A, 1 — São Paulo/SP · sac@loja.example");
   });
 });
 

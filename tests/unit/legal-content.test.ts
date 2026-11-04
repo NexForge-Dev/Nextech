@@ -37,7 +37,10 @@ describe("own-store legal content (pt-BR)", () => {
     expect(t).toMatch(/7 dias corridos/);
     expect(t).toContain("{{contact_email}}");
     expect(t).toMatch(/todos os valores pagos/);
-    expect(t).toMatch(/operadora do cartão imediatamente/);
+    expect(t).toMatch(/Pix ou transferência/);
+    expect(t).toMatch(/30 dias/);
+    expect(t).toMatch(/90 dias/);
+    expect(t).toMatch(/art\. 18/);
   });
   it("only uses placeholders the loader fills", () => {
     const known = new Set(["store_name", "seller_identity", "company_name", "contact_email", "company_block"]);
@@ -51,7 +54,7 @@ describe("own-store legal content (pt-BR)", () => {
   });
   it("privacy covers purchase data and the consent cookie", () => {
     const t = readFileSync("src/content/legal/pt-BR/store/privacy.md", "utf8");
-    for (const s of ["nx_consent", "CPF", "Stripe", "5 anos"]) expect(t).toContain(s);
+    for (const s of ["nx_consent", "CPF", "Stripe", "5 anos", "NexForge", "ViaCEP", "eu-central-1", "art. 33", "art. 48"]) expect(t).toContain(s);
   });
 });
 
@@ -72,6 +75,26 @@ describe("legal loader variants", () => {
     expect(html).toContain("Loja X LTDA, CNPJ 12.345.678/0001-90, Rua A, 1");
     expect(html).toContain("sac@loja.example");
   });
+  it("the admin contact setting overrides the default address", async () => {
+    const { loadLegal } = await import("@/lib/content/legal");
+    const s = { storeName: "NEXTECH", contactEmail: "sac@loja.example", legal: { company_name: "", tax_id: "", address: "" } } as never;
+    const html = await loadLegal("returns", "pt-BR", s, "store");
+    expect(html).toContain("sac@loja.example");
+    expect(html).not.toContain("nexforge.d4v29@gmail.com");
+  });
+  it("labels a seller CPF as CPF", async () => {
+    const { loadLegal } = await import("@/lib/content/legal");
+    const s = { storeName: "NEXTECH", contactEmail: "", legal: { company_name: "Maria Silva", tax_id: "123.456.789-09", address: "" } } as never;
+    expect(await loadLegal("terms", "pt-BR", s, "store")).toContain("Maria Silva, CPF 123.456.789-09");
+  });
+  it("own-store pages promise no e-mail the store may not send", async () => {
+    const { loadLegal } = await import("@/lib/content/legal");
+    const s = { storeName: "NEXTECH", contactEmail: "", legal: { company_name: "", tax_id: "", address: "" } } as never;
+    for (const page of ["terms", "privacy", "returns", "faq", "shipping", "how-it-works"] as const) {
+      const html = await loadLegal(page, "pt-BR", s, "store");
+      expect(html, page).not.toMatch(/recebe (um e-mail|a confirmação por e-mail|o código de rastreio por e-mail)|e-mail de confirmação do pedido|avisamos por e-mail/);
+    }
+  });
   it("never shows placeholders to customers when seller data is missing", async () => {
     const { loadLegal } = await import("@/lib/content/legal");
     const s = { storeName: "NEXTECH", contactEmail: "", legal: { company_name: "", tax_id: "", address: "" } } as never;
@@ -80,6 +103,6 @@ describe("legal loader variants", () => {
       expect(html, page).not.toMatch(/\{\{|\[a definir|CNPJ ,|CNPJ\s*\)/);
     }
     expect(await loadLegal("terms", "pt-BR", s, "store")).toContain("operada por NEXTECH");
-    expect(await loadLegal("returns", "pt-BR", s, "store")).toContain("o formulário da página de Contato");
+    expect(await loadLegal("returns", "pt-BR", s, "store")).toContain("nexforge.d4v29@gmail.com");
   });
 });

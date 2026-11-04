@@ -5,6 +5,7 @@ import { ArrowLeft, Check, ExternalLink, MapPin } from "lucide-react";
 import { pageLocale } from "@/i18n/page-locale";
 import { Link } from "@/i18n/navigation";
 import { getMyOrder } from "@/lib/data/orders";
+import { getPublicSettings } from "@/lib/data/settings";
 import { canCustomerCancel } from "@/lib/domain/order-status";
 import { formatMoney } from "@/lib/domain/money";
 import { storagePublicUrl } from "@/lib/supabase/env";
@@ -21,7 +22,7 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
   const { number } = await params;
   const order = await getMyOrder(Number(number));
   if (!order) notFound();
-  const [t, format] = await Promise.all([getTranslations("orders"), getFormatter()]);
+  const [t, format, settings] = await Promise.all([getTranslations("orders"), getFormatter(), getPublicSettings()]);
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
   const when = (kind: string) => order.timeline.find((e) => e.kind === kind)?.at ?? null;
   const dt = (iso: string | null) => (iso ? format.dateTime(new Date(iso), { dateStyle: "short", timeStyle: "short" }) : null);
@@ -50,6 +51,8 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
   ];
   const cancellable = canCustomerCancel(order.status, order.anyPurchased);
   const s = order.shipping;
+  // a paid boleto has no automatic refund: the customer must see how to get the money back
+  const manualRefundDue = order.stage === "cancelled" && order.paymentMethod === "boleto" && !!order.paidAt && order.refundedMinor < order.totalMinor;
   return (
     <div className="space-y-4" data-testid="my-order-detail">
       <Link href="/minha-conta/pedidos" className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"><ArrowLeft className="size-4" aria-hidden />{t("back")}</Link>
@@ -80,6 +83,8 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
           ))}
         </ol>
       )}
+
+      {manualRefundDue && <Notice data-testid="manual-refund-due">{t("manualRefundDue", { contact: settings.contactEmail })}</Notice>}
 
       {order.stage === "awaiting_payment" && order.boleto?.url && (
         <a href={order.boleto.url} target="_blank" rel="noopener" className="btn btn-primary">
@@ -134,11 +139,13 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
 
       <OrderActions
         orderNumber={order.number}
+        contactEmail={settings.contactEmail}
         cancellable={cancellable}
         canRequestReturn={order.stage !== "awaiting_payment" && order.stage !== "cancelled" && order.stage !== "refunded" && order.returnRequest?.status !== "open"}
         hasInvoice={order.hasInvoice}
       />
       <p className="text-xs text-mute">{t("cdc")}</p>
+      <p className="text-xs text-mute" data-testid="order-help">{t("help", { contact: settings.contactEmail })}</p>
     </div>
   );
 }

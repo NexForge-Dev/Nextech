@@ -39,6 +39,7 @@ export type MyOrderDetail = {
   totalMinor: number;
   refundedMinor: number;
   anyPurchased: boolean;
+  paidAt: string | null;
   shipping: { recipientName: string; street: string; number: string; complement: string | null; district: string; city: string; state: string; cep: string };
   boleto: { url: string; number: string | null; expiresAt: string | null } | null;
   hasInvoice: boolean;
@@ -71,6 +72,7 @@ export async function getMyOrder(orderNumber: number): Promise<MyOrderDetail | n
     totalMinor: Number(o.total_minor),
     refundedMinor: Number(o.refunded_minor),
     anyPurchased: !!o.any_purchased,
+    paidAt: o.paid_at,
     shipping: o.shipping as MyOrderDetail["shipping"],
     boleto: (o.boleto as MyOrderDetail["boleto"]) ?? null,
     hasInvoice: !!o.has_invoice,

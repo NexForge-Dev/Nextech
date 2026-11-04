@@ -6,6 +6,7 @@ import { SOCIAL_KEYS } from "@/lib/admin/schemas/settings";
 import { btnPrimary, btnSecondary, ConfirmButton, Field, FormSection, inputCls, LocaleTabs, textareaCls, Toggle, useAdminAction, type LocaleCode } from "./form";
 import type { BusinessModels } from "@/lib/domain/business-models";
 import { ImageUploader } from "./image-uploader";
+import { DEFAULT_CONTACT_EMAIL } from "@/lib/domain/seller";
 
 type PerLocale<T> = Partial<Record<LocaleCode, T>>;
 export type SettingsValue = {
@@ -185,16 +186,16 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
       )}
 
       {tab === "legal" && (
-        <FormSection title="Informações legais" description="Obrigatórias para vender (Decreto 7.962/2013): aparecem no rodapé de todas as páginas, no checkout, nos termos de venda e na política de privacidade. Campos vazios simplesmente não aparecem para o cliente, e o painel mostra um aviso até tudo estar preenchido. Use os dados exatos do seu CNPJ; o e-mail de contato fica na aba Contato.">
-          {(!v.legal.company_name.trim() || !v.legal.tax_id.trim() || !v.legal.address.trim() || !v.contactEmail.trim()) && (
+        <FormSection title="Informações legais" description={`Obrigatórias para vender (Decreto 7.962/2013): aparecem no rodapé de todas as páginas, no checkout, nos termos de venda e na política de privacidade. Campos vazios simplesmente não aparecem para o cliente, e o painel mostra um aviso até tudo estar preenchido. Use os seus dados exatos, de CPF ou CNPJ; o e-mail de contato fica na aba Contato e, em branco, a loja usa ${DEFAULT_CONTACT_EMAIL}.`}>
+          {(!v.legal.company_name.trim() || !v.legal.tax_id.trim() || !v.legal.address.trim()) && (
             <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">
-              Faltam dados do vendedor: {[!v.legal.company_name.trim() && "razão social", !v.legal.tax_id.trim() && "CNPJ", !v.legal.address.trim() && "endereço", !v.contactEmail.trim() && "e-mail de contato"].filter(Boolean).join(", ")}.
+              Faltam dados do vendedor: {[!v.legal.company_name.trim() && "nome ou razão social", !v.legal.tax_id.trim() && "CPF ou CNPJ", !v.legal.address.trim() && "endereço"].filter(Boolean).join(", ")}.
             </p>
           )}
-          <Field label="Razão social" htmlFor="lg-name">
+          <Field label="Nome ou razão social" htmlFor="lg-name">
             <input id="lg-name" className={inputCls} value={v.legal.company_name} onChange={(x) => setV({ ...v, legal: { ...v.legal, company_name: x.target.value } })} />
           </Field>
-          <Field label="CNPJ" htmlFor="lg-tax" hint="Ex.: 12.345.678/0001-90 (o MEI também tem CNPJ).">
+          <Field label="CPF ou CNPJ" htmlFor="lg-tax" hint="Só os números ou formatado. Com 11 dígitos, a loja mostra como CPF (o MEI tem CNPJ).">
             <input id="lg-tax" className={inputCls} value={v.legal.tax_id} onChange={(x) => setV({ ...v, legal: { ...v.legal, tax_id: x.target.value } })} />
           </Field>
           <Field label="Endereço" htmlFor="lg-addr" hint="Endereço físico completo: rua, número, bairro, cidade/UF e CEP.">

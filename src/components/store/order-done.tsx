@@ -24,8 +24,10 @@ const copy = (text: string, ok: string, fail: string) => {
  * `redirectFailed`: Stripe sent the customer back with redirect_status=failed (3DS/wallet declined).
  * The cart is cleared only once the payment went through (or a boleto/Pix voucher exists), so a
  * failed payment can be retried without rebuilding the cart.
+ * `emailEnabled`: a confirmation e-mail is promised only when order e-mails are configured; the order
+ * page is the status channel either way.
  */
-export function OrderDone({ initial, redirectFailed = false }: { initial: NonNullable<MyOrderStatus>; redirectFailed?: boolean }) {
+export function OrderDone({ initial, redirectFailed = false, emailEnabled = false }: { initial: NonNullable<MyOrderStatus>; redirectFailed?: boolean; emailEnabled?: boolean }) {
   const t = useTranslations("checkout");
   const [o, setO] = useState(initial);
   const [pay, setPay] = useState<Pay>({});
@@ -85,7 +87,7 @@ export function OrderDone({ initial, redirectFailed = false }: { initial: NonNul
         <p className="tabular text-lg font-semibold tracking-tight">{formatMoney(o.totalMinor, "BRL", "pt-BR")}</p>
       </div>
       {paid ? (
-        <p className="text-[15px]">{t("donePaid")}</p>
+        <p className="text-[15px]">{t("donePaid")}{emailEnabled && ` ${t("doneEmailNote")}`}</p>
       ) : failed ? (
         <div className="space-y-4">
           <p className="text-[15px]">{t("doneFailed")}</p>
@@ -125,9 +127,9 @@ export function OrderDone({ initial, redirectFailed = false }: { initial: NonNul
           </button>
         </div>
       ) : (
-        <p className="text-[15px]">{slow ? t("doneSlow") : t("doneProcessing")}</p>
+        <p className="text-[15px]">{slow ? t("doneSlow") : t("doneProcessing")}{slow && emailEnabled && ` ${t("doneEmailNote")}`}</p>
       )}
-      <Link href="/minha-conta/pedidos" className="btn btn-secondary">
+      <Link href={{ pathname: "/minha-conta/pedidos/[number]", params: { number: String(o.number) } }} className="btn btn-secondary">
         {t("myOrders")}
       </Link>
     </div>

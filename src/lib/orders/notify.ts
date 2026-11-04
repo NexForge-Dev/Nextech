@@ -2,7 +2,7 @@ import "server-only";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { sendEmail } from "@/lib/email/send";
 import { renderEmail, type EmailKind, type EmailOrder } from "@/lib/email/templates";
-import { sellerIdentityParts, type LegalSettings } from "@/lib/domain/seller";
+import { sellerContactLine, type LegalSettings } from "@/lib/domain/seller";
 
 const OWNER_KINDS: EmailKind[] = ["ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"];
 
@@ -16,8 +16,7 @@ export async function notifyOrder(kind: EmailKind, orderId: string, extra: Parti
     const { data: settings } = await svc.from("site_settings").select("key, value").in("key", ["public.legal", "public.contact_email"]);
     const legal = (settings?.find((r) => r.key === "public.legal")?.value ?? null) as Partial<LegalSettings> | null;
     const contact = settings?.find((r) => r.key === "public.contact_email")?.value;
-    const sellerParts = sellerIdentityParts(legal);
-    const seller = sellerParts.length ? [...sellerParts, typeof contact === "string" ? contact.trim() : ""].filter(Boolean).join(" · ") : null;
+    const seller = sellerContactLine(legal, typeof contact === "string" ? contact : "");
     const boleto = (o.boleto ?? null) as { url?: string } | null;
     const email: EmailOrder = {
       number: Number(o.number),

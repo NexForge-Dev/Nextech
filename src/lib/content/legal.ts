@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Locale } from "@/i18n/routing";
 import type { PublicSettings } from "@/lib/data/settings";
 import { renderMarkdownSafe } from "@/lib/security/sanitize";
-import { sellerIdentityParts } from "@/lib/domain/seller";
+import { resolveContactEmail, sellerIdentityParts } from "@/lib/domain/seller";
 
 export const LEGAL_PAGES = ["about", "how-it-works", "how-we-earn", "faq", "contact", "privacy", "terms", "cookies", "affiliates", "returns", "shipping"] as const;
 /** "store" texts (own store: we are the seller) live in <locale>/store/ and fall back to the default text. */
@@ -12,22 +12,15 @@ export type LegalVariant = "default" | "store";
 export type LegalPage = (typeof LEGAL_PAGES)[number];
 
 /** Date shown as "last updated" on institutional pages. Bump when the texts change. */
-export const LEGAL_UPDATED_AT = "2026-11-02T12:00:00Z";
+export const LEGAL_UPDATED_AT = "2026-11-04T12:00:00Z";
 
 /**
  * Customers never see placeholder values. Missing seller data is left out of the sentence (and the
- * admin dashboard flags it); a missing contact e-mail points to the contact form instead.
+ * admin dashboard flags it); a blank contact e-mail falls back to the default address.
  */
-const CONTACT_FALLBACK: Record<Locale, string> = {
-  "pt-BR": "o formulário da página de Contato",
-  "pt-PT": "o formulário da página de Contacto",
-  en: "the form on our Contact page",
-  es: "el formulario de la página de Contacto",
-};
-
 const TAX_LABEL: Record<Locale, string> = { "pt-BR": "CNPJ", "pt-PT": "NIF", en: "Tax ID", es: "NIF" };
 
-const COMPANY_LABEL: Record<Locale, string> = { "pt-BR": "Empresa responsável", "pt-PT": "Empresa responsável", en: "Company", es: "Empresa responsable" };
+const COMPANY_LABEL: Record<Locale, string> = { "pt-BR": "Responsável pela loja", "pt-PT": "Empresa responsável", en: "Company", es: "Empresa responsable" };
 
 function escapeMd(v: string): string {
   return v.replace(/[\\`*_{}[\]()#+!|<>]/g, (c) => `\\${c}`);
@@ -45,13 +38,13 @@ export async function loadLegal(page: LegalPage, locale: Locale, s: PublicSettin
     (await readFile(ptStore, "utf8"));
   const clean = (v: string | undefined | null) => (v && v.trim() ? escapeMd(v.trim()) : "");
   const parts = sellerIdentityParts(s.legal, TAX_LABEL[locale]).map(escapeMd);
-  const company = parts.length && s.legal.company_name?.trim() ? `**${COMPANY_LABEL[locale]}:** ${parts.join(" · ")}` : "";
+  const company = parts.length ? `**${COMPANY_LABEL[locale]}:** ${parts.join(" · ")}` : "";
   const filled = md
     .replaceAll("{{store_name}}", escapeMd(s.storeName))
     // "Razão social, CNPJ …, endereço" with only the fields that are set; the store name when none is
     .replaceAll("{{seller_identity}}", parts.length ? parts.join(", ") : escapeMd(s.storeName))
     .replaceAll("{{company_name}}", clean(s.legal.company_name) || escapeMd(s.storeName))
-    .replaceAll("{{contact_email}}", clean(s.contactEmail) || CONTACT_FALLBACK[locale])
+    .replaceAll("{{contact_email}}", escapeMd(resolveContactEmail(s.contactEmail)))
     .replaceAll("{{company_block}}", company);
   return renderMarkdownSafe(filled);
 }

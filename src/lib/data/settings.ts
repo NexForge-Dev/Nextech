@@ -4,6 +4,7 @@ import { createAnonSupabase } from "@/lib/supabase/server";
 import { LOCALES, type Locale } from "@/i18n/routing";
 import { cache } from "react";
 import { parseBusinessModels, storefrontLocaleLock, type BusinessModels } from "@/lib/domain/business-models";
+import { DEFAULT_CONTACT_EMAIL, resolveContactEmail } from "@/lib/domain/seller";
 
 export type PublicSettings = {
   storeName: string;
@@ -21,7 +22,7 @@ export type PublicSettings = {
 
 const DEFAULTS: PublicSettings = {
   storeName: "NEXTECH",
-  contactEmail: "",
+  contactEmail: DEFAULT_CONTACT_EMAIL,
   socials: {},
   seo: {},
   legal: { company_name: "", tax_id: "", address: "" },
@@ -46,7 +47,7 @@ export const getPublicSettings = unstable_cache(
     const nullableStr = (k: string) => (typeof m.get(k) === "string" && (m.get(k) as string) ? (m.get(k) as string) : null);
     return {
       storeName: str("public.store_name", DEFAULTS.storeName) || DEFAULTS.storeName,
-      contactEmail: str("public.contact_email", ""),
+      contactEmail: resolveContactEmail(str("public.contact_email", "")),
       socials: obj("public.socials", {}),
       seo: obj("public.seo", {}),
       legal: obj("public.legal", DEFAULTS.legal),

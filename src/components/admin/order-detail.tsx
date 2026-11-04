@@ -319,7 +319,7 @@ function ReturnCard({ r, canWrite, onSaved }: { r: Order["returns"][number]; can
               className={btnPrimary}
               disabled={pending}
               title={v.outcome === "refund_full" ? "Resolver com reembolso total?" : `Resolver com reembolso de R$ ${v.refundAmount || "0,00"}?`}
-              description="O valor será devolvido ao cliente (pelo Stripe, ou registrado como feito por fora no boleto) e o cliente recebe a resposta por e-mail. Esta ação não pode ser desfeita."
+              description="O valor será devolvido ao cliente (pelo Stripe, ou registrado como feito por fora no boleto) e o cliente vê a resposta no pedido, em Minha conta (e por e-mail, se o envio estiver configurado). Esta ação não pode ser desfeita."
               confirmLabel="Resolver e reembolsar"
               onConfirm={resolve}
             />
