@@ -20,7 +20,7 @@ A confirmação depende da compensação bancária, normalmente em até 1 dia ú
 
 ## Posso cancelar o pedido?
 
-Sim, em Minha conta → Pedidos, enquanto o botão **Cancelar pedido** aparecer no pedido. O reembolso é integral. Depois disso, ou se ele já estiver a caminho, você ainda pode desistir: abra uma solicitação no pedido, recuse a entrega ou peça a devolução em até 7 dias depois de receber (veja a pergunta abaixo).
+Sim, em Minha conta → Pedidos, enquanto o botão **Cancelar pedido** aparecer no pedido. O reembolso é integral e, no cartão, pode levar até 10 dias úteis para aparecer na fatura ou conta. Depois disso, ou se ele já estiver a caminho, você ainda pode desistir: abra uma solicitação no pedido, recuse a entrega ou peça a devolução em até 7 dias depois de receber (veja a pergunta abaixo).
 
 ## E se eu me arrepender depois de receber?
 

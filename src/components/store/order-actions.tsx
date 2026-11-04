@@ -34,7 +34,7 @@ export function OrderActions({ orderNumber, contactEmail, cancellable, canReques
       const r = await cancelMyOrder(orderNumber);
       setConfirming(false);
       if (!r.ok) return void toast.error(r.error);
-      toast.success(r.refund === "manual" ? t("cancelledManual", { contact: contactEmail }) : t("cancelled"));
+      toast.success(r.refund === "manual" ? t("cancelledManual", { contact: contactEmail }) : r.refund === "stripe" ? t("cancelledRefund") : t("cancelled"));
       router.refresh();
     });
   }

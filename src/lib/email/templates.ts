@@ -53,9 +53,9 @@ function copy(kind: EmailKind, o: EmailOrder): Copy {
     case "orderDelivered":
       return { subject: `Pedido #${o.number} entregue`, lead: `Olá, ${o.customerName}! Seu pedido #${o.number} foi entregue. Se algo não estiver certo, você tem 7 dias para desistir e a garantia legal (30 dias para produtos não duráveis, 90 dias para duráveis): é só abrir uma solicitação em Meus pedidos.`, cta: see };
     case "orderCancelled":
-      return { subject: `Pedido #${o.number} cancelado`, lead: `Olá, ${o.customerName}. Seu pedido #${o.number} foi cancelado.${o.refundMinor ? ` O reembolso de ${money(o.refundMinor)} já foi solicitado e aparece na sua fatura ou conta em alguns dias.` : ""}`, cta: see };
+      return { subject: `Pedido #${o.number} cancelado`, lead: `Olá, ${o.customerName}. Seu pedido #${o.number} foi cancelado.${o.refundMinor ? ` O reembolso de ${money(o.refundMinor)} já foi solicitado e aparece na sua fatura ou conta em até 10 dias úteis.` : ""}`, cta: see };
     case "orderRefunded":
-      return { subject: `Reembolso do pedido #${o.number}`, lead: `Olá, ${o.customerName}. Fizemos o reembolso de ${money(o.refundMinor ?? o.totalMinor)} referente ao pedido #${o.number}.${o.paymentMethod === "boleto" ? " Como o pedido foi pago com boleto, o valor foi devolvido por transferência ou Pix." : " O valor aparece na sua fatura ou conta em alguns dias."}`, cta: see };
+      return { subject: `Reembolso do pedido #${o.number}`, lead: `Olá, ${o.customerName}. Fizemos o reembolso de ${money(o.refundMinor ?? o.totalMinor)} referente ao pedido #${o.number}.${o.paymentMethod === "boleto" ? " Como o pedido foi pago com boleto, o valor foi devolvido por transferência ou Pix." : " O valor aparece na sua fatura ou conta em até 10 dias úteis."}`, cta: see };
     case "returnReceived":
       return { subject: `Recebemos sua solicitação — pedido #${o.number}`, lead: `Olá, ${o.customerName}. Recebemos sua solicitação de devolução ou suporte do pedido #${o.number}. Respondemos em até 5 dias.`, cta: see };
     case "returnResolved":

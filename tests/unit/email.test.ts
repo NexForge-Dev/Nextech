@@ -59,6 +59,11 @@ describe("email templates", () => {
     expect(m.subject).toBe("Atenção: pedido #1001");
     expect(m.text).toContain("O reembolso automático de R$ 439,80 falhou no Stripe.");
   });
+  it("tells card customers a refund takes up to 10 business days, but not boleto customers", () => {
+    expect(renderEmail("orderCancelled", { ...order, paymentMethod: "card", refundMinor: 1000 }).text).toContain("em até 10 dias úteis");
+    expect(renderEmail("orderRefunded", { ...order, paymentMethod: "card", refundMinor: 1000 }).text).toContain("em até 10 dias úteis");
+    expect(renderEmail("orderRefunded", { ...order, paymentMethod: "boleto", refundMinor: 1000 }).text).not.toContain("10 dias úteis");
+  });
   it("renders every kind with a subject and a text version", () => {
     for (const k of ["orderConfirmed", "boletoIssued", "paymentFailed", "orderShipped", "orderDelivered", "orderCancelled", "orderRefunded", "returnReceived", "returnResolved", "ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"] as const) {
       const m = renderEmail(k, { ...order, refundMinor: 1000, boletoUrl: "https://payments.stripe.com/b", outcome: "Reembolso total" });

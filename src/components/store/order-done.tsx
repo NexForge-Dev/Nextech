@@ -96,7 +96,7 @@ export function OrderDone({ initial, redirectFailed = false, emailEnabled = fals
           </Link>
         </div>
       ) : o.stage === "refunded" ? (
-        <p className="text-[15px]">{t("doneRefunded")}</p>
+        <p className="text-[15px]">{t("doneRefunded")}{o.paymentMethod !== "boleto" && ` ${t("doneRefundTiming")}`}</p>
       ) : o.paymentMethod === "boleto" && boleto ? (
         <div className="space-y-4">
           <p className="text-[15px]">{t("doneBoleto")}</p>

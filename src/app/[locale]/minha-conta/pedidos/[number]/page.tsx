@@ -116,7 +116,7 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
         <div className="space-y-2 border-t border-line p-4">
           {order.discountMinor > 0 && <SummaryRow label="Pix">−{money(order.discountMinor)}</SummaryRow>}
           <SummaryRow label="Total" strong>{money(order.totalMinor)}</SummaryRow>
-          {order.refundedMinor > 0 && <p className="text-sm">{t("refunded", { amount: money(order.refundedMinor) })}</p>}
+          {order.refundedMinor > 0 && <p className="text-sm">{t("refunded", { amount: money(order.refundedMinor) })}{order.paymentMethod !== "boleto" && ` ${t("refundTiming")}`}</p>}
         </div>
       </div>
 
