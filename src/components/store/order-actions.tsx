@@ -10,7 +10,7 @@ import { Notice } from "./ui";
 
 const btn = "btn btn-secondary";
 
-export function OrderActions({ orderNumber, cancellable, canRequestReturn, hasInvoice }: { orderNumber: number; cancellable: boolean; canRequestReturn: boolean; hasInvoice: boolean }) {
+export function OrderActions({ orderNumber, contactEmail, cancellable, canRequestReturn, hasInvoice }: { orderNumber: number; contactEmail: string; cancellable: boolean; canRequestReturn: boolean; hasInvoice: boolean }) {
   const t = useTranslations("orders");
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -34,7 +34,7 @@ export function OrderActions({ orderNumber, cancellable, canRequestReturn, hasIn
       const r = await cancelMyOrder(orderNumber);
       setConfirming(false);
       if (!r.ok) return void toast.error(r.error);
-      toast.success(r.refund === "manual" ? t("cancelledManual") : t("cancelled"));
+      toast.success(r.refund === "manual" ? t("cancelledManual", { contact: contactEmail }) : t("cancelled"));
       router.refresh();
     });
   }

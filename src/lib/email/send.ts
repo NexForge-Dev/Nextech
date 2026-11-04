@@ -2,6 +2,11 @@ import { log } from "@/lib/log";
 
 export type EmailMessage = { to: string; subject: string; html: string; text: string };
 
+/** True when order e-mails can actually go out: lets screens promise an e-mail only when one is sent. */
+export function isEmailConfigured(): boolean {
+  return !!process.env.RESEND_API_KEY?.trim() && !!process.env.EMAIL_FROM?.trim();
+}
+
 /**
  * Transactional email through the Resend HTTP API. Never throws: when RESEND_API_KEY/EMAIL_FROM are
  * missing or the provider fails, the email is logged as skipped and `{ sent: false }` is returned.
