@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Lock, RotateCcw, Truck, User } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getCategories } from "@/lib/data/taxonomy";
+import { getVisibleCategories } from "@/lib/data/taxonomy";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { Logo } from "./logo";
@@ -14,7 +14,7 @@ import { CartLink } from "./cart-link";
 import { getBusinessModels } from "@/lib/data/settings";
 
 export async function Header({ locale, storeName, logoUrl }: { locale: Locale; storeName: string; logoUrl?: string | null }) {
-  const [t, tc, ts, categories, user, bm] = await Promise.all([getTranslations("header"), getTranslations("cart"), getTranslations("store"), getCategories(locale), getSessionUser(), getBusinessModels()]);
+  const [t, tc, ts, categories, user, bm] = await Promise.all([getTranslations("header"), getTranslations("cart"), getTranslations("store"), getVisibleCategories(locale), getSessionUser(), getBusinessModels()]);
   let favCount = 0;
   if (user) {
     const sb = await createServerSupabase();
