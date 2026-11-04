@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { setPreferences } from "@/actions/store/account";
+import { Notice } from "./ui";
 
 type Opt = { value: string; label: string };
 
@@ -9,12 +10,12 @@ export function PreferencesForm({ locale, languages, markets, current }: { local
   const t = useTranslations("account");
   const tc = useTranslations("common");
   const [state, action, pending] = useActionState(setPreferences, null);
-  const select = "h-11 w-full cursor-pointer rounded-md border border-line bg-white px-3 text-[15px] outline-none focus:border-black";
+  const select = "field cursor-pointer";
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="locale" value={locale} />
       <div>
-        <label htmlFor="p-locale" className="mb-1.5 block text-sm font-medium">
+        <label htmlFor="p-locale" className="field-label">
           {t("language")}
         </label>
         <select id="p-locale" name="preferredLocale" defaultValue={current.locale} className={select}>
@@ -27,7 +28,7 @@ export function PreferencesForm({ locale, languages, markets, current }: { local
       </div>
       {markets.length > 0 && (
         <div>
-          <label htmlFor="p-market" className="mb-1.5 block text-sm font-medium">
+          <label htmlFor="p-market" className="field-label">
             {t("country")}
           </label>
           <select id="p-market" name="preferredMarket" defaultValue={current.market} className={select}>
@@ -40,11 +41,9 @@ export function PreferencesForm({ locale, languages, markets, current }: { local
         </div>
       )}
       {state?.message && (
-        <p role="status" className="text-sm">
-          {state.message}
-        </p>
+        <Notice tone="success">{state.message}</Notice>
       )}
-      <button type="submit" disabled={pending} className="h-11 cursor-pointer rounded-md bg-black px-6 text-sm font-semibold text-white hover:bg-ink disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-primary h-11 px-6">
         {tc("save")}
       </button>
     </form>

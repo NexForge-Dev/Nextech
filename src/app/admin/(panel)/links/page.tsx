@@ -45,7 +45,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
     name: l.products?.product_translations.find((t) => t.locale === "pt-BR")?.name ?? "—",
     stale: olderThan(l.price_updated_at, staleDays),
   }));
-  const sel = "h-10 rounded-md border border-line bg-white px-3 text-sm";
+  const sel = "field h-10 w-auto";
   return (
     <>
       <PageHeader title="Links de afiliados" description="Todas as ofertas cadastradas nos produtos. Edite uma oferta pelo produto." />
@@ -82,7 +82,7 @@ export default async function LinksPage({ searchParams }: { searchParams: Promis
           { key: "network", header: "Rede", cell: (r) => r.affiliate_networks?.name ?? <span className="text-mute">Manual</span> },
           { key: "market", header: "País", cell: (r) => <span className="font-mono text-xs">{r.market}</span> },
           { key: "price", header: "Preço", cell: (r) => (r.price_minor != null ? <span className="tabular">{formatMoney(r.price_minor, r.currency, "pt-BR")}</span> : <span className="text-mute">Sem preço</span>) },
-          { key: "updated", header: "Atualizado", cell: (r) => (r.price_updated_at ? <span className={`tabular text-xs ${r.stale ? "font-semibold" : "text-mute"}`}>{new Date(r.price_updated_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}{r.stale ? " ⚠" : ""}</span> : "—") },
+          { key: "updated", header: "Atualizado", cell: (r) => (r.price_updated_at ? <span className={`tabular text-xs ${r.stale ? "font-semibold" : "text-mute"}`}>{new Date(r.price_updated_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}{r.stale ? "" : ""}</span> : "—") },
           { key: "source", header: "Fonte", cell: (r) => <span className="text-xs text-mute">{r.price_source === "manual" ? "Manual" : r.price_source === "import" ? "Importação" : r.price_source === "integration" ? "Integração" : "—"}</span> },
           { key: "aff", header: "Link afiliado", cell: (r) => <span className="text-xs">{r.affiliate_url ? "Sim" : <span className="text-mute">Original</span>}</span> },
           { key: "status", header: "Status", cell: (r) => <StatusPill active={r.active} /> },

@@ -17,8 +17,8 @@ export default async function PreferencesPage({ params }: { params: Promise<{ lo
   if (!user) return null;
   const [t, tm, profile, ctx] = await Promise.all([getTranslations("account"), getTranslations("markets"), getProfile(user.id), getStoreContext(locale)]);
   return (
-    <div className="max-w-lg">
-      <h2 className="mb-6 text-xl font-semibold tracking-tight">{t("preferences")}</h2>
+    <div className="panel p-5 md:p-6 max-w-2xl">
+      <h2 className="t-section mb-5">{t("preferences")}</h2>
       <PreferencesForm
         locale={locale}
         languages={LOCALES.map((l) => ({ value: l, label: LANGUAGE_NAMES[l] }))}

@@ -36,13 +36,15 @@ export default async function CampaignPage({ params }: Props) {
   );
   return (
     <main>
-      <header className="mx-auto w-full max-w-7xl px-4 pb-6 pt-14 md:px-6">
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">{campaign.title}</h1>
-        {campaign.description && <p className="mt-4 max-w-2xl text-lg text-mute">{campaign.description}</p>}
-        {campaign.endsAt && <p className="mt-3 text-sm text-mute">{t("until", { date: format.dateTime(new Date(campaign.endsAt), { dateStyle: "long" }) })}</p>}
+      <header className="bg-black text-white">
+        <div className="shell py-10 md:py-14">
+          <h1 className="t-display text-white">{campaign.title}</h1>
+          {campaign.description && <p className="mt-3 max-w-2xl text-white/70 md:text-lg">{campaign.description}</p>}
+          {campaign.endsAt && <p className="mt-3 text-sm text-white/70">{t("until", { date: format.dateTime(new Date(campaign.endsAt), { dateStyle: "long" }) })}</p>}
+        </div>
       </header>
       {campaign.banners.length > 0 && (
-        <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+        <div className="shell pt-8">
           <BannerCarousel banners={campaign.banners} labels={{ previous: tc("previous"), next: tc("next") }} />
         </div>
       )}

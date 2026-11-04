@@ -12,8 +12,8 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
   if (!(await getBusinessModels()).ownStore) notFound();
   const [t, user] = await Promise.all([getTranslations("cart"), getSessionUser()]);
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 md:px-6">
-      <h1 className="mb-8 text-3xl font-semibold tracking-tight md:text-4xl">{t("title")}</h1>
+    <main className="shell pb-16 pt-6 md:pt-10">
+      <h1 className="t-page mb-5 md:mb-6">{t("title")}</h1>
       <CartView signedIn={!!user} />
     </main>
   );

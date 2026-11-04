@@ -46,11 +46,11 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
     });
   }
 
-  const btn = "h-10 cursor-pointer rounded-md px-4 text-sm font-medium transition-colors duration-150 disabled:opacity-50";
+  const btn = "btn";
   return (
     <>
       {visible && (
-        <div role="region" aria-label={t("bannerTitle")} className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white px-4 py-4 md:px-6">
+        <div role="region" aria-label={t("bannerTitle")} className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white px-4 py-4 shadow-[var(--shadow-pop)] md:px-6">
           <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="max-w-3xl text-sm">
               <p className="font-medium text-black">{texts?.title || t("bannerTitle")}</p>
@@ -61,14 +61,14 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
                 </Link>
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" disabled={pending} onClick={() => setDialog(true)} className={`${btn} border border-line bg-white text-black hover:bg-soft`}>
+            <div className="grid grid-cols-2 gap-2 md:flex md:shrink-0">
+              <button type="button" disabled={pending} onClick={() => setDialog(true)} className={`${btn} btn-ghost`}>
                 {t("customize")}
               </button>
-              <button type="button" disabled={pending} onClick={() => save(false, false)} className={`${btn} border border-black bg-white text-black hover:bg-soft`}>
+              <button type="button" disabled={pending} onClick={() => save(false, false)} className={`${btn} btn-secondary`}>
                 {t("rejectOptional")}
               </button>
-              <button type="button" disabled={pending} onClick={() => save(true, true)} className={`${btn} bg-black text-white hover:bg-ink`}>
+              <button type="button" disabled={pending} onClick={() => save(true, true)} className={`${btn} btn-primary col-span-2`}>
                 {t("acceptAll")}
               </button>
             </div>
@@ -76,7 +76,7 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
         </div>
       )}
       <Dialog open={dialog} onOpenChange={setDialog}>
-        <DialogContent closeLabel={tc("close")} className="max-w-lg rounded-md border border-line p-6 shadow-none ring-0">
+        <DialogContent closeLabel={tc("close")} className="max-w-[calc(100%-2rem)] rounded-lg border border-line p-6 shadow-[var(--shadow-pop)] ring-0 sm:max-w-lg">
           <DialogTitle className="text-lg font-semibold">{t("bannerTitle")}</DialogTitle>
           <DialogDescription className="text-sm text-mute">{t("bannerText")}</DialogDescription>
           <div className="mt-2 divide-y divide-line border-y border-line">
@@ -91,7 +91,7 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
             </Row>
           </div>
           <div className="mt-2 flex justify-end">
-            <button type="button" disabled={pending} onClick={() => save(analytics, marketing)} className={`${btn} bg-black text-white hover:bg-ink`}>
+            <button type="button" disabled={pending} onClick={() => save(analytics, marketing)} className={`${btn} btn-primary`}>
               {t("save")}
             </button>
           </div>

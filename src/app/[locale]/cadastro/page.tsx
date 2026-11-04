@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { signUp } from "@/actions/store/auth";
 import { AuthForm } from "@/components/store/auth-form";
 import { AuthShell } from "@/components/store/auth-shell";
+import { Notice } from "@/components/store/ui";
 
 export const metadata = { robots: { index: false } };
 
@@ -27,9 +28,7 @@ export default async function SignUpPage({ params, searchParams }: { params: Pro
       }
     >
       {noAccount && (
-        <p role="status" className="mb-5 rounded-md bg-soft px-3 py-2 text-sm">
-          {t("noAccountFound")}
-        </p>
+        <Notice className="mb-5">{t("noAccountFound")}</Notice>
       )}
       <AuthForm
         action={signUp}

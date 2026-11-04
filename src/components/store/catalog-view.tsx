@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { ChevronLeft, ChevronRight, SearchX } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { minorDigits } from "@/lib/domain/money";
@@ -11,12 +12,14 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getAvailableMarkets } from "@/lib/data/taxonomy";
 import { ProductGrid } from "./product-grid";
 import { CatalogFilters, SortSelect } from "./catalog-filters";
+import { EmptyState } from "./ui";
 
 type Base = { pathname: "/produtos" } | { pathname: "/categoria/[slug]"; params: { slug: string } };
 
 export async function CatalogView({ locale, market, filters, title, description, base, fixedCategory, result }: { locale: Locale; market: string; filters: Filters; title: string; description?: string | null; base: Base; fixedCategory?: string; result: Awaited<ReturnType<typeof listProducts>> }) {
   const t = await getTranslations("catalog");
   const tc = await getTranslations("common");
+  const ts = await getTranslations("store");
   const markets = await getAvailableMarkets();
   const currency = markets.find((m) => m.code === market)?.currency ?? "BRL";
   const digits = minorDigits(currency);
@@ -46,45 +49,62 @@ export async function CatalogView({ locale, market, filters, title, description,
     return base.pathname === "/produtos" ? { pathname: base.pathname, query } : { pathname: base.pathname, params: base.params, query };
   };
   const clearHref = base.pathname === "/produtos" ? { pathname: base.pathname } : { pathname: base.pathname, params: base.params };
+  const crumb = "transition-colors duration-150 hover:text-black";
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 md:px-6">
-      <header className="mb-8 border-b border-line pb-8">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
-        {description && <p className="mt-2 max-w-2xl text-mute">{description}</p>}
-        <p className="mt-3 text-sm text-mute" aria-live="polite">{t("count", { count: total })}</p>
-      </header>
-      <div className="grid gap-10 lg:grid-cols-[240px_1fr]">
-        <aside aria-label={t("filters")}>
-          <CatalogFilters values={values} categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} brands={facets.brands} stores={stores} hideCategory={!!fixedCategory} />
+    <main>
+      <div className="border-b border-line bg-soft">
+        <header className="shell py-6 md:py-8">
+          <nav aria-label={ts("breadcrumb")} className="mb-2 flex items-center gap-1.5 text-xs text-mute">
+            <Link href="/" className={crumb}>{ts("home")}</Link>
+            {fixedCategory && (
+              <>
+                <ChevronRight className="size-3" aria-hidden />
+                <Link href="/produtos" className={crumb}>{t("title")}</Link>
+              </>
+            )}
+            <ChevronRight className="size-3" aria-hidden />
+            <span aria-current="page" className="truncate text-black">{title}</span>
+          </nav>
+          <h1 className="t-page">{title}</h1>
+          {description && <p className="mt-2 max-w-2xl text-sm text-mute">{description}</p>}
+        </header>
+      </div>
+      <div className="shell grid gap-6 pb-16 pt-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:gap-8 lg:pt-8">
+        <aside aria-label={t("filters")} className="hidden lg:block">
+          <div className="panel sticky top-44 max-h-[calc(100vh-12rem)] overflow-y-auto p-5">
+            <CatalogFilters mode="desktop" values={values} categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} brands={facets.brands} stores={stores} hideCategory={!!fixedCategory} />
+          </div>
         </aside>
-        <section>
-          <div className="mb-6 flex justify-end">
+        <section className="min-w-0">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="lg:hidden">
+                <CatalogFilters mode="mobile" values={values} categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} brands={facets.brands} stores={stores} hideCategory={!!fixedCategory} />
+              </div>
+              <p className="text-sm text-mute" aria-live="polite">{t("count", { count: total })}</p>
+            </div>
             <SortSelect value={filters.sort} hasQuery={!!filters.q} />
           </div>
           {items.length === 0 ? (
-            <div className="rounded-md border border-line px-6 py-16 text-center">
-              <p className="text-lg font-semibold">{t("noResultsTitle")}</p>
-              <p className="mt-1 text-sm text-mute">{t("noResultsText")}</p>
-              <Link href={clearHref} className="mt-6 inline-flex h-10 items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">
-                {t("clearFilters")}
-              </Link>
-            </div>
+            <EmptyState icon={SearchX} title={t("noResultsTitle")} text={t("noResultsText")}>
+              <Link href={clearHref} className="btn btn-primary">{t("clearFilters")}</Link>
+            </EmptyState>
           ) : (
-            <ProductGrid products={items} locale={locale} signedIn={!!user} favorites={favorites} priorityCount={4} />
+            <ProductGrid products={items} locale={locale} signedIn={!!user} favorites={favorites} priorityCount={4} columns="narrow" />
           )}
           {pages > 1 && (
-            <nav className="mt-12 flex items-center justify-center gap-4 text-sm" aria-label={tc("page", { page: filters.page, total: pages })}>
+            <nav className="mt-10 flex items-center justify-center gap-3 text-sm" aria-label={tc("page", { page: filters.page, total: pages })}>
               {filters.page > 1 ? (
-                <Link href={pageHref(filters.page - 1)} className="rounded-md border border-line px-4 py-2 hover:bg-soft">{tc("previous")}</Link>
+                <Link href={pageHref(filters.page - 1)} className="btn btn-secondary"><ChevronLeft aria-hidden />{tc("previous")}</Link>
               ) : (
-                <span className="rounded-md border border-line px-4 py-2 text-mute">{tc("previous")}</span>
+                <span className="btn btn-secondary pointer-events-none opacity-50"><ChevronLeft aria-hidden />{tc("previous")}</span>
               )}
-              <span className="tabular text-mute">{tc("page", { page: filters.page, total: pages })}</span>
+              <span className="tabular px-2 text-mute">{tc("page", { page: filters.page, total: pages })}</span>
               {filters.page < pages ? (
-                <Link href={pageHref(filters.page + 1)} className="rounded-md border border-line px-4 py-2 hover:bg-soft">{tc("next")}</Link>
+                <Link href={pageHref(filters.page + 1)} className="btn btn-secondary">{tc("next")}<ChevronRight aria-hidden /></Link>
               ) : (
-                <span className="rounded-md border border-line px-4 py-2 text-mute">{tc("next")}</span>
+                <span className="btn btn-secondary pointer-events-none opacity-50">{tc("next")}<ChevronRight aria-hidden /></span>
               )}
             </nav>
           )}

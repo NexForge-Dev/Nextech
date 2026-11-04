@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Upload } from "lucide-react";
+import { Upload, CircleAlert } from "lucide-react";
 import { importProductsCsv, type ImportPreview } from "@/actions/admin/products";
 import { btnPrimary, btnSecondary, useAdminAction } from "./form";
 
@@ -21,7 +21,7 @@ export function CsvImport({ columns }: { columns: readonly string[] }) {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <div className="rounded-md border border-line p-5 text-sm">
+      <div className="panel p-5 text-sm">
         <p className="font-medium">Formato</p>
         <p className="mt-1 text-mute">CSV com cabeçalho, uma linha por oferta. Linhas com o mesmo <code className="font-mono">slug</code> formam um produto. Preços com ponto decimal (199.90). Tags e imagens separadas por “|”. Categorias, marcas e lojas devem existir (use o slug).</p>
         <p className="mt-3 break-all font-mono text-xs">{columns.join(",")}</p>
@@ -46,7 +46,7 @@ export function CsvImport({ columns }: { columns: readonly string[] }) {
         </button>
       </div>
       {preview && (
-        <div className="rounded-md border border-line p-5 text-sm" aria-live="polite">
+        <div className="panel p-5 text-sm" aria-live="polite">
           {preview.committed ? (
             <p className="font-medium">Importado: {preview.created} produto(s) criado(s), {preview.updated} atualizado(s).</p>
           ) : (
@@ -54,7 +54,7 @@ export function CsvImport({ columns }: { columns: readonly string[] }) {
           )}
           {preview.errors.length > 0 && (
             <>
-              <p className="mt-3 font-medium">⚠ {preview.errors.length} erro(s) — corrija o arquivo e envie novamente:</p>
+              <p className="mt-3 font-medium"><CircleAlert className="mr-1 inline size-3.5 align-[-2px]" aria-hidden />{preview.errors.length} erro(s) — corrija o arquivo e envie novamente:</p>
               <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto font-mono text-xs">
                 {preview.errors.map((e, i) => (
                   <li key={i}>{e.line ? `Linha ${e.line}: ` : ""}{e.message}</li>

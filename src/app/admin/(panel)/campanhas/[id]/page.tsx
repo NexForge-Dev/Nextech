@@ -33,7 +33,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
         title={c.name}
         description="Campanha"
         actions={
-          <a href={`/pt-br/campanha/${c.slug}`} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft">
+          <a href={`/pt-br/campanha/${c.slug}`} target="_blank" rel="noopener" className="btn btn-secondary">
             <ExternalLink className="size-4" /> Página pública
           </a>
         }
@@ -46,7 +46,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
             ["Comissões estimadas", formatCurrencyAmounts(g.pending, "pt-BR")],
             ["Comissões confirmadas", formatCurrencyAmounts(g.confirmed, "pt-BR")],
           ].map(([l, v]) => (
-            <div key={l} className="rounded-md border border-line p-4">
+            <div key={l} className="panel p-4">
               <p className="text-xs text-mute">{l}</p>
               <p className="tabular mt-1 text-lg font-semibold">{v}</p>
             </div>

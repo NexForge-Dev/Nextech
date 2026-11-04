@@ -20,13 +20,13 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
   // the layout redirects guests; pages render in parallel, so bail out quietly
   if (!user) return null;
   const [t, profile, addresses] = await Promise.all([getTranslations("account"), getProfile(user.id), getMyAddresses()]);
-  const block = "border-b border-line pb-8";
+  const block = "panel p-5 md:p-6";
   return (
-    <div className="max-w-2xl space-y-8">
-      <h2 className="text-xl font-semibold tracking-tight">{t("privacy")}</h2>
+    <div className="max-w-2xl space-y-4">
+      <h2 className="t-section">{t("privacy")}</h2>
       <div className={block}>
         <h3 className="font-medium">{t("cookieChoices")}</h3>
-        <CookiePreferencesButton label={t("editCookies")} className="mt-3 h-10 cursor-pointer rounded-md border border-line px-4 text-sm font-medium hover:bg-soft" />
+        <CookiePreferencesButton label={t("editCookies")} className="btn btn-secondary mt-3" />
       </div>
       <div className={block}>
         <h3 className="font-medium">{t("history")}</h3>
@@ -48,11 +48,11 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
       <div className={block}>
         <h3 className="font-medium">{t("exportData")}</h3>
         <p className="mt-1 text-sm text-mute">{t("exportDataText")}</p>
-        <a href="/api/account/export" download className="mt-3 inline-flex h-10 items-center rounded-md border border-line px-4 text-sm font-medium hover:bg-soft">
+        <a href="/api/account/export" download className="btn btn-secondary mt-3">
           {t("exportData")}
         </a>
       </div>
-      <div>
+      <div className="panel border-black p-5 md:p-6">
         <h3 className="font-medium">{t("deleteAccount")}</h3>
         <p className="mt-1 text-sm text-mute">{t("deleteAccountText")}</p>
         <div className="mt-4">

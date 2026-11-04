@@ -33,7 +33,7 @@ export function PeriodFilter({ current, from, to, children }: { current: string;
             type="button"
             aria-pressed={k === "custom" ? custom : current === k && !custom}
             onClick={() => (k === "custom" ? setCustom(true) : (setCustom(false), go({ p: k, from: null, to: null })))}
-            className={`h-9 cursor-pointer rounded-md border px-3 text-sm transition-colors duration-150 ${(k === "custom" ? custom : current === k && !custom) ? "border-black bg-black text-white" : "border-line hover:bg-soft"}`}
+            className={`h-9 cursor-pointer rounded-md border px-3 text-sm transition-colors duration-150 ${(k === "custom" ? custom : current === k && !custom) ? "border-black bg-black text-white" : "border-line bg-white hover:bg-soft"}`}
           >
             {label}
           </button>
@@ -47,10 +47,10 @@ export function PeriodFilter({ current, from, to, children }: { current: string;
             go({ p: "custom", from: range.from, to: range.to });
           }}
         >
-          <input type="date" aria-label="De" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="h-9 rounded-md border border-line px-2 text-sm" />
+          <input type="date" aria-label="De" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="field h-9 w-auto px-2" />
           <span className="text-sm text-mute">até</span>
-          <input type="date" aria-label="Até" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="h-9 rounded-md border border-line px-2 text-sm" />
-          <button type="submit" className="h-9 cursor-pointer rounded-md bg-black px-3 text-sm font-medium text-white hover:bg-ink">Aplicar</button>
+          <input type="date" aria-label="Até" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="field h-9 w-auto px-2" />
+          <button type="submit" className="btn btn-primary h-9">Aplicar</button>
         </form>
       )}
       {children}

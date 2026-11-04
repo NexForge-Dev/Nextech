@@ -19,7 +19,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       <PeriodFilter current={period.key} from={period.fromDate} to={period.toDate} />
       <ul className="grid gap-3 md:grid-cols-2">
         {Object.entries(REPORTS).map(([key, r]) => (
-          <li key={key} className="flex items-start justify-between gap-4 rounded-md border border-line p-5">
+          <li key={key} className="flex items-start justify-between gap-4 panel p-5">
             <div>
               <p className="font-medium">{r.title}</p>
               <p className="mt-1 text-sm text-mute">{r.description}</p>

@@ -74,7 +74,7 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
         actions={
           <>
             {canImport && <ButtonLink href="/admin/produtos/importar" variant="secondary"><Upload className="size-4" /> Importar CSV</ButtonLink>}
-            {canImport && <a href="/admin/produtos/exportar" download className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><Download className="size-4" /> Exportar CSV</a>}
+            {canImport && <a href="/admin/produtos/exportar" download className="btn btn-secondary"><Download className="size-4" /> Exportar CSV</a>}
             <ButtonLink href="/admin/produtos/novo"><Plus className="size-4" /> Novo produto</ButtonLink>
           </>
         }
@@ -90,13 +90,13 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
         searchPlaceholder="Buscar por nome"
         filters={
           <>
-            <select name="status" defaultValue={sp.status ?? ""} aria-label="Status" className="h-10 rounded-md border border-line bg-white px-3 text-sm">
+            <select name="status" defaultValue={sp.status ?? ""} aria-label="Status" className="field h-10 w-auto">
               <option value="">Todos os status</option>
               <option value="published">Publicados</option>
               <option value="draft">Rascunhos</option>
               <option value="archived">Arquivados</option>
             </select>
-            <select name="category" defaultValue={sp.category ?? ""} aria-label="Categoria" className="h-10 rounded-md border border-line bg-white px-3 text-sm">
+            <select name="category" defaultValue={sp.category ?? ""} aria-label="Categoria" className="field h-10 w-auto">
               <option value="">Todas as categorias</option>
               {(cats ?? []).map((c) => <option key={c.id} value={c.id}>{c.category_translations.find((t) => t.locale === "pt-BR")?.name ?? c.slug}</option>)}
             </select>
@@ -123,8 +123,8 @@ export default async function ProductsAdminPage({ searchParams }: { searchParams
               <div className="min-w-0">
                 <Link href={`/admin/produtos/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
                 {r.featured && <Star className="ml-1.5 inline size-3.5 fill-black" aria-label="Destaque" />}
-                {r.id === shownFlagship && <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-[11px] font-medium text-white">Topo da loja</span>}
-                <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium">{r.own ? "Própria" : "Afiliado"}</span>
+                {r.id === shownFlagship && <span className="tag tag-solid ml-2 h-5 px-2 text-[11px]">Topo da loja</span>}
+                <span className="tag tag-soft ml-2 h-5 px-2 text-[11px]">{r.own ? "Própria" : "Afiliado"}</span>
                 {r.sku && <p className="font-mono text-xs text-mute">{r.sku}</p>}
               </div>
             ),

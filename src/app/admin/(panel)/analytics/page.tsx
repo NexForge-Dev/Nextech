@@ -24,7 +24,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     sb.from("categories").select("id, slug, category_translations(locale, name)").order("sort_order"),
     sb.from("affiliate_networks").select("id, name").order("name"),
   ]);
-  const sel = "h-9 max-w-56 rounded-md border border-line bg-white px-2 text-sm";
+  const sel = "field h-9 w-auto max-w-56 px-2";
   return (
     <>
       <PageHeader title="Analytics" description="Visualizações e cliques registrados pela NEXTECH; conversões e comissões reportadas pelas redes." />
@@ -47,7 +47,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           <option value="">Todas as redes</option>
           {(nets ?? []).map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}
         </select>
-        <button type="submit" className="h-9 cursor-pointer rounded-md border border-line px-3 text-sm font-medium hover:bg-soft">Filtrar</button>
+        <button type="submit" className="btn btn-secondary h-9">Filtrar</button>
       </form>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <KpiCard label="Visualizações" value={String(m.totalViews)} hint="Páginas de produto" />
@@ -57,7 +57,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         <KpiCard label="Comissões estimadas" value={formatCurrencyAmounts(m.commissions.pending, "pt-BR")} />
         <KpiCard label="Comissões confirmadas" value={formatCurrencyAmounts(m.commissions.confirmed, "pt-BR")} />
       </div>
-      <div className="mt-8 grid gap-4 xl:grid-cols-2">
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <DailyLine title="Visualizações por dia" data={m.viewsByDay} valueLabel="Visualizações" />
         <DailyLine title="Cliques por dia" data={m.clicksByDay} valueLabel="Cliques" />
         <RankBar title="Visualizações por produto" data={m.viewsByProduct} valueLabel="Visualizações" />

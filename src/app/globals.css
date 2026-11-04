@@ -6,6 +6,13 @@
  * NEXTECH design tokens — strictly monochrome.
  * Palette: #000000 #FFFFFF #222222 #777777 #E5E5E5 #F7F7F7 (+ black/white alpha).
  * Tailwind's default colour scales are removed so no other colour can be used.
+ *
+ * Design system (see @layer components below):
+ *   type     .t-display / .t-page / .t-section / .t-eyebrow
+ *   layout   .shell (page width + gutters), .panel (white bordered surface)
+ *   actions  .btn + .btn-primary | .btn-secondary | .btn-outline | .btn-ghost, sizes .btn-sm | .btn-lg
+ *   forms    .field, .field-label, .field-error
+ *   status   .tag (outline), .tag-solid (filled), .tag-soft (quiet): state is never carried by colour
  */
 
 @theme {
@@ -55,6 +62,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.12);
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
@@ -110,6 +119,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: #000000;
+  }
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
   }
   ::selection {
     background: #000000;
@@ -119,6 +136,84 @@
   :focus-visible {
     outline: 2px solid #000000;
     outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Layout */
+  .shell {
+    @apply mx-auto w-full max-w-7xl px-4 md:px-6;
+  }
+  .panel {
+    @apply rounded-lg border border-line bg-white;
+  }
+
+  /* Type scale */
+  .t-display {
+    @apply text-[2.125rem] leading-[1.08] font-semibold tracking-[-0.03em] text-black md:text-4xl lg:text-5xl;
+  }
+  .t-page {
+    @apply text-2xl leading-tight font-semibold tracking-[-0.02em] text-black md:text-3xl;
+  }
+  .t-section {
+    @apply text-xl leading-tight font-semibold tracking-[-0.015em] text-black md:text-2xl;
+  }
+  .t-eyebrow {
+    @apply text-[11px] font-semibold tracking-[0.08em] text-mute uppercase;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 select-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0;
+  }
+  .btn-sm {
+    @apply h-8 gap-1.5 px-3 text-[13px] [&_svg]:size-3.5;
+  }
+  .btn-lg {
+    @apply h-12 px-6 text-[15px] font-semibold;
+  }
+  .btn-primary {
+    @apply bg-black text-white hover:bg-ink;
+  }
+  .btn-secondary {
+    @apply border-line bg-white text-black hover:border-mute hover:bg-soft;
+  }
+  .btn-outline {
+    @apply border-black bg-white text-black hover:bg-black hover:text-white;
+  }
+  .btn-ghost {
+    @apply text-ink hover:bg-soft hover:text-black;
+  }
+
+  /* Form fields */
+  .field {
+    @apply h-11 w-full rounded-md border border-line bg-white px-3 text-[15px] text-black transition-[border-color,box-shadow] duration-150 outline-none placeholder:text-mute hover:border-mute focus:border-black focus:ring-1 focus:ring-black disabled:cursor-not-allowed disabled:bg-soft disabled:text-mute aria-invalid:border-black aria-invalid:ring-1 aria-invalid:ring-black md:text-sm;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-black;
+  }
+  .field-error {
+    @apply mt-1.5 flex items-start gap-1.5 text-sm font-medium text-black [&_svg]:mt-0.5 [&_svg]:size-3.5 [&_svg]:shrink-0;
+  }
+
+  /* Status tags: filled = done/attention, outline = in progress, soft = neutral/closed */
+  .tag {
+    @apply inline-flex h-6 w-fit items-center gap-1 rounded-full border border-black bg-white px-2.5 text-xs font-medium whitespace-nowrap text-black [&_svg]:size-3;
+  }
+  .tag-solid {
+    @apply border-black bg-black text-white;
+  }
+  .tag-soft {
+    @apply border-line bg-soft text-ink;
+  }
+
+  /* Horizontal product rails: scroll without a visible bar */
+  .rail {
+    @apply flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1 md:gap-4;
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -132,8 +227,59 @@
   }
 }
 
+/* Native selects: same chevron everywhere. Unlayered so it wins over padding utilities. */
+select:not([multiple]) {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23777777' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.625rem center;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+  text-overflow: ellipsis;
+}
+
+/* Admin tables turn into stacked rows on phones; each cell is labelled from data-label. */
+@media (max-width: 767.98px) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .table-stack tr {
+    padding: 0.75rem 1rem;
+  }
+  .table-stack td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    text-align: right;
+  }
+  .table-stack td[data-label]::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 0.75rem;
+    color: #777777;
+    text-align: left;
+  }
+  .table-stack td[data-label=""]::before {
+    content: none;
+  }
+}
+
 /* Product descriptions (sanitized Markdown) */
-.prose-nx h2 { font-size: 1.125rem; font-weight: 600; margin-top: 1.25rem; }
+.prose-nx h2 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; color: #000000; margin-top: 1.5rem; }
+.prose-nx > :first-child { margin-top: 0; }
 .prose-nx h3, .prose-nx h4 { font-size: 1rem; font-weight: 600; margin-top: 1rem; }
 .prose-nx ul { list-style: disc; padding-left: 1.25rem; }
 .prose-nx ol { list-style: decimal; padding-left: 1.25rem; }
@@ -141,7 +287,8 @@
 .prose-nx table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .prose-nx th, .prose-nx td { border-bottom: 1px solid #e5e5e5; padding: 0.5rem 0; text-align: left; }
 .prose-nx blockquote { border-left: 2px solid #000000; padding-left: 1rem; color: #777777; }
-.prose-legal h2 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; color: #000000; }
+.prose-legal h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.015em; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e5e5; color: #000000; }
+.prose-legal h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 .prose-legal strong { color: #000000; }
 .prose-legal code { font-family: var(--font-geist-mono); font-size: 0.85em; background: #f7f7f7; padding: 0.1rem 0.3rem; border-radius: 4px; }
 .prose-legal li { margin-top: 0.35rem; }

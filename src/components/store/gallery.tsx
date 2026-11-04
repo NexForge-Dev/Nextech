@@ -16,7 +16,7 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
   const n = images.length;
 
   if (!n) {
-    return <div className="grid aspect-square place-items-center rounded-md bg-soft text-sm text-mute">{t("noImage")}</div>;
+    return <div className="panel grid aspect-square place-items-center bg-soft text-sm text-mute">{t("noImage")}</div>;
   }
   const current = images[i];
   const prev = () => setI((x) => (x - 1 + n) % n);
@@ -27,9 +27,9 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
   };
 
   return (
-    <div className="space-y-3" onKeyDown={onKey}>
+    <div className="min-w-0 space-y-3" onKeyDown={onKey}>
       <div
-        className="group relative aspect-square overflow-hidden rounded-md bg-soft"
+        className="panel group relative aspect-square overflow-hidden lg:aspect-[5/4]"
         onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
         onTouchEnd={(e) => {
           if (touchX.current == null) return;
@@ -39,20 +39,20 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
         }}
       >
         <button type="button" onClick={() => setZoom(true)} className="absolute inset-0 cursor-zoom-in" aria-label={t("zoom")}>
-          <Image src={current.src} alt={current.alt || name} fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain p-8 mix-blend-multiply md:p-12" unoptimized={current.src.endsWith(".svg")} />
+          <Image src={current.src} alt={current.alt || name} fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain p-6 md:p-10" unoptimized={current.src.endsWith(".svg")} />
         </button>
-        <span className="pointer-events-none absolute bottom-3 right-3 grid size-9 place-items-center rounded-full bg-white/90 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+        <span className="pointer-events-none absolute bottom-3 right-3 grid size-9 place-items-center rounded-full border border-line bg-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           <ZoomIn className="size-4" aria-hidden />
         </span>
         {n > 1 && (
           <>
-            <button type="button" onClick={prev} aria-label={t("previousImage")} className="absolute left-3 top-1/2 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 hover:bg-white">
+            <button type="button" onClick={prev} aria-label={t("previousImage")} className="absolute left-3 top-1/2 grid size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-line bg-white transition-colors duration-150 hover:border-black">
               <ChevronLeft className="size-4" aria-hidden />
             </button>
-            <button type="button" onClick={next} aria-label={t("nextImage")} className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/90 hover:bg-white">
+            <button type="button" onClick={next} aria-label={t("nextImage")} className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-line bg-white transition-colors duration-150 hover:border-black">
               <ChevronRight className="size-4" aria-hidden />
             </button>
-            <p className="tabular absolute bottom-3 left-3 rounded-sm bg-white/90 px-2 py-0.5 text-xs" aria-live="polite">
+            <p className="tabular absolute bottom-3 left-3 rounded-sm bg-soft px-2 py-0.5 text-xs" aria-live="polite">
               {t("image", { n: i + 1, total: n })}
             </p>
           </>
@@ -67,9 +67,9 @@ export function Gallery({ images, name }: { images: Img[]; name: string }) {
               onClick={() => setI(idx)}
               aria-label={t("image", { n: idx + 1, total: n })}
               aria-current={idx === i}
-              className={`relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-soft md:size-20 ${idx === i ? "border-black" : "border-line"}`}
+              className={`relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-white transition-colors duration-150 md:size-20 ${idx === i ? "border-black ring-1 ring-black" : "border-line hover:border-mute"}`}
             >
-              <Image src={img.src} alt="" fill sizes="80px" className="object-contain p-1.5 mix-blend-multiply" unoptimized={img.src.endsWith(".svg")} />
+              <Image src={img.src} alt="" fill sizes="80px" className="object-contain p-1.5" unoptimized={img.src.endsWith(".svg")} />
             </button>
           ))}
         </div>

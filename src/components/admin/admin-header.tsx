@@ -1,23 +1,17 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Bell, LogOut, Search, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, ExternalLink, LogOut, Search, UserRound } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { adminSearch, type AdminSearchHit } from "@/actions/admin/search";
 import { markNotificationsRead } from "@/actions/admin/notifications";
 import { adminSignOut } from "@/actions/admin/session";
-import { ADMIN_NAV, type NavItem } from "./nav";
+import type { NavItem } from "./nav";
 import { MobileSidebar } from "./sidebar";
 
 type Notification = { key: string; title: string; href: string; at: string; read: boolean };
-
-function usePageTitle() {
-  const pathname = usePathname();
-  const match = [...ADMIN_NAV].sort((a, b) => b.href.length - a.href.length).find((i) => (i.href === "/admin" ? pathname === "/admin" : pathname.startsWith(i.href)));
-  return match?.label ?? "Painel";
-}
 
 function GlobalSearch() {
   const router = useRouter();
@@ -52,7 +46,7 @@ function GlobalSearch() {
         <kbd className="hidden rounded border border-line bg-white px-1.5 text-[10px] font-medium sm:inline">Ctrl K</kbd>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent closeLabel="Fechar" className="top-24 max-w-[calc(100%-2rem)] translate-y-0 gap-0 rounded-md border border-line p-0 shadow-none ring-0 sm:max-w-xl">
+        <DialogContent closeLabel="Fechar" className="top-24 max-w-[calc(100%-2rem)] translate-y-0 gap-0 rounded-lg border border-line p-0 shadow-[var(--shadow-pop)] ring-0 sm:max-w-xl">
           <DialogTitle className="sr-only">Pesquisa administrativa</DialogTitle>
           <div className="flex items-center gap-2 border-b border-line px-4">
             <Search className="size-4 text-mute" aria-hidden />
@@ -93,7 +87,7 @@ function Notifications({ items, unread }: { items: Notification[]; unread: numbe
         <Bell className="size-[18px]" strokeWidth={1.75} aria-hidden />
         {unread > 0 && <span className="tabular absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">{unread}</span>}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-96 max-w-[calc(100vw-2rem)] gap-0 rounded-md border border-line p-0 shadow-[0_8px_24px_rgba(0,0,0,0.06)] ring-0">
+      <PopoverContent align="end" className="w-96 max-w-[calc(100vw-2rem)] gap-0 rounded-md border border-line p-0 shadow-[var(--shadow-pop)] ring-0">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <p className="text-sm font-semibold">Notificações</p>
           {unread > 0 && (
@@ -123,20 +117,22 @@ function Notifications({ items, unread }: { items: Notification[]; unread: numbe
 }
 
 export function AdminHeader({ nav, email, roleLabel, notifications, unread }: { nav: NavItem[]; email: string; roleLabel: string; notifications: Notification[]; unread: number }) {
-  const title = usePageTitle();
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-white/95 px-4 backdrop-blur md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-white px-4 md:gap-3 md:px-6">
       <MobileSidebar items={nav} />
-      <p className="hidden min-w-0 shrink-0 truncate text-base font-semibold md:block md:w-48">{title}</p>
-      <div className="flex min-w-0 flex-1 justify-center">
+      <div className="flex min-w-0 flex-1">
         <GlobalSearch />
       </div>
+      <a href="/" target="_blank" rel="noopener" className="btn btn-ghost hidden md:inline-flex">
+        <ExternalLink aria-hidden />
+        Ver loja
+      </a>
       <Notifications items={notifications} unread={unread} />
       <Popover>
         <PopoverTrigger aria-label="Perfil" className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border border-line hover:bg-soft">
           <UserRound className="size-[18px]" strokeWidth={1.75} aria-hidden />
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-64 rounded-md border border-line p-0 shadow-[0_8px_24px_rgba(0,0,0,0.06)] ring-0">
+        <PopoverContent align="end" className="w-64 rounded-md border border-line p-0 shadow-[var(--shadow-pop)] ring-0">
           <div className="border-b border-line px-4 py-3">
             <p className="truncate text-sm font-medium">{email}</p>
             <p className="text-xs text-mute">{roleLabel}</p>

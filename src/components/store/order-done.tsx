@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { CircleAlert, CircleCheck, Clock, Copy, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getMyOrderStatus, type MyOrderStatus } from "@/actions/store/checkout";
 import { cancelMyOrder } from "@/actions/store/orders";
@@ -74,33 +75,41 @@ export function OrderDone({ initial, redirectFailed = false }: { initial: NonNul
   }, [paid, o.number, o.totalMinor]);
 
   const boleto = o.boleto ?? pay.boleto ?? null;
+  const StatusIcon = paid ? CircleCheck : failed ? CircleAlert : o.stage === "refunded" ? RotateCcw : o.paymentMethod === "boleto" && boleto ? FileText : Clock;
   return (
-    <div className="mt-6 space-y-6" data-testid="order-done" data-stage={o.stage} aria-live="polite">
-      <p className="text-sm text-mute">{formatMoney(o.totalMinor, "BRL", "pt-BR")}</p>
+    <div className="panel mt-4 space-y-5 p-5 md:p-6" data-testid="order-done" data-stage={o.stage} aria-live="polite">
+      <div className="flex items-center justify-between gap-4 border-b border-line pb-4">
+        <span className={`grid size-11 place-items-center rounded-full ${paid ? "bg-black text-white" : "bg-soft"}`}>
+          <StatusIcon className="size-5" strokeWidth={1.75} aria-hidden />
+        </span>
+        <p className="tabular text-lg font-semibold tracking-tight">{formatMoney(o.totalMinor, "BRL", "pt-BR")}</p>
+      </div>
       {paid ? (
-        <p className="text-lg">{t("donePaid")}</p>
+        <p className="text-[15px]">{t("donePaid")}</p>
       ) : failed ? (
         <div className="space-y-4">
-          <p className="text-lg">{t("doneFailed")}</p>
-          <Link href="/checkout" className="inline-flex h-11 items-center rounded-md bg-black px-5 text-sm font-semibold text-white hover:bg-ink">
+          <p className="text-[15px]">{t("doneFailed")}</p>
+          <Link href="/checkout" className="btn btn-primary">
             {t("retry")}
           </Link>
         </div>
       ) : o.stage === "refunded" ? (
-        <p className="text-lg">{t("doneRefunded")}</p>
+        <p className="text-[15px]">{t("doneRefunded")}</p>
       ) : o.paymentMethod === "boleto" && boleto ? (
         <div className="space-y-4">
-          <p className="text-lg">{t("doneBoleto")}</p>
+          <p className="text-[15px]">{t("doneBoleto")}</p>
           {boleto.expiresAt && <p className="text-sm text-mute">{t("boletoDue", { date: new Date(boleto.expiresAt).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) })}</p>}
           {boleto.number && <p className="break-all rounded-md bg-soft px-4 py-3 font-mono text-sm">{boleto.number}</p>}
           <div className="flex flex-wrap gap-3">
             {boleto.url && (
-              <a href={boleto.url} target="_blank" rel="noopener" className="inline-flex h-11 items-center rounded-md bg-black px-5 text-sm font-semibold text-white hover:bg-ink">
+              <a href={boleto.url} target="_blank" rel="noopener" className="btn btn-primary">
+                <ExternalLink aria-hidden />
                 {t("openBoleto")}
               </a>
             )}
             {boleto.number && (
-              <button type="button" className="h-11 cursor-pointer rounded-md border border-black px-5 text-sm font-semibold" onClick={() => copy(boleto.number!, t("copied"), t("copyFailed"))}>
+              <button type="button" className="btn btn-secondary" onClick={() => copy(boleto.number!, t("copied"), t("copyFailed"))}>
+                <Copy aria-hidden />
                 {t("copyCode")}
               </button>
             )}
@@ -108,16 +117,17 @@ export function OrderDone({ initial, redirectFailed = false }: { initial: NonNul
         </div>
       ) : o.paymentMethod === "pix" && pay.pix ? (
         <div className="space-y-4">
-          <p className="text-lg">{t("donePix")}</p>
+          <p className="text-[15px]">{t("donePix")}</p>
           {pay.pix.qrImageUrl && <Image src={pay.pix.qrImageUrl} alt="QR Code Pix" width={224} height={224} unoptimized className="rounded-md border border-line" />}
-          <button type="button" className="h-11 cursor-pointer rounded-md border border-black px-5 text-sm font-semibold" onClick={() => copy(pay.pix!.code, t("copied"), t("copyFailed"))}>
+          <button type="button" className="btn btn-secondary" onClick={() => copy(pay.pix!.code, t("copied"), t("copyFailed"))}>
+            <Copy aria-hidden />
             {t("copyCode")}
           </button>
         </div>
       ) : (
-        <p className="text-lg">{slow ? t("doneSlow") : t("doneProcessing")}</p>
+        <p className="text-[15px]">{slow ? t("doneSlow") : t("doneProcessing")}</p>
       )}
-      <Link href="/minha-conta/pedidos" className="inline-flex h-11 items-center rounded-md border border-line px-5 text-sm font-medium hover:bg-soft">
+      <Link href="/minha-conta/pedidos" className="btn btn-secondary">
         {t("myOrders")}
       </Link>
     </div>

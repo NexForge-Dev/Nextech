@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { pageGuard } from "@/lib/admin/guard";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { ROLE_LABELS, type RoleKey } from "@/lib/auth/permissions";
@@ -52,10 +53,10 @@ export default async function AdminsPage() {
       />
       <section className="mt-10">
         <h2 className="mb-3 font-semibold">Permissões por perfil</h2>
-        <div className="overflow-x-auto rounded-md border border-line">
+        <div className="panel overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-line bg-soft text-left text-xs uppercase tracking-wider text-mute">
+              <tr className="border-b border-line bg-soft text-left text-[11px] uppercase tracking-[0.06em] text-mute">
                 <th className="px-4 py-2 font-medium">Área</th>
                 <th className="px-4 py-2 font-medium">Superadministrador</th>
                 <th className="px-4 py-2 font-medium">Administrador</th>
@@ -65,7 +66,7 @@ export default async function AdminsPage() {
             <tbody>
               {MATRIX.map((r) => (
                 <tr key={r[0]} className="border-b border-line last:border-0">
-                  {r.map((c, i) => <td key={i} className={`px-4 py-2 ${i === 0 ? "" : "text-center"}`}>{c}</td>)}
+                  {r.map((c, i) => <td key={i} className={`px-4 py-2 ${i === 0 ? "" : "text-center"}`}>{c.startsWith("✓") ? <span className="inline-flex items-center gap-1"><Check className="size-4" aria-label="Permitido" />{c.slice(1).trim()}</span> : c}</td>)}
                 </tr>
               ))}
             </tbody>

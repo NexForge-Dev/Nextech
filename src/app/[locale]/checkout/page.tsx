@@ -8,6 +8,7 @@ import { sellerIdentityParts } from "@/lib/domain/seller";
 import { getMyAddresses } from "@/actions/store/checkout";
 import { isStripeConfigured } from "@/lib/stripe/server";
 import { CheckoutForm } from "@/components/store/checkout-form";
+import { Notice } from "@/components/store/ui";
 
 export const metadata = { robots: { index: false } };
 
@@ -20,12 +21,12 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
   const sellerParts = sellerIdentityParts(settings.legal);
   const seller = sellerParts.length ? [...sellerParts, settings.contactEmail.trim()].filter(Boolean).join(" · ") : null;
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 md:px-6">
-      <h1 className="mb-8 text-3xl font-semibold tracking-tight md:text-4xl">{t("title")}</h1>
+    <main className="shell pb-16 pt-6 md:pt-10">
+      <h1 className="t-page mb-5 md:mb-6">{t("title")}</h1>
       {isStripeConfigured() ? (
         <CheckoutForm saved={saved} payments={bm.payments} seller={seller} />
       ) : (
-        <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">{t("notConfigured")}</p>
+        <Notice tone="error">{t("notConfigured")}</Notice>
       )}
     </main>
   );

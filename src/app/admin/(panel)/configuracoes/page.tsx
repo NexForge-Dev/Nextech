@@ -15,7 +15,7 @@ export default async function SettingsPage() {
       return (
         <>
           <PageHeader title="Configurações" />
-          <Link href="/admin/configuracoes/logs" className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><ScrollText className="size-4" /> Log de auditoria</Link>
+          <Link href="/admin/configuracoes/logs" className="btn btn-secondary"><ScrollText className="size-4" /> Log de auditoria</Link>
         </>
       );
     }
@@ -49,7 +49,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="Configurações"
         description="Dados gerais da loja. As alterações aparecem na loja em alguns segundos."
-        actions={ctx.permissions.has("audit.read") && <Link href="/admin/configuracoes/logs" className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><ScrollText className="size-4" /> Log de auditoria</Link>}
+        actions={ctx.permissions.has("audit.read") && <Link href="/admin/configuracoes/logs" className="btn btn-secondary"><ScrollText className="size-4" /> Log de auditoria</Link>}
       />
       <SettingsForm initial={initial} />
     </>

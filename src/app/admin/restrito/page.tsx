@@ -15,8 +15,8 @@ export default async function RestrictedPage() {
           {ctx ? "Seu perfil de administrador não tem permissão para esta área." : "Esta conta não tem acesso ao painel administrativo."}
         </p>
         <div className="mt-6 flex justify-center gap-2">
-          {ctx && <Link href="/admin" className="inline-flex h-10 items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">Voltar ao painel</Link>}
-          <Link href="/" className="inline-flex h-10 items-center rounded-md border border-line px-5 text-sm font-medium hover:bg-soft">Ir para a loja</Link>
+          {ctx && <Link href="/admin" className="btn btn-primary">Voltar ao painel</Link>}
+          <Link href="/" className="btn btn-secondary">Ir para a loja</Link>
         </div>
       </div>
     </main>

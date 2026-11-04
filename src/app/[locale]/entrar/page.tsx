@@ -34,7 +34,7 @@ export default async function SignInPage({ params, searchParams }: { params: Pro
           { name: "email", label: t("email"), type: "email", autoComplete: "email" },
           { name: "password", label: t("password"), type: "password", autoComplete: "current-password" },
         ]}
-        footer={<Link href="/recuperar-senha" className="block text-center text-sm text-mute hover:text-black">{t("forgot")}</Link>}
+        footer={<Link href="/recuperar-senha" className="block text-center text-sm text-mute underline-offset-4 hover:text-black hover:underline">{t("forgot")}</Link>}
       />
     </AuthShell>
   );

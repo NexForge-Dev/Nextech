@@ -67,7 +67,7 @@ export function SearchBox({ autoFocus = false, onNavigate, initialQuery = "" }: 
       }}
     >
       <label htmlFor={`${listId}-input`} className="sr-only">{t("searchLabel")}</label>
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-mute" strokeWidth={1.75} aria-hidden />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-mute" strokeWidth={1.75} aria-hidden />
       <input
         id={`${listId}-input`}
         type="search"
@@ -96,10 +96,10 @@ export function SearchBox({ autoFocus = false, onNavigate, initialQuery = "" }: 
             setActive((i) => Math.max(i - 1, -1));
           } else if (e.key === "Escape") setOpen(false);
         }}
-        className="h-10 w-full rounded-md border border-line bg-soft pl-9 pr-3 text-sm text-black outline-none transition-colors duration-150 placeholder:text-mute focus:border-black focus:bg-white"
+        className="h-11 w-full rounded-md border border-line bg-soft pl-10 pr-3 text-[15px] text-black outline-none transition-[background-color,border-color,box-shadow] duration-150 placeholder:text-mute hover:border-mute focus:border-black focus:bg-white focus:ring-1 focus:ring-black md:text-sm"
       />
       {open && q.trim().length >= 2 && (
-        <div id={listId} role="listbox" className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-md border border-line bg-white py-2 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+        <div id={listId} role="listbox" className="absolute left-0 right-0 top-[3.25rem] z-50 overflow-hidden rounded-lg border border-line bg-white py-2 shadow-[var(--shadow-pop)]">
           {items.length === 0 || q.trim().length < 2 ? (
             <p className="px-4 py-2 text-sm text-mute">{t("noSuggestions")}</p>
           ) : (
@@ -108,7 +108,7 @@ export function SearchBox({ autoFocus = false, onNavigate, initialQuery = "" }: 
               if (!list.length) return null;
               return (
                 <div key={g.kind} role="group" aria-labelledby={`${listId}-${g.kind}`} className="py-1">
-                  <p id={`${listId}-${g.kind}`} className="px-4 pb-1 text-[11px] font-medium uppercase tracking-wider text-mute">{g.label}</p>
+                  <p id={`${listId}-${g.kind}`} className="t-eyebrow px-4 pb-1">{g.label}</p>
                   {list.map((item) => {
                     const idx = items.indexOf(item);
                     return (

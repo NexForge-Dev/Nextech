@@ -1,11 +1,16 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { ArrowLeft, Check, ExternalLink, MapPin } from "lucide-react";
 import { pageLocale } from "@/i18n/page-locale";
 import { Link } from "@/i18n/navigation";
 import { getMyOrder } from "@/lib/data/orders";
 import { canCustomerCancel } from "@/lib/domain/order-status";
 import { formatMoney } from "@/lib/domain/money";
+import { storagePublicUrl } from "@/lib/supabase/env";
 import { OrderActions } from "@/components/store/order-actions";
+import { OrderStageTag } from "@/components/store/order-stage-tag";
+import { Notice, SummaryRow } from "@/components/store/ui";
 
 export const metadata = { robots: { index: false } };
 
@@ -46,26 +51,29 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
   const cancellable = canCustomerCancel(order.status, order.anyPurchased);
   const s = order.shipping;
   return (
-    <div className="space-y-8" data-testid="my-order-detail">
+    <div className="space-y-4" data-testid="my-order-detail">
+      <Link href="/minha-conta/pedidos" className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"><ArrowLeft className="size-4" aria-hidden />{t("back")}</Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">{t("number", { number: order.number })}</h2>
-          <p className="text-sm text-mute">
+        <div className="min-w-0">
+          <h2 className="t-section">{t("number", { number: order.number })}</h2>
+          <p className="mt-0.5 text-sm text-mute">
             {format.dateTime(new Date(order.createdAt), { dateStyle: "long" })} · {money(order.totalMinor)} · {order.paymentSummary ?? t(`method_${order.paymentMethod}` as "method_card")}
           </p>
         </div>
-        <span className="rounded-full border border-black px-3 py-1 text-sm font-medium" data-testid="order-stage">{t(`stage_${order.stage}`)}</span>
+        <OrderStageTag stage={order.stage} label={t(`stage_${order.stage}`)} data-testid="order-stage" />
       </div>
 
       {order.stage !== "cancelled" && order.stage !== "refunded" && order.stage !== "awaiting_payment" && (
-        <ol className="space-y-3">
-          {steps.map((st) => (
-            <li key={st.label} className="flex gap-3">
-              <span className={`mt-1 size-3 shrink-0 rounded-full ${st.done ? "bg-black" : "border border-mute bg-white"}`} aria-hidden />
-              <div>
-                <p className={`text-sm ${st.done ? "font-medium" : "text-mute"}`}>
-                  {st.label} {st.at && <span className="font-normal text-mute">· {dt(st.at)}</span>}
-                </p>
+        <ol className="panel p-5 md:p-6">
+          {steps.map((st, i) => (
+            <li key={st.label} className="relative flex gap-3 pb-6 last:pb-0">
+              {i < steps.length - 1 && <span className={`absolute bottom-0 left-[11px] top-6 w-px ${steps[i + 1].done ? "bg-black" : "bg-line"}`} aria-hidden />}
+              <span className={`grid size-6 shrink-0 place-items-center rounded-full border ${st.done ? "border-black bg-black text-white" : "border-line bg-white"}`} aria-hidden>
+                {st.done && <Check className="size-3.5" strokeWidth={2.5} />}
+              </span>
+              <div className="min-w-0 pt-0.5">
+                <p className={`text-sm ${st.done ? "font-medium" : "text-mute"}`}>{st.label}</p>
+                {st.at && <p className="text-xs text-mute">{dt(st.at)}</p>}
                 {st.done && st.extra}
               </div>
             </li>
@@ -74,47 +82,54 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
       )}
 
       {order.stage === "awaiting_payment" && order.boleto?.url && (
-        <a href={order.boleto.url} target="_blank" rel="noopener" className="inline-flex h-11 items-center rounded-md bg-black px-5 text-sm font-semibold text-white hover:bg-ink">
+        <a href={order.boleto.url} target="_blank" rel="noopener" className="btn btn-primary">
+          <ExternalLink aria-hidden />
           {t("openBoleto")}
         </a>
       )}
 
-      <ul className="divide-y divide-line border-y border-line">
-        {order.items.map((i) => (
-          <li key={i.id} className="flex justify-between gap-4 py-3 text-sm">
-            <span>
-              {i.quantity}×{" "}
-              {i.slug ? (
-                <Link href={{ pathname: "/produto/[slug]", params: { slug: i.slug } }} className="hover:underline">{i.name}</Link>
-              ) : (
-                i.name
-              )}
-            </span>
-            <span className="tabular">{money(i.lineTotalMinor)}</span>
-          </li>
-        ))}
-        {order.discountMinor > 0 && (
-          <li className="flex justify-between py-3 text-sm"><span>Pix</span><span className="tabular">−{money(order.discountMinor)}</span></li>
-        )}
-        <li className="flex justify-between py-3 font-semibold"><span>Total</span><span className="tabular">{money(order.totalMinor)}</span></li>
-      </ul>
-      {order.refundedMinor > 0 && <p className="text-sm">{t("refunded", { amount: money(order.refundedMinor) })}</p>}
+      <div className="panel">
+        <ul className="divide-y divide-line">
+          {order.items.map((i) => {
+            const img = storagePublicUrl("products", i.imagePath);
+            return (
+              <li key={i.id} className="flex items-center gap-3 p-4 text-sm">
+                <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-line bg-white">{img && <Image src={img} alt="" fill sizes="56px" className="object-contain p-1" unoptimized={img.endsWith(".svg")} />}</div>
+                <span className="min-w-0 flex-1">
+                  {i.quantity}×{" "}
+                  {i.slug ? (
+                    <Link href={{ pathname: "/produto/[slug]", params: { slug: i.slug } }} className="hover:underline">{i.name}</Link>
+                  ) : (
+                    i.name
+                  )}
+                </span>
+                <span className="tabular shrink-0 font-medium">{money(i.lineTotalMinor)}</span>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="space-y-2 border-t border-line p-4">
+          {order.discountMinor > 0 && <SummaryRow label="Pix">−{money(order.discountMinor)}</SummaryRow>}
+          <SummaryRow label="Total" strong>{money(order.totalMinor)}</SummaryRow>
+          {order.refundedMinor > 0 && <p className="text-sm">{t("refunded", { amount: money(order.refundedMinor) })}</p>}
+        </div>
+      </div>
 
-      <div>
-        <h3 className="text-sm font-semibold">{t("address")}</h3>
-        <p className="mt-1 text-sm text-mute">
+      <div className="panel p-5">
+        <h3 className="flex items-center gap-2 text-sm font-semibold"><MapPin className="size-4" strokeWidth={1.75} aria-hidden />{t("address")}</h3>
+        <p className="mt-1.5 text-sm text-mute">
           {s.recipientName} · {s.street}, {s.number}
           {s.complement ? ` – ${s.complement}` : ""} · {s.district} · {s.city}/{s.state} · {s.cep.replace(/^(\d{5})(\d{3})$/, "$1-$2")}
         </p>
       </div>
 
       {order.returnRequest && (
-        <p className="rounded-md bg-soft px-4 py-3 text-sm" data-testid="return-status">
+        <Notice data-testid="return-status">
           {order.returnRequest.status === "open"
             ? t("returnOpen", { date: format.dateTime(new Date(order.returnRequest.createdAt), { dateStyle: "short" }) })
             : t("returnResolved", { outcome: t(`outcome_${order.returnRequest.outcome}` as "outcome_refused") })}
           {order.returnRequest.outcomeNote && <span className="mt-1 block text-mute">{order.returnRequest.outcomeNote}</span>}
-        </p>
+        </Notice>
       )}
 
       <OrderActions
@@ -124,7 +139,6 @@ export default async function MyOrderPage({ params }: { params: Promise<{ locale
         hasInvoice={order.hasInvoice}
       />
       <p className="text-xs text-mute">{t("cdc")}</p>
-      <Link href="/minha-conta/pedidos" className="text-sm underline underline-offset-2">{t("back")}</Link>
     </div>
   );
 }
