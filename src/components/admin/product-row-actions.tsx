@@ -12,7 +12,7 @@ export function ProductRowActions({ id, slug, name, status, featured, canDelete 
   return (
     <div className="flex items-center justify-end gap-1">
       <DropdownMenu>
-        <DropdownMenuTrigger aria-label={`Ações de ${name}`} disabled={pending} className="grid size-8 cursor-pointer place-items-center rounded-md hover:bg-soft">
+        <DropdownMenuTrigger aria-label={`Ações de ${name}`} disabled={pending} className="grid size-9 cursor-pointer place-items-center rounded-md hover:bg-soft">
           <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-48">

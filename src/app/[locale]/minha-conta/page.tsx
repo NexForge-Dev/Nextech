@@ -15,9 +15,9 @@ export default async function AccountInfoPage({ params }: { params: Promise<{ lo
   if (!user) return null;
   const [t, ta, format, profile] = await Promise.all([getTranslations("account"), getTranslations("auth"), getFormatter(), getProfile(user.id)]);
   return (
-    <div className="max-w-lg space-y-12">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">{t("info")}</h2>
+    <div className="max-w-2xl space-y-4">
+      <div className="panel p-5 md:p-6">
+        <h2 className="t-section">{t("info")}</h2>
         {profile && <p className="mt-1 text-sm text-mute">{t("memberSince", { date: format.dateTime(new Date(profile.createdAt), { dateStyle: "long" }) })}</p>}
         <dl className="mt-6 text-sm">
           <dt className="text-mute">{t("email")}</dt>
@@ -27,8 +27,8 @@ export default async function AccountInfoPage({ params }: { params: Promise<{ lo
           <AuthForm action={updateProfile} locale={locale} submit={t("saveProfile")} fields={[{ name: "fullName", label: t("name"), autoComplete: "name", defaultValue: profile?.fullName ?? "" }]} />
         </div>
       </div>
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">{t("changePassword")}</h2>
+      <div className="panel p-5 md:p-6">
+        <h2 className="t-section">{t("changePassword")}</h2>
         <div className="mt-6">
           <AuthForm action={updatePassword} locale={locale} submit={ta("updatePassword")} fields={[{ name: "password", label: t("newPassword"), type: "password", autoComplete: "new-password" }]} />
         </div>

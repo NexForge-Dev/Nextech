@@ -20,7 +20,7 @@ function shortDay(d: string) {
 function ChartFrame({ title, total, empty, children, table }: { title: string; total?: string; empty: boolean; children: React.ReactNode; table: React.ReactNode }) {
   const [showTable, setShowTable] = useState(false);
   return (
-    <section className="rounded-md border border-line p-5">
+    <section className="panel min-w-0 p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold">{title}</h3>
@@ -32,7 +32,7 @@ function ChartFrame({ title, total, empty, children, table }: { title: string; t
           </button>
         )}
       </div>
-      {empty ? <p className="grid h-48 place-items-center text-sm text-mute">Sem dados ainda</p> : showTable ? <div className="max-h-64 overflow-y-auto">{table}</div> : children}
+      {empty ? <p className="grid h-48 place-items-center rounded-md bg-soft text-sm text-mute">Sem dados ainda</p> : showTable ? <div className="max-h-64 overflow-y-auto">{table}</div> : children}
     </section>
   );
 }
@@ -61,7 +61,7 @@ function SimpleTable({ rows, valueLabel, format }: { rows: { label: string; valu
 function TooltipBox({ active, payload, label, format }: { active?: boolean; payload?: { name?: string; value?: number; stroke?: string; strokeDasharray?: string }[]; label?: string; format?: (v: number) => string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-line bg-white px-3 py-2 text-xs shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+    <div className="rounded-md border border-line bg-white px-3 py-2 text-xs shadow-[var(--shadow-card)]">
       <p className="mb-1 font-medium">{label && /^\d{4}-\d{2}-\d{2}$/.test(label) ? shortDay(label) : label}</p>
       {payload.map((p) => (
         <p key={p.name} className="tabular flex justify-between gap-4">
@@ -100,7 +100,7 @@ export function RankBar({ title, data, valueLabel }: { title: string; data: { la
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 32, bottom: 0, left: 0 }} barCategoryGap={8}>
             <XAxis type="number" hide allowDecimals={false} />
-            <YAxis type="category" dataKey="label" width={180} tick={{ ...tick, fill: "#222222" }} axisLine={false} tickLine={false} interval={0} tickFormatter={(v: string) => (v.length > 26 ? `${v.slice(0, 25)}…` : v)} />
+            <YAxis type="category" dataKey="label" width={150} tick={{ ...tick, fill: "#222222" }} axisLine={false} tickLine={false} interval={0} tickFormatter={(v: string) => (v.length > 22 ? `${v.slice(0, 21)}…` : v)} />
             <Tooltip content={<TooltipBox />} cursor={{ fill: "#f7f7f7" }} />
             <Bar isAnimationActive={false} barSize={14} dataKey="value" name={valueLabel} fill={INK} radius={[0, 4, 4, 0]} label={{ position: "right", fill: "#222222", fontSize: 11 }} />
           </BarChart>
@@ -185,10 +185,10 @@ export function CommissionsChart({ points, days }: { points: { day: string; stat
 
 export function KpiCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-md border border-line p-4">
-      <p className="text-xs text-mute">{label}</p>
-      <p className="tabular mt-1 text-xl font-semibold tracking-tight">{value}</p>
-      {hint && <p className="mt-0.5 text-[11px] text-mute">{hint}</p>}
+    <div className="panel h-full p-4 md:p-5">
+      <p className="text-[13px] text-mute">{label}</p>
+      <p className="tabular mt-1.5 text-2xl font-semibold tracking-[-0.02em]">{value}</p>
+      {hint && <p className="mt-1 text-xs text-mute">{hint}</p>}
     </div>
   );
 }

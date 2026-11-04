@@ -21,9 +21,9 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         description={product.status === "published" ? "Publicado" : product.status === "draft" ? "Rascunho" : "Arquivado"}
         actions={
           <>
-            <Link href={`/admin/produtos/${id}/desempenho`} className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><ChartLine className="size-4" /> Desempenho</Link>
+            <Link href={`/admin/produtos/${id}/desempenho`} className="btn btn-secondary"><ChartLine className="size-4" /> Desempenho</Link>
             {product.status === "published" && (
-              <a href={`/pt-br/produto/${product.slug}`} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><ExternalLink className="size-4" /> Ver na loja</a>
+              <a href={`/pt-br/produto/${product.slug}`} target="_blank" rel="noopener" className="btn btn-secondary"><ExternalLink className="size-4" /> Ver na loja</a>
             )}
           </>
         }

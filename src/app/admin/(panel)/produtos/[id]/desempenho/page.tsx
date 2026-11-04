@@ -34,7 +34,7 @@ export default async function ProductPerformancePage({ params, searchParams }: {
         <KpiCard label="Comissões estimadas" value={formatCurrencyAmounts(m.commissions.pending, "pt-BR")} />
         <KpiCard label="Comissões confirmadas" value={formatCurrencyAmounts(m.commissions.confirmed, "pt-BR")} />
       </div>
-      <div className="mt-8 grid gap-4 xl:grid-cols-2">
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <DailyLine title="Visualizações por dia" data={m.viewsByDay} valueLabel="Visualizações" />
         <DailyLine title="Cliques por dia" data={m.clicksByDay} valueLabel="Cliques" />
         <RankBar title="Cliques por loja" data={m.clicksByStore} valueLabel="Cliques" />

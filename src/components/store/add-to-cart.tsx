@@ -1,4 +1,5 @@
 "use client";
+import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 import { addToLocalCart } from "@/lib/cart/local-cart";
@@ -8,10 +9,10 @@ type Labels = { addToCart: string; buyNow: string; soldOut: string; added: strin
 
 export function AddToCart({ productId, priceMinor, available, labels }: { productId: string; priceMinor: number; available: boolean; labels: Labels }) {
   const router = useRouter();
-  const btn = "flex h-12 w-full cursor-pointer items-center justify-center rounded-md text-sm font-semibold uppercase tracking-wide transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40";
+  const btn = "btn btn-lg w-full";
   if (!available) {
     return (
-      <button type="button" disabled className={`${btn} bg-black text-white`}>
+      <button type="button" disabled className={`${btn} btn-primary`}>
         {labels.soldOut}
       </button>
     );
@@ -24,17 +25,18 @@ export function AddToCart({ productId, priceMinor, available, labels }: { produc
     <div className="space-y-2">
       <button
         type="button"
-        className={`${btn} bg-black text-white hover:bg-ink`}
+        className={`${btn} btn-primary`}
         onClick={() => {
           add();
           toast.success(labels.added, { action: { label: labels.viewCart, onClick: () => router.push("/carrinho") } });
         }}
       >
+        <ShoppingBag aria-hidden />
         {labels.addToCart}
       </button>
       <button
         type="button"
-        className={`${btn} border border-black bg-white text-black hover:bg-soft`}
+        className={`${btn} btn-outline`}
         onClick={() => {
           add();
           router.push("/checkout");

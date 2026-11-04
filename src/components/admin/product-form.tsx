@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, CircleAlert } from "lucide-react";
 import { slugify } from "@/lib/domain/slug";
 import { discountPercent } from "@/lib/domain/pricing";
 import { estimateMarginMinor, estimateStripeFeeMinor, pixPriceMinor } from "@/lib/domain/own-pricing";
@@ -202,10 +202,10 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
 
           <div className="space-y-3">
             <p className="text-sm font-medium">Fornecedores (só você vê)</p>
-            {err("suppliers") && <p role="alert" className="text-sm font-medium text-ink">⚠ {err("suppliers")?.[0]}</p>}
+            {err("suppliers") && <p role="alert" className="text-sm font-medium text-ink"><CircleAlert className="mr-1 inline size-3.5 align-[-2px]" aria-hidden />{err("suppliers")?.[0]}</p>}
             {v.suppliers.length === 0 && <p className="text-sm text-mute">Nenhum fornecedor. Cadastre onde você compra este produto e quanto custa.</p>}
             {v.suppliers.map((x, i) => (
-              <fieldset key={i} className="grid gap-3 rounded-md border border-line p-3 md:grid-cols-[1fr_2fr_1fr_auto_auto] md:items-end">
+              <fieldset key={i} className="grid gap-3 panel p-3 md:grid-cols-[1fr_2fr_1fr_auto_auto] md:items-end">
                 <legend className="sr-only">Fornecedor {i + 1}</legend>
                 <Field label="Fornecedor" htmlFor={`sup-${i}`} error={err(`suppliers.${i}.supplierId`)}>
                   <select id={`sup-${i}`} className={inputCls} value={x.supplierId} onChange={(e) => setSupplier(i, { supplierId: e.target.value })}>
@@ -247,7 +247,7 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
           const hostError = [err(`offers.${i}.originalUrl`), err(`offers.${i}.affiliateUrl`)].flat().find((m) => m?.startsWith("Domínio"));
           const host = hostError?.match(/"([^"]+)"/)?.[1];
           return (
-            <fieldset key={o.id ?? `new-${i}`} className="space-y-4 rounded-md border border-line p-4">
+            <fieldset key={o.id ?? `new-${i}`} className="space-y-4 panel p-4">
               <div className="flex items-center justify-between">
                 <legend className="text-sm font-semibold">Oferta {i + 1}{store ? ` · ${store.name}` : ""}</legend>
                 <div className="flex items-center gap-3">
@@ -375,7 +375,7 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
       <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-line bg-white px-4 py-4 md:-mx-8 md:px-8">
         <button type="submit" disabled={pending} className={btnPrimary}>{pending ? "Salvando…" : "Salvar produto"}</button>
         <button type="button" onClick={() => router.push("/admin/produtos")} className={btnSecondary}>Voltar</button>
-        {Object.keys(errors).length > 0 && <p role="alert" className="self-center text-sm font-medium">⚠ Há {Object.keys(errors).length} campo(s) com erro.</p>}
+        {Object.keys(errors).length > 0 && <p role="alert" className="self-center text-sm font-medium"><CircleAlert className="mr-1 inline size-3.5 align-[-2px]" aria-hidden />Há {Object.keys(errors).length} campo(s) com erro.</p>}
       </div>
     </form>
   );

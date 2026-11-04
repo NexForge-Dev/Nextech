@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, Check, Clock } from "lucide-react";
 import { pageGuard } from "@/lib/admin/guard";
 import { countAwaitingSupplier, countOpenReturns, listOrders, ORDERS_PAGE_SIZE } from "@/lib/data/admin/orders";
 import { ADMIN_STATUS_LABEL, ORDER_STATUSES } from "@/lib/domain/order-status";
@@ -17,22 +18,22 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const page = Math.max(1, Number(sp.page) || 1);
   const [{ rows, total }, awaiting, openReturns] = await Promise.all([listOrders({ ...sp, page }), countAwaitingSupplier(), countOpenReturns()]);
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
-  const select = "h-10 rounded-md border border-line bg-white px-3 text-sm";
+  const select = "field h-10 w-auto";
   return (
     <>
       <PageHeader
         title="Pedidos"
         description="Pedidos da loja própria. Compre no fornecedor, registre a compra e o rastreio em cada pedido."
         actions={
-          <Link href="/admin/pedidos/devolucoes" className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft">
+          <Link href="/admin/pedidos/devolucoes" className="btn btn-secondary">
             Devoluções e suporte{openReturns > 0 && <span className="rounded-full bg-black px-2 text-xs text-white">{openReturns}</span>}
           </Link>
         }
       />
       {awaiting > 0 && (
-        <Link href="/admin/pedidos?status=awaiting_supplier" className="mb-6 flex items-center justify-between rounded-md bg-black px-4 py-3 text-sm font-medium text-white" data-testid="awaiting-banner">
+        <Link href="/admin/pedidos?status=awaiting_supplier" className="mb-4 flex items-center justify-between rounded-lg bg-black px-4 py-3 text-sm font-medium text-white" data-testid="awaiting-banner">
           <span>{awaiting === 1 ? "1 pedido aguardando compra no fornecedor" : `${awaiting} pedidos aguardando compra no fornecedor`}</span>
-          <span aria-hidden>→</span>
+          <ArrowRight className="size-4" aria-hidden />
         </Link>
       )}
       <DataTable
@@ -64,8 +65,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           { key: "date", header: "Data", cell: (r) => <span className="tabular text-xs">{new Date(r.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</span> },
           { key: "cust", header: "Cliente", cell: (r) => <div><p className="font-medium">{r.customer}</p><p className="text-xs text-mute">{r.email}</p></div> },
           { key: "total", header: "Total", cell: (r) => <span className="tabular">{money(r.totalMinor)}</span> },
-          { key: "pay", header: "Pagamento", cell: (r) => <span className="text-xs">{METHOD[r.paymentMethod] ?? r.paymentMethod} {r.paid ? "✓" : "⏳"}</span> },
-          { key: "status", header: "Status", cell: (r) => <span className="rounded-full border border-line px-2 py-0.5 text-xs font-medium">{ADMIN_STATUS_LABEL[r.status]}</span> },
+          { key: "pay", header: "Pagamento", cell: (r) => <span className="inline-flex items-center gap-1 text-xs">{METHOD[r.paymentMethod] ?? r.paymentMethod}{r.paid ? <Check className="size-3.5" aria-label="pago" /> : <Clock className="size-3.5" aria-label="não pago" />}</span> },
+          { key: "status", header: "Status", cell: (r) => <span className={`tag ${r.status === "delivered" ? "tag-solid" : r.status === "cancelled" || r.status === "refunded" ? "tag-soft" : ""}`}>{ADMIN_STATUS_LABEL[r.status]}</span> },
           { key: "margin", header: "Margem", cell: (r) => (r.marginMinor != null ? <span className="tabular text-xs">{money(r.marginMinor)}{r.marginPct != null ? ` (${r.marginPct}%)` : ""}</span> : <span className="text-mute">—</span>) },
         ]}
       />

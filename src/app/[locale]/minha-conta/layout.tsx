@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
+import { LogOut } from "lucide-react";
 import { redirect } from "@/i18n/navigation";
 import { getPathname } from "@/i18n/navigation";
 import { pageLocale } from "@/i18n/page-locale";
@@ -18,20 +19,20 @@ export default async function AccountLayout({ children, params }: { children: Re
   }
   const [t, profile] = await Promise.all([getTranslations("account"), getProfile(user!.id)]);
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-10 md:px-6">
+    <main className="shell pb-16 pt-6 md:pt-10">
       <FavoritesSync />
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-8">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{t("title")}</h1>
-          <p className="mt-1 text-sm text-mute">{profile?.fullName ? `${profile.fullName} · ` : ""}{user!.email}</p>
+      <header className="mb-6 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="t-page">{t("title")}</h1>
+          <p className="mt-1 truncate text-sm text-mute">{profile?.fullName ? `${profile.fullName} · ` : ""}{user!.email}</p>
         </div>
         <form action={signOut}>
           <input type="hidden" name="locale" value={locale} />
-          <button type="submit" className="h-10 cursor-pointer rounded-md border border-line px-4 text-sm font-medium hover:bg-soft">{t("signOut")}</button>
+          <button type="submit" className="btn btn-secondary"><LogOut aria-hidden />{t("signOut")}</button>
         </form>
       </header>
       {profile && !profile.historyPrompted && !profile.historyEnabled && <HistoryPrompt />}
-      <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
         <AccountNav />
         <section className="min-w-0">{children}</section>
       </div>

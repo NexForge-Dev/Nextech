@@ -216,7 +216,7 @@ export function ConversionImport({ networkId, adapter }: { networkId: string; ad
         <button type="button" disabled={!file || pending || !result || result.errors.length > 0 || result.committed || result.rows === 0} className={btnPrimary} onClick={() => run(() => importConversions(payload(true)), { success: "Conversões importadas.", onSuccess: (d) => setResult(d) })}>Importar</button>
       </div>
       {result && (
-        <div className="rounded-md border border-line p-5 text-sm" aria-live="polite">
+        <div className="panel p-5 text-sm" aria-live="polite">
           {result.committed ? <p className="font-medium">Importado: {result.inserted} nova(s), {result.updated} atualizada(s).</p> : <p className="font-medium">{result.rows} conversão(ões) prontas para importar.</p>}
           {result.errors.length > 0 && (
             <ul className="mt-2 max-h-64 overflow-y-auto font-mono text-xs">

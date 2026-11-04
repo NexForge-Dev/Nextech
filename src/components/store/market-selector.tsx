@@ -8,7 +8,7 @@ export function MarketSelector({ current, options, label }: { current: string; o
   const [pending, start] = useTransition();
   const list = options.some((o) => o.code === current) ? options : [{ code: current, name: current }, ...options];
   return (
-    <label className="inline-flex items-center gap-2 text-sm text-mute">
+    <label className="inline-flex items-center gap-2 text-sm text-white/60">
       {label}
       <select
         value={current}

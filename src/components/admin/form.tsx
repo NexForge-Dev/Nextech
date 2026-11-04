@@ -2,22 +2,23 @@
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Check, CircleAlert } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { ActionResult } from "@/lib/admin/action-core";
 
-export const inputCls = "h-10 w-full rounded-md border border-line bg-white px-3 text-sm outline-none transition-colors duration-150 focus:border-black aria-invalid:border-ink disabled:cursor-not-allowed disabled:bg-soft disabled:text-mute";
-export const textareaCls = "w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-black aria-invalid:border-ink";
-export const btnPrimary = "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-black px-5 text-sm font-medium text-white transition-colors duration-150 hover:bg-ink disabled:opacity-60";
-export const btnSecondary = "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-line bg-white px-4 text-sm font-medium transition-colors duration-150 hover:bg-soft disabled:opacity-60";
+export const inputCls = "field h-10 md:text-sm";
+export const textareaCls = "field h-auto py-2";
+export const btnPrimary = "btn btn-primary";
+export const btnSecondary = "btn btn-secondary";
 
 export function FormSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="grid gap-6 border-b border-line py-8 first:pt-0 last:border-0 lg:grid-cols-[260px_1fr]">
+    <section className="panel mb-4 grid gap-6 p-5 last:mb-0 md:p-6 lg:grid-cols-[240px_minmax(0,1fr)]">
       <div>
         <h2 className="font-semibold">{title}</h2>
         {description && <p className="mt-1 text-sm text-mute">{description}</p>}
       </div>
-      <div className="space-y-5">{children}</div>
+      <div className="min-w-0 space-y-5">{children}</div>
     </section>
   );
 }
@@ -26,14 +27,15 @@ export function Field({ label, htmlFor, error, hint, children }: { label: string
   const msg = Array.isArray(error) ? error[0] : error;
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium">
+      <label htmlFor={htmlFor} className="field-label">
         {label}
       </label>
       {children}
       {hint && !msg && <p className="mt-1.5 text-xs text-mute">{hint}</p>}
       {msg && (
-        <p role="alert" className="mt-1.5 text-sm font-medium text-ink">
-          ⚠ {msg}
+        <p role="alert" className="field-error">
+          <CircleAlert aria-hidden />
+          {msg}
         </p>
       )}
     </div>
@@ -93,7 +95,7 @@ export function ConfirmButton({ label, title, description, confirmLabel = "Confi
         {label}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent closeLabel="Fechar" className="max-w-[calc(100%-2rem)] rounded-md border border-line p-6 shadow-none ring-0 sm:max-w-md">
+        <DialogContent closeLabel="Fechar" className="max-w-[calc(100%-2rem)] rounded-lg border border-line p-6 shadow-[var(--shadow-pop)] ring-0 sm:max-w-md">
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
           <DialogDescription className="text-sm text-mute">{description}</DialogDescription>
           <div className="mt-4 flex justify-end gap-2">
@@ -138,7 +140,7 @@ export function LocaleTabs({ value, onChange, filled }: { value: LocaleCode; onC
           className={`-mb-px cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors duration-150 ${value === t.code ? "border-black font-medium" : "border-transparent text-mute hover:text-black"}`}
         >
           {t.label}
-          {t.code === "pt-BR" ? " *" : filled[t.code] ? " ✓" : ""}
+          {t.code === "pt-BR" ? " *" : filled[t.code] ? <Check className="ml-1 inline size-3.5" aria-label="preenchido" /> : ""}
         </button>
       ))}
     </div>

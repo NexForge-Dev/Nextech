@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Banknote, CircleAlert, CreditCard, Lock, QrCode, RefreshCw, ShoppingBag, type LucideIcon } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -12,6 +13,7 @@ import { formatMoney } from "@/lib/domain/money";
 import { lookupCep } from "@/lib/cep";
 import { markCheckoutStarted, trackAdEvent } from "./marketing-tracker";
 import { inputClass } from "./auth-form";
+import { EmptyState, Notice, SummaryRow } from "./ui";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, { locale: "pt-BR" }) : null;
 
@@ -101,23 +103,30 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
 
   if (!cart && cartFailed) {
     return (
-      <div role="alert" className="rounded-md border border-line px-6 py-14 text-center">
-        <p className="font-semibold">{tc("loadError")}</p>
-        <button type="button" onClick={reloadCart} className="mt-6 inline-flex h-10 cursor-pointer items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">
+      <EmptyState role="alert" icon={CircleAlert} title={tc("loadError")}>
+        <button type="button" onClick={reloadCart} className="btn btn-primary">
+          <RefreshCw aria-hidden />
           {tc("retry")}
         </button>
+      </EmptyState>
+    );
+  }
+  if (!cart) {
+    return (
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]" aria-busy="true">
+        <p className="sr-only">{tc("loading")}</p>
+        <div className="panel h-96 animate-pulse bg-soft" />
+        <div className="panel h-64 animate-pulse bg-soft" />
       </div>
     );
   }
-  if (!cart) return <p className="py-10 text-sm text-mute">{tc("loading")}</p>;
   if (!cart.lines.length || !cart.checkoutable) {
     return (
-      <div className="rounded-md border border-line px-6 py-14 text-center">
-        <p className="font-semibold">{cart.lines.length ? tc("hidden") : tc("emptyTitle")}</p>
-        <Link href={cart.lines.length ? "/carrinho" : "/produtos"} className="mt-6 inline-flex h-10 items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">
+      <EmptyState icon={ShoppingBag} title={cart.lines.length ? tc("hidden") : tc("emptyTitle")}>
+        <Link href={cart.lines.length ? "/carrinho" : "/produtos"} className="btn btn-primary">
           {cart.lines.length ? t("reviewCart") : tc("explore")}
         </Link>
-      </div>
+      </EmptyState>
     );
   }
 
@@ -125,7 +134,7 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
     const err = errors[`address.${k}`]?.[0];
     return (
       <div className={opts.half ? "" : "sm:col-span-2"}>
-        <label htmlFor={`co-${k}`} className="mb-1.5 block text-sm font-medium">{label}</label>
+        <label htmlFor={`co-${k}`} className="field-label">{label}</label>
         <input
           id={`co-${k}`}
           className={inputClass}
@@ -137,29 +146,34 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
           onChange={(e) => setAddr({ ...addr, [k]: e.target.value })}
           disabled={!!card}
         />
-        {err && <p role="alert" className="mt-1 text-sm font-medium">⚠ {err}</p>}
+        {err && <p role="alert" className="field-error"><CircleAlert aria-hidden />{err}</p>}
       </div>
     );
   };
 
-  const option = (m: PaymentMethod, label: string, note: string, enabled: boolean) => (
-    <label className={`flex cursor-pointer gap-3 rounded-md border p-4 ${method === m ? "border-2 border-black" : "border-line"} ${enabled ? "" : "cursor-not-allowed opacity-50"}`}>
-      <input type="radio" name="method" value={m} checked={method === m} disabled={!enabled || !!card} onChange={() => setMethod(m)} className="mt-1 accent-black" />
-      <span>
-        <span className="block text-sm font-medium">{enabled || m !== "pix" ? label : t("pixSoon")}</span>
-        {enabled && <span className="block text-xs text-mute">{note}</span>}
-      </span>
-    </label>
-  );
+  const METHOD_ICON: Record<PaymentMethod, LucideIcon> = { card: CreditCard, boleto: Banknote, pix: QrCode };
+  const option = (m: PaymentMethod, label: string, note: string, enabled: boolean) => {
+    const Icon = METHOD_ICON[m];
+    return (
+      <label className={`flex items-center gap-3 rounded-md border p-4 transition-colors duration-150 ${method === m ? "border-black ring-1 ring-black" : "border-line"} ${enabled ? "cursor-pointer hover:border-mute" : "cursor-not-allowed opacity-50"}`}>
+        <input type="radio" name="method" value={m} checked={method === m} disabled={!enabled || !!card} onChange={() => setMethod(m)} className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium">{enabled || m !== "pix" ? label : t("pixSoon")}</span>
+          {enabled && <span className="block text-xs text-mute">{note}</span>}
+        </span>
+        <Icon className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
+      </label>
+    );
+  };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
-      <form onSubmit={submit} className="space-y-10" noValidate>
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold">{t("addressTitle")}</h2>
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <form onSubmit={submit} className="min-w-0 space-y-4" noValidate>
+        <section className="panel space-y-4 p-5 md:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">{t("addressTitle")}</h2>
           {saved.length > 0 && (
             <div>
-              <label htmlFor="co-saved" className="mb-1.5 block text-sm font-medium">{t("savedAddress")}</label>
+              <label htmlFor="co-saved" className="field-label">{t("savedAddress")}</label>
               <select id="co-saved" className={inputClass} value={addressId} onChange={(e) => setAddressId(e.target.value)} disabled={!!card}>
                 {saved.map((s) => (
                   <option key={s.id} value={s.id}>{`${s.recipientName} — ${s.street}, ${s.number} · ${s.city}/${s.state}`}</option>
@@ -182,21 +196,21 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
               {field("city", t("city"), { half: true, autoComplete: "address-level2" })}
               {field("state", t("state"), { half: true, autoComplete: "address-level1" })}
               <label className="flex items-center gap-2 text-sm sm:col-span-2">
-                <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} className="accent-black" disabled={!!card} />
+                <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} className="size-4" disabled={!!card} />
                 {t("saveAddress")}
               </label>
             </div>
           )}
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">{t("paymentTitle")}</h2>
+        <section className="panel space-y-3 p-5 md:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">{t("paymentTitle")}</h2>
           {payments.card && option("card", t("card"), t("cardNote"), true)}
           {payments.boleto && option("boleto", t("boleto"), t("boletoNote"), true)}
           {option("pix", t("pix"), t("pixNote"), payments.pix)}
         </section>
 
-        {message && <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">{message}</p>}
+        {message && <Notice tone="error">{message}</Notice>}
 
         <p className="text-xs leading-relaxed text-mute" data-testid="checkout-legal">
           {t.rich("legalNotice", {
@@ -207,15 +221,16 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
         </p>
 
         {!card && (
-          <button type="submit" disabled={pending} className="h-12 w-full cursor-pointer rounded-md bg-black text-sm font-semibold uppercase tracking-wide text-white hover:bg-ink disabled:opacity-50">
+          <button type="submit" disabled={pending} className="btn btn-primary btn-lg w-full">
+            <Lock aria-hidden />
             {pending ? t("processing") : method === "card" ? t("continue") : method === "boleto" ? t("generateBoleto", { total: money(totals.totalMinor) }) : t("generatePix", { total: money(totals.totalMinor) })}
           </button>
         )}
       </form>
 
-      <aside className="h-fit space-y-4">
-        <div className="space-y-3 rounded-md border border-line p-5">
-          <h2 className="font-semibold">{t("summary")}</h2>
+      <aside className="min-w-0 space-y-4 lg:sticky lg:top-44">
+        <div className="panel space-y-3 p-5">
+          <h2 className="font-semibold tracking-tight">{t("summary")}</h2>
           <ul className="space-y-2 text-sm">
             {cart.lines.map((l) => (
               <li key={l.productId} className="flex justify-between gap-3">
@@ -224,19 +239,21 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
               </li>
             ))}
           </ul>
-          <div className="flex justify-between border-t border-line pt-3 text-sm"><span>{tc("shipping")}</span><span>{tc("free")}</span></div>
-          {totals.discountMinor > 0 && <div className="flex justify-between text-sm"><span>{t("pixDiscount")}</span><span className="tabular">−{money(totals.discountMinor)}</span></div>}
-          <div className="flex justify-between text-base font-semibold"><span>{tc("total")}</span><span className="tabular" data-testid="checkout-total">{money(totals.totalMinor)}</span></div>
+          <div className="space-y-2 border-t border-line pt-3">
+            <SummaryRow label={tc("shipping")}>{tc("free")}</SummaryRow>
+            {totals.discountMinor > 0 && <SummaryRow label={t("pixDiscount")}>−{money(totals.discountMinor)}</SummaryRow>}
+          </div>
+          <div className="flex items-baseline justify-between gap-4 border-t border-line pt-3 text-lg font-semibold tracking-tight"><span>{tc("total")}</span><span className="tabular" data-testid="checkout-total">{money(totals.totalMinor)}</span></div>
           {maxDeliveryDays != null && <p className="text-xs text-mute">{t("deliveryEstimate", { days: maxDeliveryDays })}</p>}
           {seller && <p className="border-t border-line pt-3 text-xs text-mute" data-testid="checkout-seller">{t("soldBy", { seller })}</p>}
         </div>
-        {card && !stripePromise && <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">{t("notConfigured")}</p>}
+        {card && !stripePromise && <Notice tone="error">{t("notConfigured")}</Notice>}
         {card && stripePromise && (
           <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>
             <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(chargedTotal ?? totals.totalMinor) })} />
           </Elements>
         )}
-        <p className="text-center text-xs text-mute">{t("secure")}</p>
+        <p className="flex items-center justify-center gap-1.5 text-center text-xs text-mute"><Lock className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />{t("secure")}</p>
       </aside>
     </div>
   );
@@ -262,10 +279,10 @@ function CardPayment({ orderNumber, totalLabel }: { orderNumber: number; totalLa
   }
 
   return (
-    <div className="space-y-4 rounded-md border border-line p-5" data-testid="card-payment">
+    <div className="panel space-y-4 p-5" data-testid="card-payment">
       <PaymentElement options={{ layout: "tabs", wallets: { applePay: "auto", googlePay: "auto" } }} />
-      {error && <p role="alert" className="text-sm font-medium">⚠ {error}</p>}
-      <button type="button" onClick={pay} disabled={!stripe || pending} className="h-12 w-full cursor-pointer rounded-md bg-black text-sm font-semibold uppercase tracking-wide text-white hover:bg-ink disabled:opacity-50">
+      {error && <Notice tone="error">{error}</Notice>}
+      <button type="button" onClick={pay} disabled={!stripe || pending} className="btn btn-primary btn-lg w-full">
         {pending ? t("processing") : totalLabel}
       </button>
     </div>

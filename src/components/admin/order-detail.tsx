@@ -175,10 +175,10 @@ function ItemForm({ item, suppliers, canWrite, onSaved }: { item: Order["items"]
   });
   const err = (k: string) => errors[k];
   return (
-    <fieldset className="space-y-4 rounded-md border border-line p-4" data-testid="order-item" disabled={!canWrite}>
+    <fieldset className="space-y-4 panel p-4" data-testid="order-item" disabled={!canWrite}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <legend className="font-semibold">{item.quantity}× {item.name} <span className="font-normal text-mute">· vendido por {money(item.lineTotalMinor)}</span></legend>
-        {item.purchasedAt && <span className="rounded-full bg-black px-2 py-0.5 text-xs text-white">Comprado</span>}
+        {item.purchasedAt && <span className="tag tag-solid">Comprado</span>}
       </div>
       {item.suggestion && (
         <p className="text-sm text-mute">
@@ -284,7 +284,7 @@ function ReturnCard({ r, canWrite, onSaved }: { r: Order["returns"][number]; can
   const REASON: Record<string, string> = { withdrawal: "Desistência", defect: "Defeito", other: "Outro" };
   const OUTCOME: Record<string, string> = { refund_full: "Reembolso total", refund_partial: "Reembolso parcial", replacement: "Troca", refused: "Recusada" };
   return (
-    <div className="space-y-3 rounded-md border border-line p-4" data-testid="return-card">
+    <div className="space-y-3 panel p-4" data-testid="return-card">
       <p className="text-sm">
         <span className="font-medium">{REASON[r.reason] ?? r.reason}</span> · {new Date(r.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })} ·{" "}
         {r.status === "open" ? "Aberta" : `Resolvida: ${OUTCOME[r.outcome ?? ""] ?? ""}`}

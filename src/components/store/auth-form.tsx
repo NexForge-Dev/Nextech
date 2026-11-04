@@ -1,10 +1,12 @@
 "use client";
 import { useActionState, useState, type ReactNode } from "react";
+import { CircleAlert } from "lucide-react";
 import type { AuthState } from "@/actions/store/auth";
+import { Notice } from "./ui";
 
 type Field = { name: string; label: string; type?: string; autoComplete?: string; defaultValue?: string; required?: boolean };
 
-export const inputClass = "h-11 w-full rounded-md border border-line bg-white px-3 text-[15px] outline-none transition-colors duration-150 focus:border-black aria-invalid:border-ink";
+export const inputClass = "field";
 
 export function AuthForm({
   action,
@@ -38,7 +40,7 @@ export function AuthForm({
         const err = state?.fieldErrors?.[f.name];
         return (
           <div key={f.name}>
-            <label htmlFor={`f-${f.name}`} className="mb-1.5 block text-sm font-medium">
+            <label htmlFor={`f-${f.name}`} className="field-label">
               {f.label}
             </label>
             <input
@@ -53,7 +55,8 @@ export function AuthForm({
               className={inputClass}
             />
             {err && (
-              <p id={`e-${f.name}`} className="mt-1.5 text-sm font-medium text-ink">
+              <p id={`e-${f.name}`} className="field-error">
+                <CircleAlert aria-hidden />
                 {err}
               </p>
             )}
@@ -61,16 +64,12 @@ export function AuthForm({
         );
       })}
       {state?.error && (
-        <p role="alert" className="rounded-md border border-ink px-3 py-2 text-sm font-medium">
-          {state.error}
-        </p>
+        <Notice tone="error">{state.error}</Notice>
       )}
       {state?.message && (
-        <p role="status" className="rounded-md bg-soft px-3 py-2 text-sm">
-          {state.message}
-        </p>
+        <Notice tone="success">{state.message}</Notice>
       )}
-      <button type="submit" disabled={pending} className="h-11 w-full cursor-pointer rounded-md bg-black text-sm font-semibold text-white transition-colors duration-150 hover:bg-ink disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-primary h-11 w-full font-semibold">
         {submit}
       </button>
       {footer}

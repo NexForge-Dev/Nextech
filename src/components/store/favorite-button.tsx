@@ -48,7 +48,7 @@ export function FavoriteButton({ productId, signedIn, initial = false, className
       title={label}
       className={`inline-flex cursor-pointer items-center justify-center gap-2 transition-colors duration-150 disabled:opacity-60 ${className}`}
     >
-      <Heart className="size-[18px]" strokeWidth={1.75} fill={fav ? "currentColor" : "none"} aria-hidden />
+      <Heart className="size-[18px] shrink-0" strokeWidth={1.75} fill={fav ? "currentColor" : "none"} aria-hidden />
       {withLabel && <span className="text-sm">{label}</span>}
     </button>
   );

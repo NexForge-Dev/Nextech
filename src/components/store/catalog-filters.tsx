@@ -27,8 +27,8 @@ function FilterForm({ values, categories, brands, stores, hideCategory, onDone }
   const router = useRouter();
   const pathname = usePathname();
   const [v, setV] = useState<FilterValues>(values);
-  const field = "h-10 w-full rounded-md border border-line bg-white px-3 text-sm outline-none focus:border-black";
-  const label = "mb-1.5 block text-xs font-medium uppercase tracking-wider text-mute";
+  const field = "field h-10";
+  const label = "t-eyebrow mb-1.5 block";
 
   function apply(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +38,7 @@ function FilterForm({ values, categories, brands, stores, hideCategory, onDone }
   }
 
   return (
-    <form onSubmit={apply} className="space-y-6">
+    <form onSubmit={apply} className="space-y-5">
       {!hideCategory && (
         <div>
           <label className={label} htmlFor="f-category">{t("category")}</label>
@@ -85,14 +85,14 @@ function FilterForm({ values, categories, brands, stores, hideCategory, onDone }
         {t("provenDiscount")}
       </label>
       <div className="flex gap-2">
-        <button type="submit" className="h-10 flex-1 cursor-pointer rounded-md bg-black px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-ink">{t("apply")}</button>
+        <button type="submit" className="btn btn-primary flex-1">{t("apply")}</button>
         <button
           type="button"
           onClick={() => {
             router.push(values.q ? `${pathname}?q=${encodeURIComponent(values.q)}` : pathname);
             onDone?.();
           }}
-          className="h-10 cursor-pointer rounded-md border border-line px-4 text-sm font-medium transition-colors duration-150 hover:bg-soft"
+          className="btn btn-secondary px-3"
         >
           {t("clearFilters")}
         </button>
@@ -101,22 +101,20 @@ function FilterForm({ values, categories, brands, stores, hideCategory, onDone }
   );
 }
 
-export function CatalogFilters(props: { values: FilterValues; categories: Option[]; brands: Option[]; stores: Option[]; hideCategory?: boolean }) {
+export function CatalogFilters({ mode, ...props }: { mode: "desktop" | "mobile"; values: FilterValues; categories: Option[]; brands: Option[]; stores: Option[]; hideCategory?: boolean }) {
   const t = useTranslations("catalog");
   const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
+  if (mode === "desktop") return <FilterForm {...props} />;
   return (
     <>
-      <div className="hidden lg:block">
-        <FilterForm {...props} />
-      </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft lg:hidden">
+        <SheetTrigger className="btn btn-secondary">
           <SlidersHorizontal className="size-4" strokeWidth={1.75} aria-hidden />
           {t("filter")}
         </SheetTrigger>
-        <SheetContent side="left" closeLabel={tc("close")} className="w-[88vw] max-w-sm overflow-y-auto border-line p-5 shadow-none">
-          <SheetTitle className="mb-2 text-lg font-semibold">{t("filters")}</SheetTitle>
+        <SheetContent side="left" closeLabel={tc("close")} className="w-[88vw] max-w-sm gap-5 overflow-y-auto border-line p-5 shadow-none">
+          <SheetTitle className="text-lg font-semibold">{t("filters")}</SheetTitle>
           <FilterForm {...props} onDone={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
@@ -148,7 +146,7 @@ export function SortSelect({ value, hasQuery }: { value: string; hasQuery: boole
           sp.delete("page");
           router.push(`${pathname}?${sp.toString()}`);
         }}
-        className="h-10 cursor-pointer rounded-md border border-line bg-white px-3 text-sm text-black outline-none focus:border-black"
+        className="field h-10 w-auto min-w-44 cursor-pointer"
       >
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>

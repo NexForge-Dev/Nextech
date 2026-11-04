@@ -21,7 +21,7 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
   const [{ data, count }, users] = await Promise.all([q.range((page - 1) * PAGE, page * PAGE - 1), createServiceSupabase().auth.admin.listUsers({ perPage: 1000 })]);
   const email = new Map((users.data?.users ?? []).map((u) => [u.id, u.email ?? u.id]));
   const entities = ["products", "categories", "brands", "stores", "affiliate_networks", "promotions", "banners", "campaigns", "site_settings", "admin_users", "contact_messages", "reports", "customers"];
-  const sel = "h-10 rounded-md border border-line bg-white px-3 text-sm";
+  const sel = "field h-10 w-auto";
   return (
     <>
       <PageHeader title="Log de auditoria" description="Quem fez o quê e quando. Valores sensíveis aparecem como [redacted]." />

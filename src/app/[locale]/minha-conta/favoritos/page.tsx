@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server";
+import { Heart } from "lucide-react";
 import { pageLocale } from "@/i18n/page-locale";
 import { Link } from "@/i18n/navigation";
 import { getStoreContext } from "@/lib/data/context";
 import { getFavoriteCards } from "@/lib/data/account";
 import { ProductGrid } from "@/components/store/product-grid";
+import { EmptyState } from "@/components/store/ui";
 
 export const metadata = { robots: { index: false } };
 
@@ -13,17 +15,13 @@ export default async function AccountFavoritesPage({ params }: { params: Promise
   const items = await getFavoriteCards(locale, ctx.market);
   return (
     <div>
-      <h2 className="mb-6 text-xl font-semibold tracking-tight">{t("title")}</h2>
+      <h2 className="t-section mb-5">{t("title")}</h2>
       {items.length ? (
-        <ProductGrid products={items} locale={locale} signedIn favorites={new Set(items.map((i) => i.id))} />
+        <ProductGrid products={items} locale={locale} signedIn favorites={new Set(items.map((i) => i.id))} columns="narrow" />
       ) : (
-        <div className="rounded-md border border-line px-6 py-14 text-center">
-          <p className="font-semibold">{t("emptyTitle")}</p>
-          <p className="mt-1 text-sm text-mute">{t("emptyText")}</p>
-          <Link href="/produtos" className="mt-6 inline-flex h-10 items-center rounded-md bg-black px-5 text-sm font-medium text-white hover:bg-ink">
-            {t("explore")}
-          </Link>
-        </div>
+        <EmptyState icon={Heart} title={t("emptyTitle")} text={t("emptyText")}>
+          <Link href="/produtos" className="btn btn-primary">{t("explore")}</Link>
+        </EmptyState>
       )}
     </div>
   );

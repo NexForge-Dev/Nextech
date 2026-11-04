@@ -38,26 +38,26 @@ async function FlagshipSlide({ flagship, locale, storeName, first }: { flagship:
   const buyable = product.saleMode === "own" && price.kind === "price";
   const Heading = first ? "h1" : "h2";
   return (
-    <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 pb-12 pt-10 md:grid-cols-12 md:gap-10 md:px-6 md:pb-20 md:pt-20">
+    <div className="shell grid items-center gap-6 pb-10 pt-6 md:grid-cols-12 md:gap-10 md:pb-16 md:pt-12">
       <div className="md:order-2 md:col-span-6">
-        <Link href={href} className="relative block aspect-square overflow-hidden rounded-md bg-soft">
+        <Link href={href} className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-white md:aspect-square lg:aspect-[5/4]">
           {src ? (
-            <Image src={src} alt={product.mainImage?.alt || product.name} fill priority={first} sizes="(min-width: 1280px) 600px, (min-width: 768px) 50vw, 100vw" className="object-contain p-8 mix-blend-multiply md:p-12" unoptimized={src.endsWith(".svg")} />
+            <Image src={src} alt={product.mainImage?.alt || product.name} fill priority={first} sizes="(min-width: 1280px) 600px, (min-width: 768px) 50vw, 100vw" className="object-contain p-6 mix-blend-multiply md:p-10" unoptimized={src.endsWith(".svg")} />
           ) : (
             <span className="grid h-full place-items-center text-xs text-mute">{tp("noImage")}</span>
           )}
         </Link>
       </div>
       <div className="md:order-1 md:col-span-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-mute">{t("flagshipEyebrow", { store: storeName })}</p>
-        {product.brand && <p className="mt-5 text-sm font-medium text-black">{product.brand}</p>}
-        <Heading className="mt-1 text-[2.25rem] font-semibold leading-[1.08] tracking-[-0.03em] text-black md:text-5xl">{product.name}</Heading>
-        {shortDescription && <p className="mt-5 max-w-xl text-lg text-mute">{shortDescription}</p>}
-        <div className="mt-7">
+        <p className="t-eyebrow">{t("flagshipEyebrow", { store: storeName })}</p>
+        {product.brand && <p className="mt-4 text-sm font-medium text-black">{product.brand}</p>}
+        <Heading className="t-display mt-1">{product.name}</Heading>
+        {shortDescription && <p className="mt-4 max-w-xl text-base text-mute md:text-lg">{shortDescription}</p>}
+        <div className="mt-5 md:mt-6">
           <PriceView price={price} locale={locale} size="lg" />
         </div>
         {buyable && (
-          <div className="mt-6 max-w-sm">
+          <div className="mt-5 max-w-sm md:mt-6">
             <AddToCart productId={product.id} priceMinor={price.fromMinor} available={product.available} labels={{ addToCart: tp("addToCart"), buyNow: tp("buyNow"), soldOut: tp("soldOut"), added: tcart("added"), viewCart: tcart("viewCart") }} />
           </div>
         )}

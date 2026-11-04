@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { ExternalLink, Star } from "lucide-react";
+import { ChevronRight, CircleCheck, CircleSlash, ExternalLink, Lock, RotateCcw, ShieldCheck, Star, Truck } from "lucide-react";
 import { pageLocale } from "@/i18n/page-locale";
 import { Link } from "@/i18n/navigation";
 import { resolveLocaleParam } from "@/i18n/routing";
@@ -20,7 +20,7 @@ import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata";
 import { Gallery } from "@/components/store/gallery";
 import { PriceView } from "@/components/store/price";
 import { FavoriteButton } from "@/components/store/favorite-button";
-import { ProductGrid, Section } from "@/components/store/product-grid";
+import { ProductShelf, Section } from "@/components/store/product-grid";
 import { AddToCart } from "@/components/store/add-to-cart";
 import { ownDiscountPct, pixPriceMinor } from "@/lib/domain/own-pricing";
 import { getPublicSettings, getStorefrontLocales } from "@/lib/data/settings";
@@ -44,7 +44,7 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProduct(slug, locale);
   if (!product) notFound();
 
-  const [ctx, t, tcat, tm, format, user, favorites, tcart, settings] = await Promise.all([
+  const [ctx, t, tcat, tm, format, user, favorites, tcart, settings, ts] = await Promise.all([
     getStoreContext(locale),
     getTranslations("product"),
     getTranslations("catalog"),
@@ -54,6 +54,7 @@ export default async function ProductPage({ params }: Props) {
     getFavoriteIds(),
     getTranslations("cart"),
     getPublicSettings(),
+    getTranslations("store"),
   ]);
   const own = product.saleMode === "own" ? product.sale : null;
   const ownDiscount = own ? ownDiscountPct(own) : null;
@@ -99,22 +100,24 @@ export default async function ProductPage({ params }: Props) {
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
-      <div className="mx-auto w-full max-w-7xl px-4 pt-6 md:px-6">
-        <nav aria-label="breadcrumb" className="text-xs text-mute">
+      <div className="shell pt-4 md:pt-6">
+        <nav aria-label={ts("breadcrumb")} className="flex flex-wrap items-center gap-1.5 text-xs text-mute">
+          <Link href="/" className="hover:text-black">{ts("home")}</Link>
+          <ChevronRight className="size-3" aria-hidden />
           <Link href="/produtos" className="hover:text-black">{tcat("title")}</Link>
-          <span className="mx-2">/</span>
+          <ChevronRight className="size-3" aria-hidden />
           <Link href={{ pathname: "/categoria/[slug]", params: { slug: product.category.slug } }} className="hover:text-black">{product.category.name}</Link>
         </nav>
       </div>
-      <section className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-16 pt-6 md:px-6 lg:grid-cols-2 lg:gap-16">
+      <section className="shell grid items-start gap-6 pb-10 pt-4 md:pt-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
         <Gallery images={images} name={product.name} />
-        <div className="flex flex-col">
+        <div className="flex min-w-0 flex-col lg:sticky lg:top-44">
           {product.brand && (
-            <Link href={{ pathname: "/produtos", query: { brand: product.brand.slug } }} className="text-xs font-medium uppercase tracking-wider text-mute hover:text-black">
+            <Link href={{ pathname: "/produtos", query: { brand: product.brand.slug } }} className="t-eyebrow hover:text-black">
               {product.brand.name}
             </Link>
           )}
-          <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{product.name}</h1>
+          <h1 className="t-page mt-1.5">{product.name}</h1>
           {product.rating && (
             <p className="mt-3 flex items-center gap-2 text-sm text-mute">
               <Star className="size-4 fill-black text-black" aria-hidden />
@@ -123,35 +126,38 @@ export default async function ProductPage({ params }: Props) {
               <span>· {t("ratingSource", { source: product.rating.source })}</span>
             </p>
           )}
-          {product.shortDescription && <p className="mt-4 text-mute">{product.shortDescription}</p>}
+          {product.shortDescription && <p className="mt-3 text-[15px] text-mute">{product.shortDescription}</p>}
 
           {own ? (
-            <div className="mt-8 border-t border-line pt-8" data-testid="own-buy-box">
+            <div className="panel mt-5 p-5" data-testid="own-buy-box">
               {ownDiscount != null && own.compareAtMinor != null && (
-                <p className="tabular text-sm text-mute line-through">{formatMoney(own.compareAtMinor, "BRL", locale)}</p>
+                <p className="flex items-center gap-2 text-sm">
+                  <span className="tabular text-mute line-through">{formatMoney(own.compareAtMinor, "BRL", locale)}</span>
+                  <span className="rounded-sm bg-black px-1.5 py-0.5 text-[11px] font-semibold text-white">-{ownDiscount}%</span>
+                </p>
               )}
-              <p className="flex items-center gap-3">
-                <span className="tabular text-4xl font-semibold tracking-tight" data-testid="price-main">{formatMoney(own.priceMinor, "BRL", locale)}</span>
-                {ownDiscount != null && <span className="rounded-full bg-black px-2 py-0.5 text-xs font-semibold text-white">-{ownDiscount}%</span>}
-              </p>
+              <p className="tabular text-3xl font-semibold tracking-tight md:text-4xl" data-testid="price-main">{formatMoney(own.priceMinor, "BRL", locale)}</p>
               {(ctx.businessModels.payments.card || ctx.businessModels.payments.boleto) && (
                 <p className="mt-1 text-sm text-mute">
                   {ctx.businessModels.payments.card && ctx.businessModels.payments.boleto ? t("cardOrBoleto") : ctx.businessModels.payments.card ? t("cardOnly") : t("boletoOnly")}
                 </p>
               )}
               {pixOn && (
-                <p className="mt-1 text-sm">
-                  <strong className="tabular">{t("pixPrice", { price: formatMoney(pixPriceMinor(own.priceMinor, own.pixDiscountPct), "BRL", locale) })}</strong>{" "}
-                  <span className="rounded-full border border-black px-2 py-0.5 text-xs font-medium">{t("pixOff", { pct: own.pixDiscountPct })}</span>
+                <p className="mt-3 flex flex-wrap items-center gap-2 rounded-md bg-soft px-3 py-2 text-sm">
+                  <strong className="tabular">{t("pixPrice", { price: formatMoney(pixPriceMinor(own.priceMinor, own.pixDiscountPct), "BRL", locale) })}</strong>
+                  <span className="tag h-5 px-2">{t("pixOff", { pct: own.pixDiscountPct })}</span>
                 </p>
               )}
-              <ul className="mt-5 space-y-1 text-sm">
-                <li>✓ {t("freeShipping", { min: own.deliveryMinDays, max: own.deliveryMaxDays })}</li>
-                <li>{own.available ? `✓ ${t("inStock")}` : t("soldOut")}</li>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li className="flex items-center gap-2"><Truck className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />{t("freeShipping", { min: own.deliveryMinDays, max: own.deliveryMaxDays })}</li>
+                <li className="flex items-center gap-2 font-medium">
+                  {own.available ? <CircleCheck className="size-4 shrink-0" strokeWidth={1.75} aria-hidden /> : <CircleSlash className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />}
+                  {own.available ? t("inStock") : t("soldOut")}
+                </li>
               </ul>
               {market === "BR" ? (
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
-                  <div className="flex-1">
+                <div className="mt-5 space-y-2">
+                  <div>
                     <AddToCart
                       productId={product.id}
                       priceMinor={own.priceMinor}
@@ -159,15 +165,20 @@ export default async function ProductPage({ params }: Props) {
                       labels={{ addToCart: t("addToCart"), buyNow: t("buyNow"), soldOut: t("soldOut"), added: tcart("added"), viewCart: tcart("viewCart") }}
                     />
                   </div>
-                  <FavoriteButton productId={product.id} signedIn={!!user} initial={favorites.has(product.id)} withLabel className="h-12 rounded-md border border-line px-5 hover:bg-soft" />
+                  <FavoriteButton productId={product.id} signedIn={!!user} initial={favorites.has(product.id)} withLabel className="btn btn-ghost btn-lg w-full font-medium" />
                 </div>
               ) : (
-                <p className="mt-6 text-sm font-medium">{t("onlyBrazil")}</p>
+                <p className="mt-5 text-sm font-medium">{t("onlyBrazil")}</p>
               )}
-              <p className="mt-5 text-xs text-mute">{t("ownSeller", { store: settings.storeName })}</p>
+              <p className="mt-4 border-t border-line pt-4 text-xs text-mute">{t("ownSeller", { store: settings.storeName })}</p>
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-mute">
+                <li className="flex items-center gap-1.5"><Lock className="size-3.5" strokeWidth={1.75} aria-hidden />{ts("securePayment")}</li>
+                <li className="flex items-center gap-1.5"><RotateCcw className="size-3.5" strokeWidth={1.75} aria-hidden />{ts("withdrawal")}</li>
+                <li className="flex items-center gap-1.5"><ShieldCheck className="size-3.5" strokeWidth={1.75} aria-hidden />{ts("warranty")}</li>
+              </ul>
             </div>
           ) : (
-          <div className="mt-8 border-t border-line pt-8">
+          <div className="panel mt-5 p-5">
             <PriceView price={summary} locale={locale} size="lg" />
             {summary.kind === "unavailable" ? (
               <div className="mt-4 space-y-1 text-sm">
@@ -186,12 +197,12 @@ export default async function ProductPage({ params }: Props) {
                       href={goHref(best.id)}
                       rel="nofollow sponsored noopener"
                       target="_blank"
-                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-black px-6 text-sm font-semibold tracking-wide text-white transition-colors duration-150 hover:bg-ink"
+                      className="btn btn-primary btn-lg flex-1"
                     >
                       {ctaLabel(best)}
                       <ExternalLink className="size-4" aria-hidden />
                     </a>
-                    <FavoriteButton productId={product.id} signedIn={!!user} initial={favorites.has(product.id)} withLabel className="h-12 rounded-md border border-line px-5 hover:bg-soft" />
+                    <FavoriteButton productId={product.id} signedIn={!!user} initial={favorites.has(product.id)} withLabel className="btn btn-secondary btn-lg font-medium" />
                   </div>
                 </>
               )
@@ -215,7 +226,7 @@ export default async function ProductPage({ params }: Props) {
                       <span>{o.storeName}</span>
                       <span className="flex items-center gap-4">
                         {price != null && <span className="tabular font-semibold">{formatMoney(price, o.currency, locale)}</span>}
-                        <a href={goHref(o.id)} rel="nofollow sponsored noopener" target="_blank" className="inline-flex h-9 items-center gap-1 rounded-md border border-line px-3 text-xs font-medium hover:bg-soft">
+                        <a href={goHref(o.id)} rel="nofollow sponsored noopener" target="_blank" className="btn btn-secondary btn-sm">
                           {price == null ? t("seePriceAt", { store: o.storeName }) : t("seeProduct")}
                           <ExternalLink className="size-3" aria-hidden />
                         </a>
@@ -230,17 +241,17 @@ export default async function ProductPage({ params }: Props) {
       </section>
 
       {(product.descriptionMd || product.specs.length > 0) && (
-        <section className="mx-auto grid w-full max-w-7xl gap-12 border-t border-line px-4 py-14 md:px-6 lg:grid-cols-2">
+        <section className="shell grid items-start gap-4 pb-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           {product.descriptionMd && (
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">{t("description")}</h2>
+            <div className="panel min-w-0 p-5 md:p-6">
+              <h2 className="t-section">{t("description")}</h2>
               <div className="prose-nx mt-4 space-y-3 text-[15px] leading-relaxed text-ink" dangerouslySetInnerHTML={{ __html: renderMarkdownSafe(product.descriptionMd) }} />
             </div>
           )}
           {product.specs.length > 0 && (
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">{t("specs")}</h2>
-              <dl className="mt-4 divide-y divide-line border-y border-line">
+            <div className="panel min-w-0 p-5 md:p-6">
+              <h2 className="t-section">{t("specs")}</h2>
+              <dl className="mt-3 divide-y divide-line">
                 {product.specs.map((s) => (
                   <div key={s.label} className="grid grid-cols-2 gap-4 py-3 text-sm">
                     <dt className="text-mute">{s.label}</dt>
@@ -259,7 +270,7 @@ export default async function ProductPage({ params }: Props) {
 
       {related.length > 0 && (
         <Section title={t("related")}>
-          <ProductGrid products={related.slice(0, 4)} locale={locale} signedIn={!!user} favorites={favorites} />
+          <ProductShelf products={related} locale={locale} signedIn={!!user} favorites={favorites} />
         </Section>
       )}
     </main>

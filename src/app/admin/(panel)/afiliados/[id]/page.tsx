@@ -54,7 +54,7 @@ export default async function NetworkPage({ params }: { params: Promise<{ id: st
           ["Comissões confirmadas", formatCurrencyAmounts(g.confirmed, "pt-BR")],
           ["Rejeitadas", formatCurrencyAmounts(g.rejected, "pt-BR")],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-md border border-line p-4">
+          <div key={label} className="panel p-4">
             <p className="text-xs text-mute">{label}</p>
             <p className="tabular mt-1 text-lg font-semibold">{value}</p>
           </div>
@@ -78,7 +78,7 @@ export default async function NetworkPage({ params }: { params: Promise<{ id: st
         )}
         <FormSection title="Execuções recentes">
           {runs?.length ? (
-            <ul className="divide-y divide-line rounded-md border border-line text-sm">
+            <ul className="divide-y divide-line panel text-sm">
               {runs.map((r) => (
                 <li key={r.id} className="flex flex-wrap justify-between gap-2 px-4 py-2">
                   <span>{new Date(r.started_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {r.kind === "csv" ? "Importação CSV" : r.kind === "prices" ? "Preços" : "API"}</span>
@@ -92,7 +92,7 @@ export default async function NetworkPage({ params }: { params: Promise<{ id: st
         </FormSection>
         <FormSection title="Links associados" description="Até 20 ofertas que usam esta rede.">
           {links?.length ? (
-            <ul className="divide-y divide-line rounded-md border border-line text-sm">
+            <ul className="divide-y divide-line panel text-sm">
               {links.map((l) => (
                 <li key={l.id} className="flex justify-between gap-2 px-4 py-2">
                   <Link href={`/admin/produtos/${l.product_id}`} className="hover:underline">{l.products?.product_translations.find((t) => t.locale === "pt-BR")?.name ?? "—"}</Link>

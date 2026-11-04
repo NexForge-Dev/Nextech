@@ -22,7 +22,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         actions={
           <>
             <ButtonLink href="/admin/clientes/mensagens" variant="secondary"><Mail className="size-4" /> Mensagens</ButtonLink>
-            {ctx.permissions.has("customers.export") && <a href="/admin/clientes/exportar" download className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm font-medium hover:bg-soft"><Download className="size-4" /> Exportar CSV</a>}
+            {ctx.permissions.has("customers.export") && <a href="/admin/clientes/exportar" download className="btn btn-secondary"><Download className="size-4" /> Exportar CSV</a>}
           </>
         }
       />

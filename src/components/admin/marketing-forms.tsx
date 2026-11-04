@@ -129,7 +129,7 @@ export function BannerForm({ initial, campaigns }: { initial: BannerFormValue; c
             <>
               <div>
                 <p className="mb-2 text-xs font-medium uppercase tracking-wider text-mute">Desktop (1280 px)</p>
-                <div className="overflow-x-auto rounded-md border border-line p-4">
+                <div className="overflow-x-auto panel p-4">
                   <div className="w-[1248px]">
                     <BannerCarousel banners={preview} labels={{ previous: "Anterior", next: "Próximo" }} frame="desktop" />
                   </div>
@@ -137,7 +137,7 @@ export function BannerForm({ initial, campaigns }: { initial: BannerFormValue; c
               </div>
               <div>
                 <p className="mb-2 text-xs font-medium uppercase tracking-wider text-mute">Celular (375 px)</p>
-                <div className="w-[375px] rounded-md border border-line p-3">
+                <div className="w-[375px] panel p-3">
                   <BannerCarousel banners={preview} labels={{ previous: "Anterior", next: "Próximo" }} frame="mobile" />
                 </div>
               </div>
@@ -266,7 +266,7 @@ export function CampaignForm({ initial, products, banners }: { initial: Campaign
       <FormSection title="Produtos" description="Na ordem em que aparecem na página.">
         <ul className="space-y-1">
           {v.productIds.map((id, i) => (
-            <li key={id} className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-sm">
+            <li key={id} className="flex items-center justify-between panel px-3 py-2 text-sm">
               <span>{i + 1}. {byId.get(id) ?? id}</span>
               <button type="button" onClick={() => setV({ ...v, productIds: v.productIds.filter((x) => x !== id) })} className="cursor-pointer text-xs underline">Remover</button>
             </li>

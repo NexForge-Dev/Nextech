@@ -29,7 +29,7 @@ export default async function ConversionsPage({ searchParams }: { searchParams: 
   if (sp.status && STATUS[sp.status]) q = q.eq("status", sp.status);
   const [{ data, count }, { data: all }] = await Promise.all([q.range((page - 1) * PAGE, page * PAGE - 1), cq.limit(50000)]);
   const g = groupByCurrency((all ?? []).map((c) => ({ amountMinor: c.amount_minor, currency: c.currency, status: c.status })));
-  const sel = "h-10 rounded-md border border-line bg-white px-3 text-sm";
+  const sel = "field h-10 w-auto";
   return (
     <>
       <PageHeader title="Conversões e comissões" description="Somente valores reportados pelas redes (API ou relatório importado). Cliques não são vendas." />
@@ -39,7 +39,7 @@ export default async function ConversionsPage({ searchParams }: { searchParams: 
           ["Confirmadas", g.confirmed],
           ["Rejeitadas", g.rejected],
         ].map(([label, list]) => (
-          <div key={label as string} className="rounded-md border border-line p-4">
+          <div key={label as string} className="panel p-4">
             <p className="text-xs text-mute">{label as string}</p>
             <p className="tabular mt-1 text-lg font-semibold">{formatCurrencyAmounts(list as never, "pt-BR")}</p>
           </div>

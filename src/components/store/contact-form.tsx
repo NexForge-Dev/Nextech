@@ -3,20 +3,19 @@ import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { submitContact } from "@/actions/store/contact";
 import { inputClass } from "./auth-form";
+import { Notice } from "./ui";
 
 export function ContactForm({ locale, ownStore = false }: { locale: string; ownStore?: boolean }) {
   const t = useTranslations("legal");
   const [state, action, pending] = useActionState(submitContact, null);
   if (state?.ok) {
     return (
-      <p role="status" className="mt-10 rounded-md bg-soft px-4 py-3 text-sm">
-        {t("contactSent")}
-      </p>
+      <Notice tone="success" className="mt-10">{t("contactSent")}</Notice>
     );
   }
-  const label = "mb-1.5 block text-sm font-medium";
+  const label = "field-label";
   return (
-    <form action={action} className="mt-10 space-y-5">
+    <form action={action} className="panel mt-10 space-y-5 p-5 md:p-6">
       <input type="hidden" name="locale" value={locale} />
       {/* honeypot: hidden from people, bots fill it */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -39,15 +38,13 @@ export function ContactForm({ locale, ownStore = false }: { locale: string; ownS
       </div>
       <div>
         <label htmlFor="c-body" className={label}>{t("contactBody")}</label>
-        <textarea id="c-body" name="body" required minLength={10} maxLength={5000} rows={6} className="w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] outline-none focus:border-black" />
+        <textarea id="c-body" name="body" required minLength={10} maxLength={5000} rows={6} className={`${inputClass} h-auto py-2`} />
       </div>
       <p className="text-xs text-mute">{ownStore ? t("contactOrderNote") : t("contactPurchaseNote")}</p>
       {state?.error && (
-        <p role="alert" className="rounded-md border border-ink px-3 py-2 text-sm font-medium">
-          {state.error}
-        </p>
+        <Notice tone="error">{state.error}</Notice>
       )}
-      <button type="submit" disabled={pending} className="h-11 cursor-pointer rounded-md bg-black px-6 text-sm font-semibold text-white hover:bg-ink disabled:opacity-60">
+      <button type="submit" disabled={pending} className="btn btn-primary h-11 px-6">
         {t("contactSend")}
       </button>
     </form>

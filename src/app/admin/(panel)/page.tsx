@@ -17,7 +17,7 @@ async function LaunchReadiness() {
   const issues = ownStoreReadiness({ ownStore: bm.ownStore, legal: s.legal, contactEmail: s.contactEmail, env: process.env });
   if (!issues.length) return null;
   return (
-    <section role="alert" className="mb-8 rounded-md border-2 border-black p-5" data-testid="launch-readiness">
+    <section role="alert" className="mb-6 rounded-lg border border-black bg-white p-5" data-testid="launch-readiness">
       <h2 className="text-sm font-semibold">Pendências para vender na loja própria</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
         {issues.map((i) => (
@@ -40,8 +40,8 @@ async function OwnStoreKpis() {
   const k = await orderKpis(30);
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
   return (
-    <section className="mb-8">
-      <h2 className="mb-3 text-sm font-semibold">Loja própria — últimos 30 dias</h2>
+    <section className="mb-6">
+      <h2 className="t-eyebrow mb-3">Loja própria — últimos 30 dias</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Pedidos pagos" value={String(k.paidOrders)} />
         <KpiCard label="Faturamento" value={money(k.revenueMinor)} hint="Pago menos reembolsos" />
@@ -107,7 +107,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <KpiCard label="Comissões pendentes" value={formatCurrencyAmounts(m.commissions.pending, "pt-BR")} hint="Aguardando confirmação da rede" />
         <KpiCard label="Comissões confirmadas" value={formatCurrencyAmounts(m.commissions.confirmed, "pt-BR")} />
       </div>
-      <div className="mt-8 grid gap-4 xl:grid-cols-2">
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <DailyLine title="Cliques por dia" data={m.clicksByDay} valueLabel="Cliques" />
         <CommissionsChart points={m.commissionsDaily} days={days} />
         <RankBar title="Produtos mais acessados" data={m.viewsByProduct} valueLabel="Visualizações" />
@@ -115,7 +115,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <RankBar title="Cliques por plataforma de afiliados" data={m.clicksByNetwork} valueLabel="Cliques" />
         <RankBar title="Desempenho das campanhas (cliques)" data={m.clicksByCampaign} valueLabel="Cliques" />
       </div>
-      <section className="mt-8 rounded-md border border-line">
+      <section className="panel mt-4 overflow-hidden">
         <h2 className="border-b border-line px-5 py-3 text-sm font-semibold">Produtos com maior desempenho</h2>
         {m.topProducts.length === 0 ? (
           <p className="px-5 py-10 text-center text-sm text-mute">Sem dados ainda</p>

@@ -8,12 +8,18 @@ export async function LegalPageView({ page, locale, title, showUpdated = false, 
   const [settings, t, format, bm] = await Promise.all([getPublicSettings(), getTranslations("legal"), getFormatter(), getBusinessModels()]);
   const html = await loadLegal(page, locale, settings, bm.ownStore ? "store" : "default");
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-14 md:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{title}</h1>
-      {showUpdated && <p className="mt-3 text-sm text-mute">{t("lastUpdated", { date: format.dateTime(new Date(LEGAL_UPDATED_AT), { dateStyle: "long" }) })}</p>}
-      {page === "about" && settings.institutional[locale] && <p className="mt-8 whitespace-pre-line text-lg text-ink">{settings.institutional[locale]}</p>}
-      <div className="prose-nx prose-legal mt-10 space-y-4 text-[15px] leading-relaxed text-ink" dangerouslySetInnerHTML={{ __html: html }} />
-      {children}
+    <main>
+      <header className="border-b border-line bg-soft">
+        <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12">
+          <h1 className="t-page md:text-4xl">{title}</h1>
+          {showUpdated && <p className="mt-2 text-sm text-mute">{t("lastUpdated", { date: format.dateTime(new Date(LEGAL_UPDATED_AT), { dateStyle: "long" }) })}</p>}
+        </div>
+      </header>
+      <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-8 md:px-6 md:pt-10">
+        {page === "about" && settings.institutional[locale] && <p className="mb-8 whitespace-pre-line text-lg text-ink">{settings.institutional[locale]}</p>}
+        <div className="prose-nx prose-legal space-y-4 text-[15px] leading-relaxed text-ink" dangerouslySetInnerHTML={{ __html: html }} />
+        {children}
+      </div>
     </main>
   );
 }
