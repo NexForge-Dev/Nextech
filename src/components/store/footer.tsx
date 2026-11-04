@@ -5,14 +5,14 @@ import type { StoreContext } from "@/lib/data/context";
 import { Logo } from "./logo";
 import { MarketSelector } from "./market-selector";
 import { CookiePreferencesButton } from "./cookie-banner";
-import { sellerIdentityParts } from "@/lib/domain/seller";
+import { sellerContactLine } from "@/lib/domain/seller";
 
 export async function Footer({ ctx, storeName, legal = { company_name: "", tax_id: "", address: "" }, contactEmail = "" }: { ctx: StoreContext; storeName: string; legal?: { company_name: string; tax_id: string; address: string }; contactEmail?: string }) {
   const [t, tm, ts] = await Promise.all([getTranslations("footer"), getTranslations("markets"), getTranslations("store")]);
   const marketName = (code: string) => (tm.has(code as "BR") ? tm(code as "BR") : code);
   const options = ctx.availableMarkets.map((code) => ({ code, name: marketName(code) }));
-  // Decreto 7.962/2013: seller identity on every page; only the fields the admin filled in
-  const seller = sellerIdentityParts(legal);
+  // Decreto 7.962/2013: seller identity on every page; only the fields the admin filled in, plus the contact
+  const seller = sellerContactLine(legal, contactEmail);
   const { card, boleto, pix } = ctx.businessModels.payments;
   const methods = ctx.businessModels.ownStore
     ? [
@@ -62,9 +62,9 @@ export async function Footer({ ctx, storeName, legal = { company_name: "", tax_i
         <div className="shell flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
             <p className="text-xs text-white/60">{t("rights", { year: new Date().getFullYear() })}</p>
-            {ctx.businessModels.ownStore && seller.length > 0 && (
+            {ctx.businessModels.ownStore && (
               <p className="text-xs text-white/60" data-testid="seller-identity">
-                {[...seller, contactEmail.trim()].filter(Boolean).join(" · ")}
+                {seller}
               </p>
             )}
           </div>
