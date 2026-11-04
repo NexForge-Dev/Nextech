@@ -479,5 +479,22 @@
     "step4Title": "Get it at home",
     "step4Text": "If something is not right, you have 7 days to change your mind, plus the legal warranty.",
     "howMore": "See how it works"
+  },
+  "feedback": {
+    "open": "Send a suggestion or problem",
+    "close": "Close",
+    "title": "Talk to us",
+    "kindLegend": "What is your message about?",
+    "suggestion": "Help us improve",
+    "problem": "Report a problem",
+    "messageLabel": "Your message",
+    "privacyHint": "Please leave out personal data.",
+    "send": "Send",
+    "sending": "Sending…",
+    "sent": "Message sent. Thank you!",
+    "errorInvalid": "Choose an option and write your message.",
+    "errorRate": "You have sent too many messages. Please try again later.",
+    "errorSession": "Your session has expired. Sign in again to send.",
+    "errorServer": "We couldn't send it. Please try again."
   }
 }

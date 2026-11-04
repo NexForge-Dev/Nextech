@@ -10,11 +10,12 @@ export const LIMITS = {
   auth: { windowSeconds: 600, max: 10 },
   checkout: { windowSeconds: 600, max: 15 },
   orders: { windowSeconds: 600, max: 20 },
+  feedback: { windowSeconds: 3600, max: 10 },
 } as const;
 export type LimitBucket = keyof typeof LIMITS;
 
 /** Abuse-sensitive buckets refuse when the limiter itself is down; tracking/search ones stay open. */
-const FAIL_CLOSED: ReadonlySet<LimitBucket> = new Set(["auth", "contact", "checkout", "orders"]);
+const FAIL_CLOSED: ReadonlySet<LimitBucket> = new Set(["auth", "contact", "checkout", "orders", "feedback"]);
 
 export async function clientIp(): Promise<string> {
   const h = await headers();

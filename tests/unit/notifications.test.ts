@@ -10,6 +10,12 @@ function input(p: Partial<NotificationInput> = {}): NotificationInput {
 }
 
 describe("own-store notifications", () => {
+  it("links new feedback to the filtered admin page, and stays quiet without any", () => {
+    const n = computeNotifications(input({ newFeedback: 3 }));
+    expect(n).toHaveLength(1);
+    expect(n[0]).toMatchObject({ kind: "feedback", href: "/admin/feedback?status=new", key: "feedback:3" });
+    expect(computeNotifications(input({ newFeedback: 0 }))).toEqual([]);
+  });
   it("counts orders to buy and open returns", async () => {
     const { computeNotifications } = await import("@/lib/domain/notifications");
     const n = computeNotifications({ now: new Date("2026-11-02T12:00:00Z"), staleDays: 14, offers: [], schedules: [], failedSyncs: [], unhandledMessages: 0, productsWithoutOffer: [], ordersToBuy: 2, openReturns: 1 });

@@ -1,7 +1,7 @@
 import "server-only";
 import { after } from "next/server";
 import { log } from "@/lib/log";
-import { createNexforge, type NexforgeClient, type NexforgeEvent } from "./nexforge-client.cjs";
+import { createNexforge, type FeedbackItem, type NexforgeClient, type NexforgeEvent } from "./nexforge-client.cjs";
 
 /**
  * Product metrics for the internal NexForge management panel (Painel de Gestão NexForge).
@@ -11,6 +11,7 @@ import { createNexforge, type NexforgeClient, type NexforgeEvent } from "./nexfo
  * sent — never names, e-mails, CPF, addresses, products or order numbers. Without the three
  * NEXFORGE_* variables (and always under NODE_ENV=test) every call is a no-op.
  * Sending happens after the response via `after()`, so it never slows a request.
+ * The one exception is forwardFeedback(): it carries the customer's own text, with no identity.
  */
 
 let client: NexforgeClient | null = null;
@@ -36,6 +37,15 @@ function flushLater(c: NexforgeClient) {
   } catch {
     // Outside a request scope (scripts): send now without waiting.
     void c.flush(3000);
+  }
+}
+
+/** Copies a saved suggestion or problem report to the panel, waiting at most 2.5 s. Never throws. */
+export async function forwardFeedback(item: FeedbackItem): Promise<void> {
+  try {
+    await nf().feedback(item, 2500);
+  } catch (e) {
+    log.info("nexforge.failed", { reason: e instanceof Error ? e.message.slice(0, 80) : "unknown" });
   }
 }
 

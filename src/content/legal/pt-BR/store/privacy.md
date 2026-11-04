@@ -22,6 +22,7 @@ Canal de privacidade e contato do encarregado pelo tratamento de dados (LGPD, ar
 **Atendimento**
 
 - Solicitações de devolução ou suporte: motivo, mensagem e até 3 fotos enviadas por você.
+- Sugestões e relatos de problema enviados pelo balão da loja: o tipo, o texto, a página em que você estava (sem os parâmetros do endereço) e a sua conta.
 - Formulário de contato: nome, e-mail, assunto e mensagem.
 
 **Recursos opcionais**
@@ -45,6 +46,7 @@ Não pedimos dados pessoais sensíveis. Evite incluí-los em mensagens ou fotos.
 | Criar e manter a conta, processar pedido, pagamento, entrega, cancelamento, devolução e atendimento | Execução de contrato (art. 7º, V) |
 | Guardar registros fiscais e de consumo | Cumprimento de obrigação legal (art. 7º, II) |
 | Defender direitos em processos, reclamações e contestações de pagamento | Exercício regular de direitos (art. 7º, VI) |
+| Analisar sugestões e relatos de problema para corrigir falhas e melhorar a loja | Legítimo interesse (art. 7º, IX) |
 | Segurança, prevenção a fraudes e abusos, estatísticas de uso e métricas internas pseudonimizadas | Legítimo interesse (art. 7º, IX) |
 | Cookies de análise e de marketing e histórico de produtos vistos | Consentimento (art. 7º, I), que você pode revogar a qualquer momento |
 
@@ -56,7 +58,7 @@ Não pedimos dados pessoais sensíveis. Evite incluí-los em mensagens ou fotos.
 - **Fornecedores, marketplaces e distribuidores, no Brasil ou no exterior (produtos enviados por parceiros):** nome, telefone e endereço de entrega e, quando exigido para a compra, a emissão fiscal ou o transporte, o CPF.
 - **Transportadoras:** nome, endereço de entrega, telefone e, quando exigido para a emissão fiscal ou o transporte, o CPF.
 - **ViaCEP:** quando você digita o CEP no checkout, seu navegador consulta esse serviço público, que recebe o CEP e os dados técnicos da conexão, para preencher o endereço.
-- **NexForge:** quando essa integração está ativa, o painel interno de métricas de gestão recebe eventos pseudonimizados (código irreversível sem a chave da loja, nome do evento e, nas compras, o valor). Não enviamos nome, e-mail, CPF, endereço, produtos nem número do pedido.
+- **NexForge:** quando essa integração está ativa, o painel interno de métricas de gestão recebe eventos pseudonimizados (código irreversível sem a chave da loja, nome do evento e, nas compras, o valor). Não enviamos nome, e-mail, CPF, endereço, produtos nem número do pedido. A exceção são as sugestões e os relatos de problema enviados pelo balão da loja: uma cópia do tipo, do texto que você escreveu e da página vai para esse painel, sem nome, e-mail nem identificação da conta. Por isso, não escreva dados pessoais nessas mensagens.
 - **Resend:** quando o envio de e-mails do pedido está ativo, recebe seu e-mail, seu nome e os dados do pedido para enviar as mensagens.
 - **Google (Ads e Analytics), Meta (Pixel) e Plausible:** somente quando essas ferramentas estão ativadas pela loja e você aceitou a categoria de cookies correspondente. Nas compras, Google Ads e Meta recebem valor, moeda e número do pedido. Usamos o Modo de Consentimento do Google: sem o seu aceite, armazenamento de anúncios e de análise ficam negados.
 - **Autoridades públicas:** quando exigido por lei ou ordem judicial.
@@ -75,16 +77,17 @@ Nosso banco de dados fica na União Europeia, e alguns dos parceiros acima trata
 | Histórico de produtos vistos | Até você limpar o histórico ou excluir a conta |
 | Pedidos, pagamentos, notas fiscais, solicitações de devolução e histórico do pedido | No mínimo **5 anos**, por obrigações fiscais e pelo prazo de reclamação do Código de Defesa do Consumidor, **mesmo que você exclua a conta** |
 | Mensagens do formulário de contato | Pelo tempo necessário ao atendimento e à defesa de direitos |
+| Sugestões e relatos de problema | Até você excluir a conta. A cópia no painel da NexForge não fica ligada à conta e não é apagada com ela; para pedir a eliminação, use o canal de privacidade |
 | Eventos de uso e buscas detalhados | Até 13 meses; depois são excluídos ou resumidos em totais diários sem identificação |
 | Código de limite de tentativas | Cerca de 1 dia |
 
-Ao excluir a conta, os dados de perfil, favoritos, histórico e endereços salvos são apagados. O pedido deixa de ficar vinculado à conta, mas os dados de compra (inclusive nome, CPF, e-mail, telefone e endereço) continuam guardados pelo prazo acima. Depois desse prazo, você pode pedir a eliminação pelo canal de privacidade. Parceiros como a Stripe têm prazos próprios para seus registros.
+Ao excluir a conta, os dados de perfil, favoritos, histórico, endereços salvos e sugestões e relatos de problema são apagados. O pedido deixa de ficar vinculado à conta, mas os dados de compra (inclusive nome, CPF, e-mail, telefone e endereço) continuam guardados pelo prazo acima. Depois desse prazo, você pode pedir a eliminação pelo canal de privacidade. Parceiros como a Stripe têm prazos próprios para seus registros.
 
 ## Seus direitos (LGPD, art. 18)
 
 Você pode pedir confirmação do tratamento, acesso, correção, anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade, portabilidade, eliminação de dados tratados com consentimento, informação sobre compartilhamento e sobre a possibilidade de negar consentimento, além de revogar consentimentos e se opor a tratamentos irregulares.
 
-Em **Minha conta → Privacidade** você mesmo pode exportar seus dados da conta (perfil, favoritos, histórico, pedidos, endereços e solicitações), remover endereços salvos, controlar o histórico, alterar as escolhas de cookies e excluir a conta. Para o restante, escreva para {{contact_email}}. Poderemos pedir informações para confirmar sua identidade. Pedidos de acesso completo são respondidos em até 15 dias (LGPD, art. 19).
+Em **Minha conta → Privacidade** você mesmo pode exportar seus dados da conta (perfil, favoritos, histórico, pedidos, endereços, solicitações, sugestões e relatos de problema), remover endereços salvos, controlar o histórico, alterar as escolhas de cookies e excluir a conta. Para o restante, escreva para {{contact_email}}. Poderemos pedir informações para confirmar sua identidade. Pedidos de acesso completo são respondidos em até 15 dias (LGPD, art. 19).
 
 Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD) e aos órgãos de defesa do consumidor.
 

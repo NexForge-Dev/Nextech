@@ -20,7 +20,7 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
   if (sp.actor && /^[0-9a-f-]{36}$/i.test(sp.actor)) q = q.eq("actor_id", sp.actor);
   const [{ data, count }, users] = await Promise.all([q.range((page - 1) * PAGE, page * PAGE - 1), createServiceSupabase().auth.admin.listUsers({ perPage: 1000 })]);
   const email = new Map((users.data?.users ?? []).map((u) => [u.id, u.email ?? u.id]));
-  const entities = ["products", "categories", "brands", "stores", "affiliate_networks", "promotions", "banners", "campaigns", "site_settings", "admin_users", "contact_messages", "reports", "customers"];
+  const entities = ["products", "categories", "brands", "stores", "affiliate_networks", "promotions", "banners", "campaigns", "site_settings", "admin_users", "contact_messages", "product_feedback", "reports", "customers"];
   const sel = "field h-10 w-auto";
   return (
     <>

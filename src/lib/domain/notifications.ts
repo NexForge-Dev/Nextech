@@ -1,4 +1,4 @@
-export type NotificationKind = "stale" | "ending" | "starting" | "sync_failed" | "messages" | "no_offer" | "orders_to_buy" | "returns_open";
+export type NotificationKind = "stale" | "ending" | "starting" | "sync_failed" | "messages" | "feedback" | "no_offer" | "orders_to_buy" | "returns_open";
 
 export type AdminNotification = { key: string; kind: NotificationKind; title: string; href: string; at: string };
 
@@ -9,6 +9,8 @@ export type NotificationInput = {
   schedules: { kind: "promotion" | "banner" | "campaign"; id: string; name: string; startsAt: string | null; endsAt: string | null }[];
   failedSyncs: { networkId: string; networkName: string; at: string }[];
   unhandledMessages: number;
+  /** Suggestions and problem reports nobody has looked at yet. */
+  newFeedback?: number;
   productsWithoutOffer: { id: string; name: string }[];
   /** Own store: paid orders still waiting for the supplier purchase, and open return/support requests. */
   ordersToBuy?: number;
@@ -46,6 +48,9 @@ export function computeNotifications(i: NotificationInput): AdminNotification[] 
   }
   if (i.unhandledMessages > 0) {
     out.push({ key: `messages:${i.unhandledMessages}`, kind: "messages", title: `${i.unhandledMessages} mensagem(ns) de contato sem resposta`, href: "/admin/clientes/mensagens", at: i.now.toISOString() });
+  }
+  if (i.newFeedback) {
+    out.push({ key: `feedback:${i.newFeedback}`, kind: "feedback", title: `${i.newFeedback} sugestão(ões) ou problema(s) sem análise`, href: "/admin/feedback?status=new", at: i.now.toISOString() });
   }
   if (i.ordersToBuy) {
     out.push({ key: `orders_to_buy:${i.ordersToBuy}`, kind: "orders_to_buy", title: `${i.ordersToBuy} pedido(s) pago(s) aguardando compra no fornecedor`, href: "/admin/pedidos?status=awaiting_supplier", at: i.now.toISOString() });

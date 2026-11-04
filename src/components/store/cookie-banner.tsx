@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -30,6 +30,22 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
   const [analytics, setAnalytics] = useState(initial.analytics);
   const [marketing, setMarketing] = useState(initial.marketing ?? false);
   const [pending, start] = useTransition();
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  // anything else fixed to the bottom of the screen reads this to stay clear of the banner
+  useEffect(() => {
+    const banner = bannerRef.current;
+    if (!banner) return;
+    const root = document.documentElement;
+    const sync = () => root.style.setProperty("--cookie-banner-height", `${banner.offsetHeight}px`);
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--cookie-banner-height");
+    };
+  }, [visible]);
 
   useEffect(() => {
     const open = () => setDialog(true);
@@ -50,7 +66,7 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
   return (
     <>
       {visible && (
-        <div role="region" aria-label={t("bannerTitle")} className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white px-4 py-4 shadow-[var(--shadow-pop)] md:px-6">
+        <div ref={bannerRef} data-cookie-banner role="region" aria-label={t("bannerTitle")} className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white px-4 py-4 shadow-[var(--shadow-pop)] md:px-6">
           <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="max-w-3xl text-sm">
               <p className="font-medium text-black">{texts?.title || t("bannerTitle")}</p>

@@ -755,6 +755,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"product_feedback": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"message": string,"page": string,"status": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"message": string,"page"?: string,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"message"?: string,"page"?: string,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"product_images": {
                   Row: {
                     "alt": string | null,"created_at": string,"id": string,"is_main": boolean,"path": string,"product_id": string,"sort_order": number,"updated_at": string
