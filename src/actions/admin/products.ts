@@ -6,6 +6,9 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { productInputSchema, validateOfferUrls, type ProductParsed } from "@/lib/admin/schemas/product";
 import { parseProductsCsv, type CsvProduct } from "@/lib/domain/csv";
+import { parseProductsJson } from "@/lib/domain/product-json";
+import { formatMoney } from "@/lib/domain/money";
+import { getProductJsonCatalog } from "@/lib/data/admin/products";
 import { fetchPublicHttps } from "@/lib/security/safe-fetch";
 
 async function storeDomains(storeIds: string[]) {
@@ -268,4 +271,55 @@ const importImpl = adminAction(
 );
 export async function importProductsCsv(input: unknown) {
   return importImpl(input);
+}
+
+// ---------------------------------------------------------------- JSON import
+export type JsonImportPreview = {
+  items: { name: string; slug: string; summary: string; id?: string }[];
+  errors: { line: number; message: string }[];
+  warnings: string[];
+  created: number;
+  committed: boolean;
+};
+
+const STATUS_LABEL = { draft: "rascunho", published: "publicado", archived: "arquivado" } as const;
+
+/** Creates only: a repeated slug is an error, so an import never overwrites a product already edited. */
+const importJsonImpl = adminAction(
+  { permission: "products.import", schema: z.object({ text: z.string().max(5_000_000), commit: z.boolean() }), audit: { action: "import_json", entity: "products" } },
+  async ({ text, commit }, ctx) => {
+    if (!ctx.permissions.has("products.write")) throw new ActionFailure("forbidden");
+    const parsed = parseProductsJson(text, await getProductJsonCatalog());
+    const sb = await createServerSupabase();
+    const { data: taken } = await sb.from("products").select("slug").in("slug", parsed.items.map((i) => i.slug));
+    const takenSlugs = new Set((taken ?? []).map((p) => p.slug));
+    const errors = [...parsed.errors];
+    for (const item of parsed.items) {
+      if (takenSlugs.has(item.slug)) errors.push({ line: 0, message: `${item.name}: já existe um produto com o endereço "${item.slug}".` });
+    }
+    const ready = parsed.items.filter((i) => !takenSlugs.has(i.slug));
+    let items: JsonImportPreview["items"] = ready.map((i) => ({ name: i.name, slug: i.slug, summary: `${formatMoney(i.payload.sale?.priceMinor ?? 0, "BRL", "pt-BR")} · ${STATUS_LABEL[i.payload.status]}` }));
+
+    let created = 0;
+    if (commit) {
+      if (errors.length) throw new ActionFailure("invalid", `Corrija os ${errors.length} erro(s) antes de importar.`);
+      const saved: JsonImportPreview["items"] = [];
+      for (const [i, item] of ready.entries()) {
+        const { data: id, error } = await sb.rpc("admin_save_product_full", { p: rpcPayload(item.payload) as never });
+        if (error) {
+          errors.push({ line: 0, message: `${item.name}: ${error.message}` });
+          continue;
+        }
+        saved.push({ ...items[i], id: id as string });
+        created++;
+      }
+      items = saved;
+      updateTag("catalog");
+    }
+    const preview: JsonImportPreview = { items, errors: errors.slice(0, 200), warnings: parsed.warnings, created, committed: commit };
+    return { ...preview, audit: { created, committed: commit } };
+  },
+);
+export async function importProductsJson(input: unknown) {
+  return importJsonImpl(input);
 }

@@ -2,12 +2,14 @@ import "server-only";
 import { createAnonSupabase } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/routing";
 import type { MarketCode } from "@/lib/domain/markets";
-import { getCategories, type NavCategory } from "./taxonomy";
+import { getVisibleCategories, type NavCategory } from "./taxonomy";
 import { pickTranslation } from "./translations";
 import { toCards, type ProductCardData } from "./catalog";
 import { getBusinessModels } from "./settings";
+import { log } from "@/lib/log";
 import { visibleModes } from "@/lib/domain/business-models";
 import { flagshipCandidates, flagshipLineup, MAX_FLAGSHIPS } from "@/lib/domain/flagship";
+import { autoDealProducts, mergeDeals, type DealRow } from "@/lib/domain/storefront";
 
 export type FlagshipData = { product: ProductCardData; shortDescription: string | null };
 
@@ -24,6 +26,25 @@ type ProductRow = {
   brands: { name: string } | null;
   product_translations: { locale: string; name: string }[];
 };
+
+const AUTO_DEALS_SCANNED = 200;
+
+/** Published products on offer by price alone, limited to the sale modes switched on. */
+export async function listAutoDeals(): Promise<ProductRow[]> {
+  const [{ data, error }, models] = await Promise.all([
+    createAnonSupabase()
+      .from("product_sale")
+      .select(`price_minor, compare_at_minor, available, fulfillment, stock_quantity, products(${PRODUCT_FIELDS})`)
+      .not("compare_at_minor", "is", null)
+      .limit(AUTO_DEALS_SCANNED),
+    getBusinessModels(),
+  ]);
+  if (error) {
+    log.error("deals.auto_failed", new Error(error.message));
+    return [];
+  }
+  return autoDealProducts((data ?? []) as unknown as DealRow<ProductRow>[], models);
+}
 
 export function baseRow(p: ProductRow, locale: Locale) {
   return {
@@ -94,21 +115,20 @@ export async function getHome(locale: Locale, market: MarketCode): Promise<{
 }> {
   const sb = createAnonSupabase();
   const modes = visibleModes(await getBusinessModels());
-  const [banners, flagships, categories, featuredRes, promoRes, popularRes, anyRes] = await Promise.all([
+  const [banners, flagships, categories, featuredRes, promoRes, popularRes, anyRes, autoDeals] = await Promise.all([
     getActiveBanners(locale),
     getFlagships(locale, market),
-    getCategories(locale),
+    getVisibleCategories(locale),
     sb.from("products").select(PRODUCT_FIELDS).eq("status", "published").eq("featured", true).order("published_at", { ascending: false }).limit(8),
     sb.from("promotions").select(`highlighted, starts_at, products(${PRODUCT_FIELDS})`).order("highlighted", { ascending: false }).order("starts_at", { ascending: false }).limit(8),
     sb.rpc("search_products", { q: "", p_locale: locale, p_market: market, p_sort: "popular", p_limit: 8, p_offset: 0 }),
     sb.from("products").select("id", { count: "exact", head: true }).eq("status", "published").in("sale_mode", modes.length ? modes : ["none"]),
+    listAutoDeals(),
   ]);
 
   const featuredRows = ((featuredRes.data ?? []) as unknown as ProductRow[]).map((p) => baseRow(p, locale));
-  const promoRows = ((promoRes.data ?? []) as unknown as { products: ProductRow | null }[])
-    .map((r) => r.products)
-    .filter((p): p is ProductRow => !!p)
-    .map((p) => baseRow(p, locale));
+  const manualDeals = ((promoRes.data ?? []) as unknown as { products: ProductRow | null }[]).map((r) => r.products).filter((p): p is ProductRow => !!p);
+  const promoRows = mergeDeals(manualDeals, autoDeals, 8).map((p) => baseRow(p, locale));
   const popularRows = (popularRes.data ?? []).filter((r) => Number(r.popularity) > 0);
 
   // whatever fills the top of the page isn't repeated in the curated grid
