@@ -12,7 +12,7 @@ export async function LegalPageView({ page, locale, title, showUpdated = false, 
       <header className="border-b border-line bg-soft">
         <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12">
           <h1 className="t-page md:text-4xl">{title}</h1>
-          {showUpdated && <p className="mt-2 text-sm text-mute">{t("lastUpdated", { date: format.dateTime(new Date(LEGAL_UPDATED_AT), { dateStyle: "long" }) })}</p>}
+          {showUpdated && <p className="mt-2 text-sm text-mute">{t("lastUpdated", { date: format.dateTime(new Date(LEGAL_UPDATED_AT), { day: "2-digit", month: "2-digit", year: "numeric" }) })}</p>}
         </div>
       </header>
       <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-8 md:px-6 md:pt-10">

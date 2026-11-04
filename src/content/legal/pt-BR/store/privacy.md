@@ -1,73 +1,105 @@
-Esta política explica quais dados pessoais a {{store_name}} trata, por que e quais são os seus direitos, de acordo com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).
+Esta política explica quais dados pessoais a {{store_name}} trata, para quê, com quem compartilha e quais são os seus direitos, de acordo com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).
 
-## Quem somos
+## Quem é o controlador
 
 Controlador dos dados: {{seller_identity}}.
 
-Canal de privacidade e do encarregado pelo tratamento de dados (LGPD, art. 41): {{contact_email}}.
+Canal de privacidade e contato do encarregado pelo tratamento de dados (LGPD, art. 41): {{contact_email}}.
 
 ## Quais dados tratamos
 
-**Quando você compra**
+**Conta**
 
-- Nome, e-mail, telefone, CPF e endereço de entrega — necessários para emitir o pedido, o boleto, a nota fiscal quando aplicável, e para a entrega.
-- Itens comprados, valores, forma de pagamento e status do pedido.
-- Do pagamento, recebemos da Stripe apenas a confirmação, a bandeira e os 4 últimos dígitos do cartão. **Não recebemos nem guardamos o número completo do cartão.**
-- Solicitações de devolução ou suporte, com as fotos que você enviar.
+- Nome, e-mail, data de criação, preferências de idioma e país e o registro das suas escolhas sobre o histórico de navegação.
+- Senha: é gerenciada pelo nosso provedor de autenticação e nós não temos acesso a ela em texto legível.
 
-**Com uma conta**
+**Compra e entrega**
 
-- Nome, e-mail e senha (guardada de forma criptografada pelo nosso provedor de autenticação), endereços salvos, favoritos, preferências e, **somente se você ativar**, o histórico de navegação.
+- Nome do destinatário, CPF, telefone, e-mail e endereço de entrega. O CPF é obrigatório no checkout e é usado na identificação da compra, no boleto e, quando emitida, na nota fiscal.
+- Produtos, valores, forma de pagamento, status, histórico e código de rastreio do pedido, além da nota fiscal, quando emitida.
+- Do pagamento, guardamos a confirmação, a forma de pagamento e, no cartão, a bandeira e os 4 últimos dígitos. Os dados do cartão são digitados diretamente no componente da Stripe: **não recebemos nem guardamos o número completo do cartão.**
+
+**Atendimento**
+
+- Solicitações de devolução ou suporte: motivo, mensagem e até 3 fotos enviadas por você.
+- Formulário de contato: nome, e-mail, assunto e mensagem.
+
+**Recursos opcionais**
+
+- Favoritos, endereços salvos (com CPF e telefone) e, **somente se você ativar**, o histórico de produtos vistos.
 
 **Navegação**
 
-- Contagens anônimas de uso (visualizações e buscas), sem endereço IP ou identificador de dispositivo.
-- Com o seu consentimento para cookies de análise: um identificador anônimo de sessão (`nx_sid`).
-- Com o seu consentimento para cookies de marketing: tags do Google Ads e do Pixel da Meta, para medir nossos anúncios (ex.: “adicionou ao carrinho”, “comprou”).
-- O carrinho fica guardado no seu navegador (`nx_cart_v1`).
+- Sem identificar você, registramos eventos de uso (página inicial, categoria ou produto visto, idioma, país, se o acesso parece ser de um robô) e os termos buscados, sem endereço IP.
+- Com o seu consentimento para cookies de análise, esses registros incluem também um identificador aleatório de sessão (`nx_sid`) e a página de origem, e as buscas feitas com login ficam ligadas à sua conta.
+- Para evitar abusos, usamos um código gerado a partir do seu endereço IP (hash, não o IP em si) em limites de tentativas.
+- Nossa hospedagem processa dados técnicos da conexão, como endereço IP e tipo de navegador, para entregar o site.
+- O carrinho e os favoritos de quem não tem conta ficam guardados no seu navegador.
 
-## Bases legais
+Não pedimos dados pessoais sensíveis. Evite incluí-los em mensagens ou fotos.
 
-Execução do contrato (pedido, pagamento, entrega e atendimento), cumprimento de obrigação legal (registros fiscais e de consumo), consentimento (cookies de análise e marketing, histórico de navegação) e legítimo interesse (segurança, prevenção a fraudes e estatísticas anônimas).
+## Para que usamos e com qual base legal (LGPD, art. 7º)
 
-## Cookies
-
-| Cookie | Finalidade | Tipo |
-|---|---|---|
-| `nx_consent` | Guarda suas escolhas de cookies | Essencial |
-| `nx_market` | Guarda o país | Essencial |
-| `NEXT_LOCALE` | Guarda o idioma | Essencial |
-| `sb-*` | Mantém sua sessão quando você entra na conta | Essencial |
-| `nx_sid` | Identificador anônimo de sessão | Análise (com consentimento) |
-| Google Ads / Meta Pixel | Medição de anúncios | Marketing (com consentimento) |
-
-Você pode alterar suas escolhas a qualquer momento em “Preferências de cookies”, no rodapé.
+| Finalidade | Base legal |
+|---|---|
+| Criar e manter a conta, processar pedido, pagamento, entrega, cancelamento, devolução e atendimento | Execução de contrato (art. 7º, V) |
+| Guardar registros fiscais e de consumo | Cumprimento de obrigação legal (art. 7º, II) |
+| Defender direitos em processos, reclamações e contestações de pagamento | Exercício regular de direitos (art. 7º, VI) |
+| Segurança, prevenção a fraudes e abusos, estatísticas de uso e métricas internas pseudonimizadas | Legítimo interesse (art. 7º, IX) |
+| Cookies de análise e de marketing e histórico de produtos vistos | Consentimento (art. 7º, I), que você pode revogar a qualquer momento |
 
 ## Com quem compartilhamos
 
-- **Stripe** (processamento de pagamentos), **provedores de infraestrutura** (hospedagem e banco de dados) e **provedor de e-mail** (envio dos e-mails do pedido), que tratam dados em nosso nome.
-- **Fornecedores e transportadoras**: nome, telefone e endereço de entrega, apenas para que o produto chegue até você.
-- **Google e Meta**: somente com o seu consentimento para cookies de marketing. Usamos o Modo de Consentimento do Google: sem o seu aceite, as tags do Google ficam com armazenamento de anúncios e de análise negados.
-- Autoridades, quando exigido por lei.
+- **Supabase:** banco de dados, autenticação e armazenamento de arquivos, com dados hospedados na região de Frankfurt, Alemanha (eu-central-1). Os e-mails de confirmação de cadastro e de recuperação de senha partem do serviço de autenticação.
+- **Stripe:** processamento de pagamentos. Recebe valor, número do pedido, e-mail e os dados do cartão; no boleto, também nome, CPF e endereço. A Stripe usa o e-mail para o comprovante de pagamento dela.
+- **Vercel:** hospedagem e entrega do site.
+- **Fornecedores, marketplaces e distribuidores, no Brasil ou no exterior (produtos enviados por parceiros):** nome, telefone e endereço de entrega e, quando exigido para a compra, a emissão fiscal ou o transporte, o CPF.
+- **Transportadoras:** nome, endereço de entrega, telefone e, quando exigido para a emissão fiscal ou o transporte, o CPF.
+- **ViaCEP:** quando você digita o CEP no checkout, seu navegador consulta esse serviço público, que recebe o CEP e os dados técnicos da conexão, para preencher o endereço.
+- **NexForge:** quando essa integração está ativa, o painel interno de métricas de gestão recebe eventos pseudonimizados (código irreversível sem a chave da loja, nome do evento e, nas compras, o valor). Não enviamos nome, e-mail, CPF, endereço, produtos nem número do pedido.
+- **Resend:** quando o envio de e-mails do pedido está ativo, recebe seu e-mail, seu nome e os dados do pedido para enviar as mensagens.
+- **Google (Ads e Analytics), Meta (Pixel) e Plausible:** somente quando essas ferramentas estão ativadas pela loja e você aceitou a categoria de cookies correspondente. Nas compras, Google Ads e Meta recebem valor, moeda e número do pedido. Usamos o Modo de Consentimento do Google: sem o seu aceite, armazenamento de anúncios e de análise ficam negados.
+- **Autoridades públicas:** quando exigido por lei ou ordem judicial.
 
-Nunca vendemos seus dados.
+Não vendemos seus dados pessoais.
 
 ## Transferência internacional
 
-Alguns desses prestadores (pagamentos, hospedagem, banco de dados e e-mail) mantêm servidores fora do Brasil, por exemplo nos Estados Unidos e na União Europeia. Nesses casos, a transferência é feita para cumprir o contrato com você e com garantias contratuais de proteção de dados, conforme o art. 33 da LGPD.
+Nosso banco de dados fica na União Europeia, e alguns dos parceiros acima tratam dados nos Estados Unidos ou em outros países, inclusive fornecedores no exterior. Essas transferências ocorrem quando necessárias para executar o contrato com você, cumprir obrigação legal ou exercer direitos (LGPD, art. 33, IX) ou com o seu consentimento específico, no caso das ferramentas de análise e marketing (art. 33, VIII).
 
-## Retenção
+## Por quanto tempo guardamos
 
-Pedidos e registros de pagamento são mantidos por no mínimo **5 anos**, por obrigações fiscais e do Código de Defesa do Consumidor, **mesmo que você exclua a conta** (nesse caso, o pedido deixa de ficar vinculado à sua conta). Dados da conta são mantidos enquanto ela existir. Eventos de uso detalhados são mantidos por até 13 meses e depois agregados sem identificação.
+| Dados | Prazo |
+|---|---|
+| Conta, favoritos e endereços salvos | Até você remover ou excluir a conta |
+| Histórico de produtos vistos | Até você limpar o histórico ou excluir a conta |
+| Pedidos, pagamentos, notas fiscais, solicitações de devolução e histórico do pedido | No mínimo **5 anos**, por obrigações fiscais e pelo prazo de reclamação do Código de Defesa do Consumidor, **mesmo que você exclua a conta** |
+| Mensagens do formulário de contato | Pelo tempo necessário ao atendimento e à defesa de direitos |
+| Eventos de uso e buscas detalhados | Até 13 meses; depois são excluídos ou resumidos em totais diários sem identificação |
+| Código de limite de tentativas | Cerca de 1 dia |
 
-## Seus direitos
+Ao excluir a conta, os dados de perfil, favoritos, histórico e endereços salvos são apagados. O pedido deixa de ficar vinculado à conta, mas os dados de compra (inclusive nome, CPF, e-mail, telefone e endereço) continuam guardados pelo prazo acima. Depois desse prazo, você pode pedir a eliminação pelo canal de privacidade. Parceiros como a Stripe têm prazos próprios para seus registros.
 
-Você pode confirmar a existência de tratamento, acessar, corrigir, exportar (portabilidade) e excluir seus dados, revogar consentimentos e se opor a tratamentos. Em Minha conta → Privacidade você exporta seus dados (incluindo pedidos) e exclui sua conta. Para outros pedidos, fale com a gente: {{contact_email}}. Respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD) e aos órgãos de defesa do consumidor.
+## Seus direitos (LGPD, art. 18)
+
+Você pode pedir confirmação do tratamento, acesso, correção, anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade, portabilidade, eliminação de dados tratados com consentimento, informação sobre compartilhamento e sobre a possibilidade de negar consentimento, além de revogar consentimentos e se opor a tratamentos irregulares.
+
+Em **Minha conta → Privacidade** você mesmo pode exportar seus dados da conta (perfil, favoritos, histórico, pedidos, endereços e solicitações), remover endereços salvos, controlar o histórico, alterar as escolhas de cookies e excluir a conta. Para o restante, escreva para {{contact_email}}. Poderemos pedir informações para confirmar sua identidade. Pedidos de acesso completo são respondidos em até 15 dias (LGPD, art. 19).
+
+Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD) e aos órgãos de defesa do consumidor.
+
+## Cookies
+
+Usamos cookies essenciais para a sessão de login (`sb-*`), para guardar suas escolhas (`nx_consent`) e as preferências da loja e, somente com o seu consentimento, cookies de análise e de marketing. Na etapa de pagamento, o componente da Stripe pode usar cookies próprios. Detalhes na página **Política de cookies**. Você pode mudar suas escolhas a qualquer momento em “Preferências de cookies”, no rodapé.
 
 ## Menores de idade
 
-A loja não é direcionada a menores de 18 anos. Compras devem ser feitas por maiores de idade ou com a autorização dos responsáveis.
+A loja não é direcionada a menores de 18 anos e não coleta dados de menores de propósito, mas não verifica a idade de quem se cadastra. Se você é responsável por uma criança ou adolescente que nos enviou dados, fale com a gente: {{contact_email}}.
+
+## Segurança e incidentes
+
+Usamos conexão criptografada (HTTPS), controle de acesso por conta e por perfil no painel administrativo, regras no banco de dados que limitam cada cliente aos próprios dados e arquivos privados para fotos de devolução e notas fiscais. Nenhum sistema é totalmente seguro, por isso não podemos garantir segurança absoluta. Se ocorrer um incidente que possa causar risco ou dano relevante a você, comunicaremos a você e à ANPD, como exige o art. 48 da LGPD.
 
 ## Alterações
 
-Podemos atualizar esta política. A data da última atualização aparece no topo da página.
+Podemos atualizar esta política para refletir mudanças na loja ou na lei. A versão vigente fica sempre nesta página, com a data da última atualização no topo.
