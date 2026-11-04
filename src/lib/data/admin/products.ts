@@ -24,6 +24,21 @@ export async function getProductFormOptions() {
   };
 }
 
+/** Categories, brands and active suppliers as the JSON import names them. */
+export async function getProductJsonCatalog() {
+  const sb = await createServerSupabase();
+  const [cats, brands, suppliers] = await Promise.all([
+    sb.from("categories").select("id, slug, category_translations(locale, name)").order("sort_order"),
+    sb.from("brands").select("id, slug, name").order("name"),
+    sb.from("suppliers").select("id, name").eq("active", true).order("name"),
+  ]);
+  return {
+    categories: (cats.data ?? []).map((c) => ({ id: c.id, slug: c.slug, name: c.category_translations.find((t) => t.locale === "pt-BR")?.name ?? c.slug })),
+    brands: brands.data ?? [],
+    suppliers: suppliers.data ?? [],
+  };
+}
+
 function money(minor: number | null, currency: string): string {
   if (minor == null) return "";
   const d = minorDigits(currency);
