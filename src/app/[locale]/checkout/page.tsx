@@ -4,7 +4,7 @@ import { pageLocale } from "@/i18n/page-locale";
 import { redirect } from "@/i18n/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getBusinessModels, getPublicSettings } from "@/lib/data/settings";
-import { sellerContactLine, sellerIdentityParts } from "@/lib/domain/seller";
+import { isSellerIdentified, sellerContactLine, sellerIdentityParts } from "@/lib/domain/seller";
 import { getMyAddresses } from "@/actions/store/checkout";
 import { isStripeConfigured } from "@/lib/stripe/server";
 import { CheckoutForm } from "@/components/store/checkout-form";
@@ -24,10 +24,12 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
   return (
     <main className="shell pb-16 pt-6 md:pt-10">
       <h1 className="t-page mb-5 md:mb-6">{t("title")}</h1>
-      {isStripeConfigured() ? (
-        <CheckoutForm saved={saved} payments={bm.payments} seller={seller} />
-      ) : (
+      {!isStripeConfigured() ? (
         <Notice tone="error">{t("notConfigured")}</Notice>
+      ) : !isSellerIdentified(settings.legal) ? (
+        <Notice tone="error">{t("salesClosed")}</Notice>
+      ) : (
+        <CheckoutForm saved={saved} payments={bm.payments} seller={seller} />
       )}
     </main>
   );

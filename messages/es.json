@@ -386,6 +386,7 @@
     "copyFailed": "No se pudo copiar. Selecciona el código y cópialo manualmente.",
     "myOrders": "Seguir este pedido",
     "notConfigured": "Los pagos aún no están disponibles.",
+    "salesClosed": "La tienda aún no está abierta para compras. Inténtalo de nuevo más tarde.",
     "deliveryEstimate": "Entrega estimada: hasta {days, plural, one {# día hábil} other {# días hábiles}} tras la confirmación del pago.",
     "soldBy": "Vendido y enviado por {seller}.",
     "legalNotice": "Al finalizar la compra, aceptas los <terms>Términos de venta</terms> y la <privacy>Política de privacidad</privacy>. Puedes desistir hasta 7 días después de recibir el producto, con reembolso íntegro (art. 49 del Código de Defensa del Consumidor de Brasil): consulta <returns>Devoluciones</returns>.",

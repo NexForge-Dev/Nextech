@@ -9,6 +9,8 @@ import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/o
 import { log } from "@/lib/log";
 import { notifyOrder } from "@/lib/orders/notify";
 import { analytics } from "@/lib/analytics";
+import { getPublicSettings } from "@/lib/data/settings";
+import { isSellerIdentified } from "@/lib/domain/seller";
 
 export async function startCheckout(input: unknown): Promise<CheckoutResult & { fieldErrors?: Record<string, string[]> }> {
   const user = await getSessionUser();
@@ -20,6 +22,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
     return { ok: false, error: "Revise os dados destacados.", fieldErrors };
   }
   if (!isStripeConfigured()) return { ok: false, error: "Pagamentos ainda não configurados na loja. Tente mais tarde." };
+  if (!isSellerIdentified((await getPublicSettings()).legal)) return { ok: false, error: "A loja ainda não está aberta para compras. Tente novamente mais tarde." };
   if (!(await rateLimit("checkout", user.id))) return { ok: false, error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." };
 
   const sb = await createServerSupabase();

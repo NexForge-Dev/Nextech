@@ -186,10 +186,10 @@ export function SettingsForm({ initial }: { initial: SettingsValue }) {
       )}
 
       {tab === "legal" && (
-        <FormSection title="Informações legais" description={`Obrigatórias para vender (Decreto 7.962/2013): aparecem no rodapé de todas as páginas, no checkout, nos termos de venda e na política de privacidade. Campos vazios simplesmente não aparecem para o cliente, e o painel mostra um aviso até tudo estar preenchido. Use os seus dados exatos, de CPF ou CNPJ; o e-mail de contato fica na aba Contato e, em branco, a loja usa ${DEFAULT_CONTACT_EMAIL}.`}>
+        <FormSection title="Informações legais" description={`Obrigatórias para vender (Decreto 7.962/2013): aparecem no rodapé de todas as páginas, no checkout, nos termos de venda e na política de privacidade. Campos vazios não aparecem para o cliente, e o checkout fica fechado até nome, CPF ou CNPJ e endereço estarem preenchidos. Use os seus dados exatos, de CPF ou CNPJ; o e-mail de contato fica na aba Contato e, em branco, a loja usa ${DEFAULT_CONTACT_EMAIL}.`}>
           {(!v.legal.company_name.trim() || !v.legal.tax_id.trim() || !v.legal.address.trim()) && (
             <p role="alert" className="rounded-md border border-black px-4 py-3 text-sm font-medium">
-              Faltam dados do vendedor: {[!v.legal.company_name.trim() && "nome ou razão social", !v.legal.tax_id.trim() && "CPF ou CNPJ", !v.legal.address.trim() && "endereço"].filter(Boolean).join(", ")}.
+              Faltam dados do vendedor: {[!v.legal.company_name.trim() && "nome ou razão social", !v.legal.tax_id.trim() && "CPF ou CNPJ", !v.legal.address.trim() && "endereço"].filter(Boolean).join(", ")}. O checkout fica fechado até preencher.
             </p>
           )}
           <Field label="Nome ou razão social" htmlFor="lg-name">

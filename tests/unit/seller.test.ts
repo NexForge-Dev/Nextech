@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_CONTACT_EMAIL, resolveContactEmail, sellerContactLine, sellerIdentityGaps, sellerIdentityParts } from "@/lib/domain/seller";
+import { DEFAULT_CONTACT_EMAIL, isSellerIdentified, resolveContactEmail, sellerContactLine, sellerIdentityGaps, sellerIdentityParts } from "@/lib/domain/seller";
 import { ownStoreReadiness } from "@/lib/admin/launch-readiness";
 
 const full = { company_name: "Loja X LTDA", tax_id: "12.345.678/0001-90", address: "Rua A, 1 — São Paulo/SP" };
@@ -32,6 +32,13 @@ describe("seller identity", () => {
     expect(resolveContactEmail(null)).toBe(DEFAULT_CONTACT_EMAIL);
     expect(resolveContactEmail(" sac@loja.example ")).toBe("sac@loja.example");
     expect(DEFAULT_CONTACT_EMAIL).toBe("nexforge.d4v29@gmail.com");
+  });
+  it("sales need name, tax id and address; the default e-mail does not fill the gap", () => {
+    expect(isSellerIdentified(full)).toBe(true);
+    expect(isSellerIdentified(null)).toBe(false);
+    expect(isSellerIdentified({ ...full, company_name: "  " })).toBe(false);
+    expect(isSellerIdentified({ ...full, tax_id: "" })).toBe(false);
+    expect(isSellerIdentified({ ...full, address: "" })).toBe(false);
   });
   it("the seller line always carries the contact", () => {
     expect(sellerContactLine(null, "")).toBe(DEFAULT_CONTACT_EMAIL);

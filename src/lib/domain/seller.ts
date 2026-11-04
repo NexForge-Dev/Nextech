@@ -35,6 +35,11 @@ export function sellerIdentityGaps(legal: Partial<LegalSettings> | null | undefi
   return gaps;
 }
 
+/** Sales stay closed until name, tax id and address exist; the default e-mail does not stand in for them. */
+export function isSellerIdentified(legal: Partial<LegalSettings> | null | undefined): boolean {
+  return sellerIdentityGaps(legal, DEFAULT_CONTACT_EMAIL).length === 0;
+}
+
 /** The Brazilian label follows the number: 11 digits is a CPF (seller without CNPJ), anything else a CNPJ. */
 function brazilianTaxLabel(tax: string): string {
   return tax.replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ";
