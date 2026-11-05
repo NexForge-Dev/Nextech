@@ -61,7 +61,7 @@ async function FlagshipSlide({ flagship, locale, storeName, first }: { flagship:
             <AddToCart productId={product.id} priceMinor={price.fromMinor} available={product.available} labels={{ addToCart: tp("addToCart"), buyNow: tp("buyNow"), soldOut: tp("soldOut"), added: tcart("added"), viewCart: tcart("viewCart") }} />
           </div>
         )}
-        <Link href={href} className={`inline-flex items-center gap-1 text-sm font-medium text-black hover:underline ${buyable ? "mt-4" : "mt-6"}`}>
+        <Link href={href} className={`inline-flex min-h-11 items-center gap-1 text-sm font-medium text-black hover:underline md:min-h-0 ${buyable ? "mt-2 md:mt-4" : "mt-4 md:mt-6"}`}>
           {t("flagshipDetails")}
           <ArrowRight className="size-3.5" aria-hidden />
         </Link>

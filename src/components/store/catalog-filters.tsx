@@ -27,7 +27,7 @@ function FilterForm({ values, categories, brands, stores, hideCategory, onDone }
   const router = useRouter();
   const pathname = usePathname();
   const [v, setV] = useState<FilterValues>(values);
-  const field = "field h-10";
+  const field = "field h-11 md:h-10";
   const label = "t-eyebrow mb-1.5 block";
 
   function apply(e: React.FormEvent) {
@@ -146,7 +146,7 @@ export function SortSelect({ value, hasQuery }: { value: string; hasQuery: boole
           sp.delete("page");
           router.push(`${pathname}?${sp.toString()}`);
         }}
-        className="field h-10 w-auto min-w-44 cursor-pointer"
+        className="field h-11 w-auto min-w-44 cursor-pointer md:h-10"
       >
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>

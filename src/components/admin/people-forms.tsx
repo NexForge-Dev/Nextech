@@ -252,7 +252,7 @@ export function AdminRowActions({ userId, role, active, isSelf }: { userId: stri
   if (isSelf) return <span className="text-xs text-mute">Você</span>;
   return (
     <div className="flex flex-wrap justify-end gap-2">
-      <select aria-label="Perfil" disabled={pending} value={role} onChange={(e) => run(() => updateAdmin({ userId, role: e.target.value }), { success: "Perfil atualizado." })} className="h-8 rounded-md border border-line bg-white px-2 text-sm">
+      <select aria-label="Perfil" disabled={pending} value={role} onChange={(e) => run(() => updateAdmin({ userId, role: e.target.value }), { success: "Perfil atualizado." })} className="h-11 rounded-md border border-line bg-white px-2 text-base md:h-8 md:text-sm">
         <option value="editor">Editor</option>
         <option value="admin">Administrador</option>
         <option value="superadmin">Superadministrador</option>

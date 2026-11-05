@@ -179,7 +179,7 @@ const TILE_DEALS = `${TILE_BASE} border-black bg-black text-white hover:bg-ink`;
 
 function SeeAll({ label, href = "/produtos" }: { label: string; href?: "/produtos" | "/ofertas" }) {
   return (
-    <Link href={href} className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-black underline-offset-4 hover:underline">
+    <Link href={href} className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-black underline-offset-4 hover:underline md:min-h-0">
       {label}
       <ArrowRight className="size-3.5" aria-hidden />
     </Link>

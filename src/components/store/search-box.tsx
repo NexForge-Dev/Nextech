@@ -96,7 +96,7 @@ export function SearchBox({ autoFocus = false, onNavigate, initialQuery = "" }: 
             setActive((i) => Math.max(i - 1, -1));
           } else if (e.key === "Escape") setOpen(false);
         }}
-        className="h-11 w-full rounded-md border border-line bg-soft pl-10 pr-3 text-[15px] text-black outline-none transition-[background-color,border-color,box-shadow] duration-150 placeholder:text-mute hover:border-mute focus:border-black focus:bg-white focus:ring-1 focus:ring-black md:text-sm"
+        className="h-11 w-full rounded-md border border-line bg-soft pl-10 pr-3 text-base text-black md:text-[15px] outline-none transition-[background-color,border-color,box-shadow] duration-150 placeholder:text-mute hover:border-mute focus:border-black focus:bg-white focus:ring-1 focus:ring-black md:text-sm"
       />
       {open && q.trim().length >= 2 && (
         <div id={listId} role="listbox" className="absolute left-0 right-0 top-[3.25rem] z-50 overflow-hidden rounded-lg border border-line bg-white py-2 shadow-[var(--shadow-pop)]">

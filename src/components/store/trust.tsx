@@ -67,7 +67,7 @@ export async function HowToBuy({ storeName }: { storeName: string }) {
             </li>
           ))}
         </ol>
-        <Link href="/como-funciona" className="mt-4 inline-flex items-center gap-1 text-sm font-medium underline-offset-4 hover:underline sm:hidden" aria-label={tf("howItWorks")}>
+        <Link href="/como-funciona" className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium underline-offset-4 hover:underline sm:hidden" aria-label={tf("howItWorks")}>
           {t("howMore")}
           <ArrowRight className="size-3.5" aria-hidden />
         </Link>
