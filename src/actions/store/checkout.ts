@@ -9,6 +9,7 @@ import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/o
 import { log } from "@/lib/log";
 import { notifyOrder } from "@/lib/orders/notify";
 import { releaseExpiredHolds } from "@/lib/orders/expire";
+import { attachPaymentIntentToOrder } from "@/lib/orders/attach";
 import { analytics } from "@/lib/analytics";
 import { getPublicSettings } from "@/lib/data/settings";
 import { isSellerIdentified } from "@/lib/domain/seller";
@@ -68,9 +69,12 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
           }
           const { data, error } = await svc.rpc("order_cancel_unpaid", { p_order: o.orderId });
           if (error) throw new Error(error.message);
+          // another tab may have attached a payment after the list above was read
+          const { data: now } = await svc.from("orders").select("stripe_payment_intent_id").eq("id", o.orderId).maybeSingle();
+          if (data === true && now?.stripe_payment_intent_id && now.stripe_payment_intent_id !== o.paymentIntentId) await stripe.paymentIntents.cancel(now.stripe_payment_intent_id).catch(() => undefined);
           return data === true;
         },
-        releaseExpired: releaseExpiredHolds,
+        releaseExpired: () => releaseExpiredHolds({ force: true }),
         async createOrder(i) {
           const { data, error } = await sb.rpc("create_order_from_cart", { p_items: i.items as never, p_address: i.address as never, p_method: i.method, p_save_address: i.saveAddress, ...(i.expectedTotalMinor ? { p_expected_total: i.expectedTotalMinor } : {}) });
           if (error) throw new Error(error.message);
@@ -79,8 +83,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
           return { orderId: row.order_id, orderNumber: Number(row.order_number), totalMinor: Number(row.total_minor) };
         },
         async attachPaymentIntent(orderId, paymentIntentId, boleto) {
-          const { error } = await svc.from("orders").update({ stripe_payment_intent_id: paymentIntentId, boleto: boleto as never }).eq("id", orderId);
-          if (error) throw new Error(error.message);
+          await attachPaymentIntentToOrder(svc, orderId, paymentIntentId, boleto);
           if (boleto) {
             await svc.from("order_events").insert({ order_id: orderId, actor: "stripe", kind: "boleto_issued", data: { expiresAt: boleto.expiresAt } });
             await notifyOrder("boletoIssued", orderId);

@@ -3,6 +3,7 @@ import { createServiceSupabase } from "@/lib/supabase/service";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
 import { notifyOrder } from "@/lib/orders/notify";
 import { cancelStaleOrdersWith } from "@/lib/orders/stale";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { log } from "@/lib/log";
 
 /** Cancel unpaid orders past their payment window, asking Stripe first. Returns their stock. */
@@ -35,9 +36,14 @@ export function expireStaleOrders(svc: ReturnType<typeof createServiceSupabase>)
   });
 }
 
-/** The cron runs once a day, a stock hold lasts minutes: sold-out screens ask for this on the way. Never throws. */
-export async function releaseExpiredHolds() {
+/**
+ * The cron runs once a day, a stock hold lasts minutes: sold-out screens ask for this on the way. Each
+ * order costs a Stripe call on a shared account, so anonymous visits get one pass a minute. `force` is
+ * for checkout, which has its own per-customer limit. Never throws.
+ */
+export async function releaseExpiredHolds(opts: { force?: boolean } = {}) {
   try {
+    if (!opts.force && !(await rateLimit("expireHolds", "all-visitors"))) return;
     await expireStaleOrders(createServiceSupabase());
   } catch (e) {
     log.error("orders.release_expired_failed", e);

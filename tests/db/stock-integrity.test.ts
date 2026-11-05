@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { Client } from "pg";
 import { createAdmin, createUser, makeProduct, serviceClient, uniq, type DB } from "./helpers";
 
 let admin: { id: string; client: DB };
@@ -65,7 +66,37 @@ afterAll(async () => {
   await svc.from("site_settings").update({ value: savedLegal as never }).eq("key", "public.legal");
 });
 
+/** A plain connection, to hold a row lock while an RPC runs. The database port is the API port + 1. */
+async function pgClient() {
+  const c = new Client({ connectionString: `postgresql://postgres:postgres@127.0.0.1:${Number(new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).port) + 1}/postgres` });
+  await c.connect();
+  return c;
+}
+
 describe("NXT-011: carts with the same products in opposite order", () => {
+  it("lock products in a fixed order, whatever the cart order", async () => {
+    await setStock(a, 1000);
+    await setStock(b, 1000);
+    const [first, second] = [a, b].sort();
+    const holder = await pgClient();
+    const probe = await pgClient();
+    try {
+      // hold the product that sorts second, then send a cart listing it first
+      await holder.query("begin");
+      await holder.query("select 1 from public.product_sale where product_id = $1 for update", [second]);
+      const pendingOrder = Promise.resolve(order(buyer.client, [{ productId: second, quantity: 1 }, { productId: first, quantity: 1 }]));
+      // with a fixed order the RPC took `first` and now waits on `second`; in cart order it would hold nothing yet
+      await expect
+        .poll(async () => (await probe.query("select 1 from public.product_sale where product_id = $1 for update skip locked", [first])).rowCount, { timeout: 5000 })
+        .toBe(0);
+      await holder.query("rollback");
+      expect((await pendingOrder).error).toBeNull();
+    } finally {
+      await holder.query("rollback");
+      await holder.end();
+      await probe.end();
+    }
+  });
   it("never deadlock under concurrency", async () => {
     await setStock(a, 1000);
     await setStock(b, 1000);
@@ -95,6 +126,17 @@ describe("NXT-013: the RPC defends itself when called straight through the API",
 });
 
 describe("NXT-005: holding stock without paying", () => {
+  it("units in an expired hold are reported for sale; a hold still running and a boleto are not", async () => {
+    await setStock(a, 3);
+    const svc = serviceClient();
+    const card = (await order(buyer.client, [{ productId: a, quantity: 1 }])).data![0].order_id;
+    const boleto = (await order(buyer.client, [{ productId: a, quantity: 1 }], address, "boleto")).data![0].order_id;
+    await order(buyer.client, [{ productId: a, quantity: 1 }]);
+    const old = new Date(Date.now() - 31 * 60_000).toISOString();
+    await svc.from("orders").update({ created_at: old }).in("id", [card, boleto]);
+    const anon = buyer.client;
+    expect((await anon.rpc("expired_hold_units", { p_ids: [a] })).data).toEqual([{ product_id: a, units: 1 }]);
+  });
   it("one account can hold at most 10 units of a product", async () => {
     await setStock(a, 100);
     expect((await order(rival.client, [{ productId: a, quantity: 6 }])).error).toBeNull();

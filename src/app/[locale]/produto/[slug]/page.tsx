@@ -61,7 +61,7 @@ export default async function ProductPage({ params }: Props) {
   const crumb = "inline-flex min-h-11 items-center hover:text-black md:min-h-0";
   const own = product.saleMode === "own" ? product.sale : null;
   // sold out may only mean units held by an unpaid order that already expired
-  if (own?.fulfillment === "stock" && !own.available) after(releaseExpiredHolds);
+  if (own?.fulfillment === "stock" && !own.available) after(() => releaseExpiredHolds());
   const ownDiscount = own ? ownDiscountPct(own) : null;
   const pixOn = ctx.businessModels.payments.pix && !!own && own.pixDiscountPct > 0;
   const now = new Date();

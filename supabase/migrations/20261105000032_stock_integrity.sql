@@ -24,6 +24,21 @@ language sql stable security definer set search_path = public as $$
   limit 200;
 $$;
 
+-- Units sitting in expired card/Pix holds, so a storefront can offer them while they wait for release.
+-- Counts only. Releasing them stays with the app, which asks Stripe first: SQL cannot know whether the
+-- card is being paid right now, and cancelling blindly would turn that payment into a refund.
+create or replace function public.expired_hold_units(p_ids uuid[])
+returns table (product_id uuid, units bigint)
+language sql stable security definer set search_path = public as $$
+  select i.product_id, sum(i.stock_taken)
+  from public.stale_unpaid_orders() s
+  join public.order_items i on i.order_id = s.order_id
+  where s.payment_method <> 'boleto' and i.stock_taken > 0 and i.product_id = any (p_ids)
+  group by i.product_id;
+$$;
+revoke all on function public.expired_hold_units(uuid[]) from public;
+grant execute on function public.expired_hold_units(uuid[]) to anon, authenticated, service_role;
+
 -- 2. stock return (same trigger as 0026) ---------------------------------------------------------
 create or replace function public.order_release_stock() returns trigger
 language plpgsql security definer set search_path = public as $$

@@ -58,7 +58,7 @@ export async function loadCart(input: unknown): Promise<CartView> {
   });
   const lines = buildCartLines(parsed.data, rows, bm, held);
   // something looks sold out: the units may be in an expired order nobody will pay
-  if (lines.some((l) => l.problem === "short" || (l.problem === "unavailable" && l.maxQuantity != null))) after(releaseExpiredHolds);
+  if (lines.some((l) => l.problem === "short" || (l.problem === "unavailable" && l.maxQuantity != null))) after(() => releaseExpiredHolds());
   const ok = lines.filter((l) => !l.problem);
   const totals = cartTotals(ok, "card");
   return { lines, subtotalMinor: totals.subtotalMinor, totalMinor: totals.totalMinor, checkoutable: ok.length > 0 && ok.length === lines.length };
