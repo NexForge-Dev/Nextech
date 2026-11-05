@@ -18,6 +18,8 @@ export default defineConfig({
     command: isolated ? `npm run build && npx next start -p ${port}` : "npm run dev",
     url: `http://localhost:${port}/api/health`,
     reuseExistingServer: !isolated,
+    // specs flip the business-model switches: the proxy's 30 s cache would hide the change
+    env: { BUSINESS_MODELS_PROXY_TTL_MS: "0" },
     timeout: 600_000,
   },
 });

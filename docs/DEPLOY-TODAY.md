@@ -66,7 +66,7 @@ Without the Stripe keys the checkout shows "pagamentos ainda não configurados";
 
 ```bash
 npx supabase link --project-ref yeqensrclrxbeikfksdf   # already linked in this repo
-npx supabase db push --linked --dry-run                 # must list exactly 0017 … 0024
+npx supabase db push --linked --dry-run                 # must list exactly the pending ones, up to the latest in supabase/migrations (0030)
 npx supabase db push --linked
 npx supabase migration list --linked                    # local = remote for every row
 ```
@@ -124,7 +124,7 @@ At least one product with sale mode "loja própria": price, delivery days (min/m
 ## Rollback
 
 - Code: in Vercel, promote the previous production deployment (the affiliate site).
-- Data: the affiliate site needs affiliates on — in `site_settings`, set `public.business_models` to `{"own_store": false, "affiliates": true, ...}` (Admin → Configurações → Modelos de negócio). Migrations 0017–0024 only add objects and replace functions with the same signatures; restore from the step 1 backup only if something is actually corrupted.
+- Data: the affiliate site needs affiliates on — in `site_settings`, set `public.business_models` to `{"own_store": false, "affiliates": true, ...}` (Admin → Configurações → Modelos de negócio). Migrations 0017–0030 only add objects and replace functions with the same signatures; restore from the step 1 backup only if something is actually corrupted.
 
 ## Decisions taken in `fix/launch`
 
