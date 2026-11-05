@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
 
+const ORDER = "6f1c0f5e-2b7a-4a55-9a51-1f0e7c2d9a10";
 type Ev = { id: string; type: string; data: { object: Record<string, unknown> } };
 const ev = (id: string, type: string, object: Record<string, unknown>): Ev => ({ id, type, data: { object } });
-const pi = (status = "succeeded") => ({ id: "pi_1", object: "payment_intent", status, amount: 43980, amount_received: 43980, currency: "brl", metadata: { order_id: "o1" }, latest_charge: "ch_1", last_payment_error: { message: "Cartão recusado" } });
+const pi = (status = "succeeded") => ({ id: "pi_1", object: "payment_intent", status, amount: 43980, amount_received: 43980, currency: "brl", metadata: { order_id: ORDER }, latest_charge: "ch_1", last_payment_error: { message: "Cartão recusado" } });
 
 function fake() {
   const state = {
@@ -153,5 +154,32 @@ describe("handleStripeEvent", () => {
     expect(state.claimed.has("evt_big")).toBe(true);
     expect(state.events).toEqual(["refund_mismatch"]);
     expect(state.notes).toEqual(["ownerAlert"]);
+  });
+  it("records a refund in a status the table does not know as pending, instead of failing forever", async () => {
+    const { d, state } = fake();
+    const seen: string[] = [];
+    const record = d.recordRefund;
+    d.recordRefund = async (r) => (seen.push(r.status), record(r));
+    const rf = { id: "re_action", object: "refund", payment_intent: "pi_1", amount: 100, status: "requires_action" };
+    expect(await handleStripeEvent(ev("evt_ra", "refund.updated", rf) as never, d)).toBe("processed");
+    expect(seen).toEqual(["pending"]);
+    expect(state.notes).not.toContain("ownerAlert");
+  });
+  it("alerts the owner when a refund turns out not to have reached the customer", async () => {
+    const { d, state } = fake();
+    d.recordRefund = async () => ({ orderId: "o1", fullyRefunded: false, changed: false, failedNow: true });
+    const rf = { id: "re_bad", object: "refund", payment_intent: "pi_1", amount: 100, status: "failed" };
+    expect(await handleStripeEvent(ev("evt_rf", "refund.updated", rf) as never, d)).toBe("processed");
+    expect(state.events).toEqual(["refund_failed"]);
+    expect(state.notes).toEqual(["ownerAlert"]);
+  });
+  it("ignores a payment whose order id is not ours (shared Stripe account), without retries", async () => {
+    const { d, state } = fake();
+    d.orderAmount = async () => {
+      throw new Error("invalid input syntax for type uuid");
+    };
+    const foreign = { ...pi(), metadata: { order_id: "cvmatch-1234" } };
+    expect(await handleStripeEvent(ev("evt_foreign", "payment_intent.succeeded", foreign) as never, d)).toBe("ignored");
+    expect(state.status).toBe("awaiting_payment");
   });
 });

@@ -3,8 +3,17 @@ import { createServiceSupabase } from "@/lib/supabase/service";
 import { sendEmail } from "@/lib/email/send";
 import { renderEmail, type EmailKind, type EmailOrder } from "@/lib/email/templates";
 import { sellerContactLine, type LegalSettings } from "@/lib/domain/seller";
+import { log } from "@/lib/log";
 
 const OWNER_KINDS: EmailKind[] = ["ownerNewOrder", "ownerDispute", "ownerManualRefund", "ownerAlert"];
+/** Something needs the owner's action. Stored as an order event, so the admin panel shows it with or without e-mail. */
+const ACTION_KINDS: EmailKind[] = ["ownerDispute", "ownerManualRefund", "ownerAlert"];
+
+async function recordOwnerAlert(kind: EmailKind, orderId: string, extra: Partial<EmailOrder>, emailed: boolean) {
+  if (!ACTION_KINDS.includes(kind)) return;
+  if (!emailed) log.error("orders.owner_alert_not_emailed", new Error(kind), { orderId, alert: extra.alert ?? null });
+  await createServiceSupabase().from("order_events").insert({ order_id: orderId, actor: "system", kind: "owner_alert", data: { template: kind, alert: extra.alert ?? null, refundMinor: extra.refundMinor ?? null, emailed } });
+}
 
 /** Send an order email (customer or owner) and record it in the order history. Never throws. */
 export async function notifyOrder(kind: EmailKind, orderId: string, extra: Partial<EmailOrder> = {}): Promise<void> {
@@ -34,7 +43,10 @@ export async function notifyOrder(kind: EmailKind, orderId: string, extra: Parti
     const msg = renderEmail(kind, email);
     const { sent } = await sendEmail({ to, ...msg });
     await svc.from("order_events").insert({ order_id: o.id, actor: "system", kind: sent ? "email_sent" : "email_skipped", data: { template: kind, to: OWNER_KINDS.includes(kind) ? "owner" : "customer" } });
-  } catch {
-    /* emails must never break order processing */
+    await recordOwnerAlert(kind, o.id, extra, sent);
+  } catch (e) {
+    // emails must never break order processing, but a lost alert has to leave a trace
+    log.error("orders.notify_failed", e, { kind, orderId });
+    await recordOwnerAlert(kind, orderId, extra, false).catch(() => undefined);
   }
 }

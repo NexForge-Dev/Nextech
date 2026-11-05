@@ -22,9 +22,9 @@ export function ownStoreReadiness(input: { ownStore: boolean; legal: Partial<Leg
   const env = input.env;
   const missing = (names: string[]) => names.filter((n) => !env[n]?.trim());
   const stripe = missing(["STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET"]);
-  if (stripe.length) issues.push({ key: "stripe", message: `Pagamentos sem configuração completa: faltam ${stripe.join(", ")} no ambiente. Sem eles o checkout fica fechado ou os pedidos não são confirmados.` });
+  if (stripe.length) issues.push({ key: "stripe", message: `Pagamentos sem configuração completa: faltam ${stripe.join(", ")} no ambiente. Sem eles o checkout fica fechado.` });
   const email = missing(["RESEND_API_KEY", "EMAIL_FROM", "OWNER_ALERT_EMAIL"]);
-  if (email.length) issues.push({ key: "email", message: `E-mails de pedido sem configuração completa: faltam ${email.join(", ")}. A confirmação do pedido ao cliente e os alertas de novo pedido não são enviados: acompanhe os pedidos por este painel.` });
+  if (email.length) issues.push({ key: "email", message: `E-mails de pedido sem configuração completa: faltam ${email.join(", ")}. A confirmação do pedido e o boleto não chegam ao cliente por e-mail, e os alertas (novo pedido, contestação, reembolso) só aparecem neste painel.` });
   if (!env.CRON_SECRET?.trim()) issues.push({ key: "cron", message: "CRON_SECRET não definido: o cancelamento automático de pedidos não pagos não roda." });
   const site = env.NEXT_PUBLIC_SITE_URL?.trim() ?? "";
   if (!/^https:\/\//.test(site) && env.NODE_ENV === "production") issues.push({ key: "site_url", message: "NEXT_PUBLIC_SITE_URL não aponta para o domínio de produção (https://…): links dos e-mails e SEO ficam errados." });

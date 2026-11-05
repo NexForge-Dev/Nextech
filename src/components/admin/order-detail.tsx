@@ -34,7 +34,11 @@ const EVENT: Record<string, string> = {
   return_resolved: "Devolução/suporte resolvido",
   invoice_attached: "Nota fiscal anexada",
   email_sent: "E-mail enviado",
-  email_skipped: "E-mail não enviado (provedor não configurado)",
+  email_skipped: "E-mail não enviado",
+  owner_alert: "Alerta para a loja",
+  payment_stuck: "Pagamento no Stripe sem confirmação no pedido",
+  paid_after_cancel: "Pagamento recebido depois do cancelamento",
+  amount_mismatch: "Valor pago diferente do total do pedido",
   dispute_created: "Contestação aberta",
   dispute_closed: "Contestação encerrada",
 };

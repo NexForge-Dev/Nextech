@@ -3,6 +3,7 @@ import { createServiceSupabase } from "@/lib/supabase/service";
 import { getStripe } from "@/lib/stripe/server";
 import { verifyStripeEvent } from "@/lib/stripe/verify";
 import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
+import { confirmPayment, lateRefundDeps, settleLateRefund, stripeRefundApi } from "@/lib/orders/late-refund";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
 import { analytics } from "@/lib/analytics";
@@ -86,24 +87,9 @@ function deps(stripeEventId: string): WebhookDeps {
       if (error) throw new Error(error.message);
       return data ? { totalMinor: Number(data.total_minor), currency: data.currency } : null;
     },
-    async markPaid(piId, orderId, fee, summary) {
-      const { data, error } = await svc.rpc("order_mark_paid", { p_pi: piId, p_order: orderId, p_fee: fee as never, p_summary: summary as never });
-      if (error) throw new Error(error.message);
-      const r = data?.[0];
-      return r ? { orderId: r.order_id, transitioned: r.transitioned, wasCancelled: r.was_cancelled } : null;
-    },
+    markPaid: (piId, orderId, fee, summary) => confirmPayment(svc, piId, orderId, fee, summary),
     async paidAfterCancel(piId, orderId) {
-      const { data: o } = await svc.from("orders").select("payment_method, total_minor, refunded_minor").eq("id", orderId).single();
-      const amount = Number(o?.total_minor ?? 0) - Number(o?.refunded_minor ?? 0);
-      if (!o || amount <= 0) return;
-      if (o.payment_method === "boleto") {
-        await svc.from("order_events").insert({ order_id: orderId, actor: "system", kind: "manual_refund_pending", data: { amount, reason: "paid_after_cancel" } });
-        after(() => notifyOrder("ownerManualRefund", orderId, { refundMinor: amount }));
-        return;
-      }
-      const refund = await getStripe().refunds.create({ payment_intent: piId, amount, metadata: { order_id: orderId, source: "paid_after_cancel" } }, { idempotencyKey: `refund-after-cancel-${orderId}` });
-      await svc.rpc("order_record_refund", { p_order: orderId, p_pi: null as never, p_amount: amount, p_method: "stripe", p_stripe_refund: refund.id, p_status: refund.status === "succeeded" ? "succeeded" : "pending", p_note: "Pago depois do cancelamento" as never, p_actor: null as never });
-      after(() => notifyOrder("orderRefunded", orderId, { refundMinor: amount }));
+      await settleLateRefund(lateRefundDeps(svc, stripeRefundApi(getStripe()), notifyOrder), orderId, piId);
     },
     async listRefunds(chargeId) {
       const list = await getStripe().refunds.list({ charge: chargeId, limit: 100 });
@@ -115,6 +101,7 @@ function deps(stripeEventId: string): WebhookDeps {
       return data?.[0] ? { orderId: data[0].order_id } : null;
     },
     async recordRefund(r) {
+      const { data: before } = await svc.from("order_refunds").select("status").eq("stripe_refund_id", r.stripeRefundId).maybeSingle();
       const { data, error } = await svc.rpc("order_record_refund", {
         p_order: null as never, p_pi: r.paymentIntentId, p_amount: r.amountMinor, p_method: "stripe", p_stripe_refund: r.stripeRefundId, p_status: r.status, p_note: null as never, p_actor: null as never,
       });
@@ -122,7 +109,8 @@ function deps(stripeEventId: string): WebhookDeps {
       const x = data?.[0];
       // Every Stripe refund passes here, including ones started in the admin or by the customer.
       if (x && r.status === "succeeded") await trackRefund(svc, x.order_id, r.stripeRefundId, r.amountMinor);
-      return x ? { orderId: x.order_id, fullyRefunded: x.fully_refunded, changed: x.changed } : null;
+      const failedNow = (r.status === "failed" || r.status === "canceled") && before?.status !== r.status;
+      return x ? { orderId: x.order_id, fullyRefunded: x.fully_refunded, changed: x.changed, failedNow } : null;
     },
     async addEvent(piId, kind, data) {
       const { data: rows, error } = await svc.rpc("order_add_event_by_pi", { p_pi: piId, p_kind: kind, p_data: data as never });
@@ -140,6 +128,11 @@ function deps(stripeEventId: string): WebhookDeps {
 }
 
 export async function POST(req: NextRequest) {
+  // not a bad signature but a broken deployment: say so, or every payment goes unconfirmed in silence
+  if (!process.env.STRIPE_WEBHOOK_SECRET?.trim()) {
+    log.error("stripe.webhook_secret_missing", new Error("STRIPE_WEBHOOK_SECRET is not set"));
+    return NextResponse.json({ error: "webhook not configured" }, { status: 503 });
+  }
   const body = await req.text();
   const v = verifyStripeEvent(body, req.headers.get("stripe-signature"), process.env.STRIPE_WEBHOOK_SECRET);
   if (!v.ok) return NextResponse.json({ error: "invalid signature" }, { status: 400 });

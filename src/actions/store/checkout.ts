@@ -3,7 +3,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { getSessionUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
+import { canTakePayments, getStripe } from "@/lib/stripe/server";
 import { checkoutInputSchema, startCheckoutWith, type CheckoutResult } from "@/lib/orders/checkout";
 import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/order-status";
 import { log } from "@/lib/log";
@@ -22,7 +22,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
     for (const i of parsed.error.issues) (fieldErrors[i.path.join(".")] ??= []).push(i.message);
     return { ok: false, error: "Revise os dados destacados.", fieldErrors };
   }
-  if (!isStripeConfigured()) return { ok: false, error: "Pagamentos ainda não configurados na loja. Tente mais tarde." };
+  if (!canTakePayments()) return { ok: false, error: "Pagamentos ainda não configurados na loja. Tente mais tarde." };
   if (!isSellerIdentified((await getPublicSettings()).legal)) return { ok: false, error: "A loja ainda não está aberta para compras. Tente novamente mais tarde." };
   if (!(await rateLimit("checkout", user.id))) return { ok: false, error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." };
 

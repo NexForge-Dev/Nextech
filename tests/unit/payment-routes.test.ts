@@ -11,6 +11,7 @@ vi.mock("@/lib/supabase/service", () => ({ createServiceSupabase: () => ({}) }))
 vi.mock("@/lib/orders/notify", () => ({ notifyOrder: vi.fn() }));
 vi.mock("@/lib/orders/webhook", () => ({ handleStripeEvent: (...a: unknown[]) => handleStripeEvent(...a) }));
 vi.mock("@/lib/orders/stale", () => ({ cancelStaleOrdersWith: (...a: unknown[]) => cancelStaleOrdersWith(...a) }));
+vi.mock("@/lib/orders/owed-refunds", () => ({ settleOwedRefunds: async () => ({ owed: 0, settled: 0, failed: 0 }) }));
 
 const secret = "whsec_route_test";
 const payload = JSON.stringify({ id: "evt_route_1", object: "event", type: "payment_intent.succeeded", data: { object: { id: "pi_route_1", metadata: { order_id: "o1" } } } });
@@ -31,6 +32,18 @@ beforeEach(() => {
 });
 
 describe("POST /api/stripe/webhook", () => {
+  it("answers 503 and logs an error when the signing secret is missing, unlike a bad signature", async () => {
+    const { POST } = await import("@/app/api/stripe/webhook/route");
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    process.env.STRIPE_WEBHOOK_SECRET = "";
+    const res = await POST(webhookRequest(payload, "t=1,v1=x"));
+    process.env.STRIPE_WEBHOOK_SECRET = secret;
+    expect(res.status).toBe(503);
+    expect(errors.mock.calls.flat().join(" ")).toContain("stripe.webhook_secret_missing");
+    errors.mockRestore();
+    expect(handleStripeEvent).not.toHaveBeenCalled();
+  });
+
   it("rejects a request without a signature and never processes it", async () => {
     const { POST } = await import("@/app/api/stripe/webhook/route");
     const res = await POST(webhookRequest(payload, null));

@@ -14,3 +14,11 @@ export function getStripe(): Stripe {
 export function isStripeConfigured(): boolean {
   return !!process.env.STRIPE_SECRET_KEY && !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 }
+
+/**
+ * Checkout may only take money when the webhook can confirm it: without the signing secret every
+ * webhook is refused, so the customer is charged and the order is never marked paid.
+ */
+export function canTakePayments(): boolean {
+  return isStripeConfigured() && !!process.env.STRIPE_WEBHOOK_SECRET?.trim();
+}

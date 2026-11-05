@@ -6,7 +6,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getBusinessModels, getPublicSettings } from "@/lib/data/settings";
 import { isSellerIdentified, sellerContactLine, sellerIdentityParts } from "@/lib/domain/seller";
 import { getMyAddresses, getMyBirthDate } from "@/actions/store/checkout";
-import { isStripeConfigured } from "@/lib/stripe/server";
+import { canTakePayments } from "@/lib/stripe/server";
 import { CheckoutForm } from "@/components/store/checkout-form";
 import { Notice } from "@/components/store/ui";
 
@@ -24,7 +24,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
   return (
     <main className="shell pb-16 pt-6 md:pt-10">
       <h1 className="t-page mb-5 md:mb-6">{t("title")}</h1>
-      {!isStripeConfigured() ? (
+      {!canTakePayments() ? (
         <Notice tone="error">{t("notConfigured")}</Notice>
       ) : !isSellerIdentified(settings.legal) ? (
         <Notice tone="error">{t("salesClosed")}</Notice>
