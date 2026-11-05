@@ -79,7 +79,7 @@ describe("buildSalesBi", () => {
   it("uses São Paulo days and zero-fills the period", () => {
     const bi = buildSalesBi({ orders: [order({ id: "a", paidAt: "2026-11-02T02:00:00Z", items: [item("fone", 1, 10_000)] })], refunds: [], catalog, from, to });
     expect(bi.revenueByDay.map((d) => [d.key, d.value])).toEqual([["2026-11-01", 100], ["2026-11-02", 0]]);
-    expect(bi.revenueByDay[0].label).toBe("01/11");
+    expect(bi.revenueByDay[0].label).toBe("2026-11-01");
   });
 
   it("is empty but safe with no sales", () => {

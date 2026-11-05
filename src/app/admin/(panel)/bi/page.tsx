@@ -69,7 +69,7 @@ export default async function SalesBiPage({ searchParams }: { searchParams: Prom
         <KpiCard label="Receita bruta" value={money(t.grossMinor)} hint={`${t.orders} ${t.orders === 1 ? "pedido pago" : "pedidos pagos"}`} />
         <KpiCard label="Receita líquida" value={money(t.netMinor)} hint="Bruta menos reembolsos" />
         <KpiCard label="Unidades vendidas" value={String(t.units)} hint={`Ticket médio ${t.averageTicketMinor == null ? "—" : money(t.averageTicketMinor)}`} />
-        <KpiCard label="Compradores" value={String(t.buyers)} hint={`${t.repeatBuyers} compraram mais de uma vez`} />
+        <KpiCard label="Compradores" value={String(t.buyers)} hint={`${t.repeatBuyers} com mais de uma compra`} />
         <KpiCard label="Reembolsos" value={String(t.refunds)} hint={t.pendingRefunds ? `${t.pendingRefunds} em andamento` : "Concluídos no período"} />
         <KpiCard label="Valor reembolsado" value={money(t.refundedMinor)} hint={`${t.refundedOrders} ${t.refundedOrders === 1 ? "pedido" : "pedidos"}`} />
         <KpiCard label="Taxa de reembolso" value={pct(t.refundRate)} hint="Pedidos reembolsados ÷ pedidos pagos" />

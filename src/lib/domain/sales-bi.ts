@@ -53,9 +53,6 @@ function saoPauloDay(iso: string): string {
   return new Date(new Date(iso).getTime() - 3 * 3_600_000).toISOString().slice(0, 10);
 }
 
-function dayLabel(ymd: string): string {
-  return `${ymd.slice(8, 10)}/${ymd.slice(5, 7)}`;
-}
 
 function eachDay(from: Date, to: Date): string[] {
   const out: string[] = [];
@@ -165,7 +162,7 @@ export function buildSalesBi(input: { orders: BiOrder[]; refunds: BiRefund[]; ca
   }
 
   const days = eachDay(from, to);
-  const series = (m: Map<string, number>, scale = 1): BiPoint[] => days.map((d) => ({ key: d, label: dayLabel(d), value: (m.get(d) ?? 0) / scale }));
+  const series = (m: Map<string, number>, scale = 1): BiPoint[] => days.map((d) => ({ key: d, label: d, value: (m.get(d) ?? 0) / scale }));
   const count = orders.length;
 
   return {
