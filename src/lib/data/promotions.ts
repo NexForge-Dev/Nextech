@@ -4,29 +4,33 @@ import type { Locale } from "@/i18n/routing";
 import type { MarketCode } from "@/lib/domain/markets";
 import { pickTranslation } from "./translations";
 import { toCards, type ProductCardData } from "./catalog";
-import { baseRow, type BannerData } from "./home";
+import { baseRow, listAutoDeals, type BannerData } from "./home";
+import { mergeDeals } from "@/lib/domain/storefront";
 
 const PRODUCT_FIELDS = "id, slug, rating, rating_count, rating_source, brands(name), product_translations(locale, name)";
 
-/** Live promotions (RLS: active, published, within window, publish_at reached). Highlighted first. */
+const MAX_DEALS = 96;
+
+/** Manual promotions (RLS: active, published, within window, publish_at reached), highlighted first, then products on offer by price. */
 export async function listActivePromotions(locale: Locale, market: MarketCode): Promise<{ items: ProductCardData[]; reasons: Map<string, string> }> {
-  const { data } = await createAnonSupabase()
-    .from("promotions")
-    .select(`reason, highlighted, starts_at, products(${PRODUCT_FIELDS})`)
-    .order("highlighted", { ascending: false })
-    .order("starts_at", { ascending: false })
-    .limit(96);
+  const [{ data }, autoDeals] = await Promise.all([
+    createAnonSupabase()
+      .from("promotions")
+      .select(`reason, highlighted, starts_at, products(${PRODUCT_FIELDS})`)
+      .order("highlighted", { ascending: false })
+      .order("starts_at", { ascending: false })
+      .limit(MAX_DEALS),
+    listAutoDeals(),
+  ]);
   const rows = (data ?? []) as unknown as { reason: string | null; products: Parameters<typeof baseRow>[0] | null }[];
-  const seen = new Set<string>();
-  const base = [];
   const reasons = new Map<string, string>();
+  const manual = [];
   for (const r of rows) {
-    if (!r.products || seen.has(r.products.id)) continue;
-    seen.add(r.products.id);
-    base.push(baseRow(r.products, locale));
-    if (r.reason) reasons.set(r.products.id, r.reason);
+    if (!r.products) continue;
+    manual.push(r.products);
+    if (r.reason && !reasons.has(r.products.id)) reasons.set(r.products.id, r.reason);
   }
-  const items = await toCards(base, market);
+  const items = await toCards(mergeDeals(manual, autoDeals, MAX_DEALS).map((p) => baseRow(p, locale)), market);
   // the reason is only shown when there is no proven discount to show instead
   for (const item of items) if (item.price.kind === "price" && item.price.discount != null) reasons.delete(item.id);
   return { items, reasons };

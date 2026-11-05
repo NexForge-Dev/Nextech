@@ -10,6 +10,7 @@ import { getPublicSettings } from "@/lib/data/settings";
 import { Header } from "@/components/store/header";
 import { Footer } from "@/components/store/footer";
 import { CookieBanner } from "@/components/store/cookie-banner";
+import { FeedbackWidget } from "@/components/store/feedback-widget";
 import { Toaster } from "@/components/ui/sonner";
 import { siteUrl } from "@/lib/seo/metadata";
 import { storagePublicUrl } from "@/lib/supabase/env";
@@ -50,6 +51,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           </div>
           <Footer ctx={ctx} storeName={settings.storeName} legal={settings.legal} contactEmail={settings.contactEmail} />
           <CookieBanner decided={!!ctx.consent} initial={{ analytics: ctx.consent?.analytics ?? false, marketing: ctx.consent?.marketing ?? false }} texts={settings.cookieTexts[locale]} />
+          <FeedbackWidget />
           <Toaster />
           <AnalyticsScripts
             consented={ctx.consent?.analytics === true}

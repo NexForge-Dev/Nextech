@@ -6,7 +6,7 @@ import { minorDigits } from "@/lib/domain/money";
 import { PAGE_SIZE, serializeFilters, type CatalogFilters as Filters } from "@/lib/domain/filters";
 import { getFacets, type listProducts } from "@/lib/data/catalog";
 import { getBusinessModels } from "@/lib/data/settings";
-import { getCategories } from "@/lib/data/taxonomy";
+import { getVisibleCategories } from "@/lib/data/taxonomy";
 import { getFavoriteIds } from "@/lib/data/favorites";
 import { getSessionUser } from "@/lib/auth/session";
 import { getAvailableMarkets } from "@/lib/data/taxonomy";
@@ -26,7 +26,7 @@ export async function CatalogView({ locale, market, filters, title, description,
   const { items, total } = result;
   const [facets, categories, favorites, user, bm] = await Promise.all([
     getFacets(),
-    getCategories(locale),
+    getVisibleCategories(locale),
     getFavoriteIds(),
     getSessionUser(),
     getBusinessModels(),

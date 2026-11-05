@@ -479,5 +479,22 @@
     "step4Title": "Receba em casa",
     "step4Text": "Se algo não estiver certo, você tem 7 dias para desistir, além da garantia legal.",
     "howMore": "Saiba como funciona"
+  },
+  "feedback": {
+    "open": "Enviar sugestão ou problema",
+    "close": "Fechar",
+    "title": "Fale com a gente",
+    "kindLegend": "Sobre o que é a sua mensagem?",
+    "suggestion": "Ajude-nos a melhorar",
+    "problem": "Reportar um problema",
+    "messageLabel": "Sua mensagem",
+    "privacyHint": "Não inclua dados pessoais.",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "sent": "Mensagem enviada. Obrigado!",
+    "errorInvalid": "Escolha uma opção e escreva sua mensagem.",
+    "errorRate": "Você enviou muitas mensagens. Tente novamente mais tarde.",
+    "errorSession": "Sua sessão expirou. Entre novamente para enviar.",
+    "errorServer": "Não foi possível enviar. Tente novamente."
   }
 }
