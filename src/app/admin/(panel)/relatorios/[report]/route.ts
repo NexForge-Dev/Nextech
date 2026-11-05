@@ -11,6 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ repo
   const { report } = await params;
   const def = REPORTS[report];
   if (!def) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (def.permission && !ctx.permissions.has(def.permission)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const sp = req.nextUrl.searchParams;
   const period = parsePeriod(sp);
   const uuid = (k: string) => (/^[0-9a-f-]{36}$/i.test(sp.get(k) ?? "") ? sp.get(k)! : undefined);
