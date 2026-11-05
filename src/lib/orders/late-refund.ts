@@ -109,7 +109,7 @@ export async function issueStripeRefund(
     const o = await d.order(r.orderId);
     const available = o ? Math.max(0, owed(o)) : 0;
     if (!o || available <= 0) return { outcome: "nothing_owed" };
-    // checked here too: the sync above may have just found another dead refund
+    // after the sync, which may have just found another dead refund
     if (r.maxAttempts !== undefined && o.failedAttempts >= r.maxAttempts) return { outcome: "exhausted" };
     const amountMinor = r.amountMinor ?? available;
     if (amountMinor > available) return { outcome: "exceeds", availableMinor: available };
@@ -146,7 +146,7 @@ export async function settleLateRefund(d: LateRefundDeps, orderId: string, payme
   const pi = paymentIntent ?? o.paymentIntent;
   if (due <= 0 && !(pi && o.pendingMinor > 0)) return "none";
 
-  if (o.disputed) {
+  if (o.disputed && due > 0) {
     if (!o.blockedAlerted) {
       await d.addEvent(orderId, "refund_blocked", { reason: "dispute", amount: due });
       await d.notify("ownerAlert", orderId, { alert: `O pedido tem ${money(due)} a devolver, mas há contestação no Stripe, então nada foi reembolsado automaticamente. Resolva a contestação antes de devolver o valor.` });
@@ -161,7 +161,6 @@ export async function settleLateRefund(d: LateRefundDeps, orderId: string, payme
     return "manual";
   }
 
-  if (o.failedAttempts >= MAX_REFUND_ATTEMPTS) return "exhausted";
   if (opts.limitMinor !== undefined && due > opts.limitMinor) return "over_limit";
 
   try {
