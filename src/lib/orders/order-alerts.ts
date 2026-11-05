@@ -1,4 +1,4 @@
-import type { UnsettledRefund } from "./late-refund";
+import { MAX_REFUND_ATTEMPTS, type UnsettledRefund } from "./late-refund";
 
 export type AlertEvent = {
   orderId: string;
@@ -24,12 +24,13 @@ function eventMessage(e: AlertEvent, money: (m: number) => string): string {
  * message, newest first; refund alerts disappear as soon as the order is fully refunded.
  */
 export function orderAlertsFrom(owed: UnsettledRefund[], events: AlertEvent[], money: (m: number) => string): OrderAlert[] {
-  const owedAlerts = owed.map((o): OrderAlert => ({
-    key: `owed:${o.orderId}`,
-    number: o.number,
-    message: o.paymentMethod === "boleto" ? `Pedido cancelado com ${money(o.outstandingMinor)} a devolver por Pix ou transferência.` : `Pedido cancelado com ${money(o.outstandingMinor)} ainda não devolvidos ao cliente. O reembolso é tentado de novo todo dia; se preferir, use “Reembolsar”.`,
-    emailed: null,
-  }));
+  const owedMessage = (o: UnsettledRefund) => {
+    const amount = money(o.outstandingMinor);
+    if (o.disputed) return `Pedido cancelado com ${amount} a devolver e contestação no Stripe. Resolva a contestação antes de devolver.`;
+    if (o.paymentMethod === "boleto") return `Pedido cancelado com ${amount} a devolver por Pix ou transferência.`;
+    return `Pedido cancelado com ${amount} ainda não devolvidos ao cliente${o.attempts >= MAX_REFUND_ATTEMPTS ? ", e as tentativas automáticas acabaram" : ""}. Confira e use “Reembolsar” no pedido.`;
+  };
+  const owedAlerts = owed.map((o): OrderAlert => ({ key: `owed:${o.orderId}`, number: o.number, message: owedMessage(o), emailed: null }));
   const owedIds = new Set(owed.map((o) => o.orderId));
   const seen = new Set<string>();
   const eventAlerts = events.flatMap((e): OrderAlert[] => {

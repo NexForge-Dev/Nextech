@@ -19,7 +19,7 @@ function fakeStripe(failures = 0) {
       if (state.failures > 0) {
         state.failures -= 1;
         state.failedKeys.add(key);
-        throw new Error("stripe is down");
+        throw Object.assign(new Error("stripe is down"), { statusCode: 402 });
       }
       const r = { id: `re_${state.refunds.length + 1}_${p.paymentIntent}`, amountMinor: p.amountMinor, status: "succeeded" };
       state.refunds.push(r);

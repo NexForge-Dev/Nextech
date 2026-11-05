@@ -12,6 +12,7 @@ import { log } from "@/lib/log";
 import { analytics } from "@/lib/analytics";
 import { hasImageSignature } from "@/lib/security/image-signature";
 import { isDeclinedPayment } from "@/lib/orders/declined";
+import { issueStripeRefund, lateRefundDeps, stripeRefundApi } from "@/lib/orders/late-refund";
 
 export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> {
   const user = await getSessionUser();
@@ -29,25 +30,16 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
         const { data: o } = await svc.from("orders").select("refunded_minor").eq("id", row.order_id).maybeSingle();
         return { ...row, total_minor: Number(row.total_minor), refunded_minor: Number(o?.refunded_minor ?? 0) };
       },
-      async refund(pi, amount, key) {
+      async refund(pi, amount) {
+        const { data: o } = await svc.from("orders").select("id").eq("stripe_payment_intent_id", pi).maybeSingle();
+        if (!o) return false;
         try {
-          const refund = await getStripe().refunds.create({ payment_intent: pi, amount, reason: "requested_by_customer", metadata: { source: "customer_cancel" } }, { idempotencyKey: key });
-          await svc.rpc("order_record_refund", {
-            p_order: null as never,
-            p_pi: pi,
-            p_amount: amount,
-            p_method: "stripe",
-            p_stripe_refund: refund.id,
-            p_status: refund.status === "succeeded" ? "succeeded" : "pending",
-            p_note: "Cancelado pelo cliente" as never,
-            p_actor: null as never,
-          });
-          return true;
+          const r = await issueStripeRefund(lateRefundDeps(svc, stripeRefundApi(getStripe()), notifyOrder), { orderId: o.id, paymentIntent: pi, source: "customer", amountMinor: amount, note: "Cancelado pelo cliente" });
+          return r.outcome === "created" || r.outcome === "nothing_owed";
         } catch (e) {
-          // the order is cancelled; the failed refund shows in the history and the owner refunds from the admin
+          // the order is cancelled; the failed refund shows in the history and the panel lists what is owed
           log.error("orders.cancel_refund_failed", e, { pi });
-          const { data: o } = await svc.from("orders").select("id").eq("stripe_payment_intent_id", pi).maybeSingle();
-          if (o) await svc.from("order_events").insert({ order_id: o.id, actor: "system", kind: "refund_failed", data: { amount } });
+          await svc.from("order_events").insert({ order_id: o.id, actor: "system", kind: "refund_failed", data: { amount } });
           return false;
         }
       },

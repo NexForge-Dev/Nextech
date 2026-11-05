@@ -11,7 +11,7 @@ vi.mock("@/lib/supabase/service", () => ({ createServiceSupabase: () => ({}) }))
 vi.mock("@/lib/orders/notify", () => ({ notifyOrder: vi.fn() }));
 vi.mock("@/lib/orders/webhook", () => ({ handleStripeEvent: (...a: unknown[]) => handleStripeEvent(...a) }));
 vi.mock("@/lib/orders/stale", () => ({ cancelStaleOrdersWith: (...a: unknown[]) => cancelStaleOrdersWith(...a) }));
-vi.mock("@/lib/orders/owed-refunds", () => ({ settleOwedRefunds: async () => ({ owed: 0, settled: 0, failed: 0 }) }));
+vi.mock("@/lib/orders/owed-refunds", () => ({ settleOwedRefunds: async () => ({ mode: "off", owed: 0, owedMinor: 0, refunded: 0, refundedMinor: 0, failed: 0, left: 0 }) }));
 
 const secret = "whsec_route_test";
 const payload = JSON.stringify({ id: "evt_route_1", object: "event", type: "payment_intent.succeeded", data: { object: { id: "pi_route_1", metadata: { order_id: "o1" } } } });

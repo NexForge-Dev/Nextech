@@ -1,9 +1,11 @@
 -- 0031 payment integrity (QA 2026-11-05). Same signatures as before: safe to run twice and with the
 -- previous code still running.
 --  1. a confirmed payment is always recorded, whatever state the order is in (NXT-003, NXT-010);
---  2. a refund that fails after being confirmed reopens the order, and unknown Stripe refund
---     statuses count as pending instead of violating the check constraint (NXT-009, NXT-010);
---  3. an unpaid order can only be cancelled (NXT-003).
+--  2. a refund that fails after being confirmed reopens the order, unknown Stripe refund statuses
+--     count as pending, and a refund's status only moves forward, whatever order events arrive in
+--     (NXT-009, NXT-010);
+--  3. an unpaid order can only be cancelled (NXT-003);
+--  4. one refund at a time per order, from any source: webhook, cron, admin or customer.
 
 -- 1. same signature as 0023 ----------------------------------------------------------------------
 create or replace function public.order_mark_paid(p_pi text, p_order uuid, p_fee bigint, p_summary text)
@@ -41,7 +43,7 @@ declare
   v_prev text;
   v_total bigint;
   v_changed boolean := false;
-  v_status text := case when p_status in ('pending', 'succeeded', 'failed', 'canceled') then p_status when p_status is null then null else 'pending' end;
+  v_status text := case when p_status in ('succeeded', 'failed', 'canceled') then p_status when p_status is null then null else 'pending' end;
   v_new_status text;
 begin
   if p_order is not null then
@@ -55,9 +57,11 @@ begin
     select status into v_prev from order_refunds where stripe_refund_id = p_stripe_refund;
     if v_prev is null then
       insert into order_refunds (order_id, amount_minor, method, stripe_refund_id, status, note, created_by)
-      values (v_order.id, p_amount, p_method, p_stripe_refund, v_status, p_note, p_actor);
+      values (v_order.id, p_amount, p_method, p_stripe_refund, coalesce(v_status, 'pending'), p_note, p_actor);
       v_changed := v_status = 'succeeded';
-    elsif v_prev <> v_status then
+    -- pending, then succeeded, then failed/canceled. Stripe does not guarantee order, and a late
+    -- event carries an old snapshot: anything that would move backwards is a no-op.
+    elsif (case v_status when 'pending' then 0 when 'succeeded' then 1 else 2 end) > (case v_prev when 'pending' then 0 when 'succeeded' then 1 else 2 end) then
       update order_refunds set status = v_status where stripe_refund_id = p_stripe_refund;
       v_changed := v_status = 'succeeded';
     end if;
@@ -80,7 +84,7 @@ begin
       when v_order.paid_at is null then 'awaiting_payment'
       else coalesce(
         (select e.data ->> 'to' from order_events e
-         where e.order_id = v_order.id and e.data ->> 'to' is not null and e.data ->> 'to' not in ('cancelled', 'refunded')
+         where e.order_id = v_order.id and e.kind in ('status_changed', 'shipped', 'delivered') and e.data ->> 'to' is not null
          order by e.at desc limit 1),
         'awaiting_supplier')
     end;
@@ -121,6 +125,45 @@ begin
   insert into order_events (order_id, actor, actor_id, kind, data)
   values (p_order, 'admin', p_actor, v_kind, jsonb_build_object('from', v_order.status, 'to', p_to) || coalesce(p_data, '{}'::jsonb));
 end $$;
+
+-- 4. refund claim ---------------------------------------------------------------------------------
+-- Held from before the balance is read until the refund is recorded. Stripe idempotency cannot do
+-- this: each source has its own amount and key, so two partial refunds would both be accepted.
+create table if not exists public.order_refund_claims (
+  order_id uuid primary key references public.orders (id) on delete cascade,
+  token uuid not null,
+  source text not null check (source in ('webhook', 'cron', 'admin', 'customer')),
+  expires_at timestamptz not null
+);
+alter table public.order_refund_claims enable row level security;
+revoke all on public.order_refund_claims from public, anon, authenticated;
+
+-- The token, or null while someone else holds the order. An expired claim can be taken over.
+create or replace function public.order_refund_claim(p_order uuid, p_source text, p_ttl_seconds int default 120)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_token uuid := gen_random_uuid();
+  v_rows int;
+begin
+  insert into order_refund_claims (order_id, token, source, expires_at)
+  values (p_order, v_token, p_source, now() + make_interval(secs => p_ttl_seconds))
+  on conflict (order_id) do update set token = excluded.token, source = excluded.source, expires_at = excluded.expires_at
+  where order_refund_claims.expires_at < now();
+  get diagnostics v_rows = row_count;
+  return case when v_rows = 1 then v_token end;
+end $$;
+
+create or replace function public.order_refund_release(p_order uuid, p_token uuid)
+returns void
+language sql security definer set search_path = public as $$
+  delete from order_refund_claims where order_id = p_order and token = p_token;
+$$;
+
+revoke all on function public.order_refund_claim(uuid, text, int) from public, anon, authenticated;
+revoke all on function public.order_refund_release(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.order_refund_claim(uuid, text, int) to service_role;
+grant execute on function public.order_refund_release(uuid, uuid) to service_role;
 
 revoke all on function public.order_mark_paid(text, uuid, bigint, text) from public, anon, authenticated;
 revoke all on function public.order_record_refund(uuid, text, bigint, text, text, text, text, uuid) from public, anon, authenticated;

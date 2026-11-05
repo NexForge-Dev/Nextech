@@ -11,6 +11,8 @@ async function newOrder() {
   return data![0].order_id;
 }
 const orderOf = async (id: string) => (await serviceClient().from("orders").select("status, paid_at, refunded_minor").eq("id", id).single()).data!;
+/** Real orders always have these, and their data.to is "customer" or "owner", not a status. */
+const emails = (id: string) => serviceClient().from("order_events").insert([{ order_id: id, actor: "system", kind: "email_sent", data: { template: "orderConfirmed", to: "customer" } }, { order_id: id, actor: "system", kind: "email_skipped", data: { template: "ownerNewOrder", to: "owner" } }]);
 const refund = (id: string, stripeId: string, status: string) =>
   serviceClient().rpc("order_record_refund", { p_order: id, p_pi: null as never, p_amount: 24990, p_method: "stripe", p_stripe_refund: stripeId, p_status: status, p_note: null as never, p_actor: null as never });
 
@@ -46,6 +48,47 @@ describe("NXT-003: an unpaid order", () => {
   });
 });
 
+describe("a refund's status only moves forward", () => {
+  const paid = async () => {
+    const id = await newOrder();
+    await serviceClient().from("orders").update({ status: "awaiting_supplier", paid_at: new Date().toISOString() }).eq("id", id);
+    await emails(id);
+    return id;
+  };
+  const statusOf = async (sid: string) => (await serviceClient().from("order_refunds").select("status").eq("stripe_refund_id", sid).single()).data?.status;
+  it("a late pending after succeeded changes nothing, on an ordinary order", async () => {
+    const id = await paid();
+    await refund(id, `re_o1_${id}`, "succeeded");
+    expect((await refund(id, `re_o1_${id}`, "pending")).error).toBeNull();
+    expect(await statusOf(`re_o1_${id}`)).toBe("succeeded");
+    expect(await orderOf(id)).toMatchObject({ status: "refunded", refunded_minor: 24990 });
+  });
+  it("a late pending after succeeded changes nothing, on a cancelled order", async () => {
+    const id = await newOrder();
+    await serviceClient().from("orders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), paid_at: new Date().toISOString() }).eq("id", id);
+    await refund(id, `re_o2_${id}`, "succeeded");
+    await refund(id, `re_o2_${id}`, "pending");
+    expect(await orderOf(id)).toMatchObject({ status: "refunded", refunded_minor: 24990 });
+  });
+  it("a late succeeded cannot revive a failed refund", async () => {
+    const id = await paid();
+    await refund(id, `re_o3_${id}`, "succeeded");
+    await refund(id, `re_o3_${id}`, "failed");
+    expect((await refund(id, `re_o3_${id}`, "succeeded")).error).toBeNull();
+    expect(await statusOf(`re_o3_${id}`)).toBe("failed");
+    expect(await orderOf(id)).toMatchObject({ status: "awaiting_supplier", refunded_minor: 0 });
+  });
+  it("every order of events ends in the same place, and duplicates are no-ops", async () => {
+    const ends: string[] = [];
+    for (const seq of [["pending", "succeeded", "failed"], ["failed", "succeeded", "pending"], ["succeeded", "failed", "pending"], ["pending", "pending", "failed", "failed"]]) {
+      const id = await paid();
+      for (const s of seq) expect((await refund(id, `re_seq_${id}`, s)).error).toBeNull();
+      ends.push(`${await statusOf(`re_seq_${id}`)}:${(await orderOf(id)).status}`);
+    }
+    expect(new Set(ends)).toEqual(new Set(["failed:awaiting_supplier"]));
+  });
+});
+
 describe("NXT-009: refund statuses", () => {
   it("an unknown status is stored as pending, not a constraint violation", async () => {
     const id = await newOrder();
@@ -57,11 +100,21 @@ describe("NXT-009: refund statuses", () => {
 });
 
 describe("NXT-010: a refund that fails after it was confirmed", () => {
+  it("reopens an order with e-mail events, whose `to` is not a status, without a constraint error", async () => {
+    const id = await newOrder();
+    const svc = serviceClient();
+    await svc.from("orders").update({ status: "awaiting_supplier", paid_at: new Date().toISOString() }).eq("id", id);
+    await emails(id);
+    await refund(id, `re_mail_${id}`, "succeeded");
+    expect((await refund(id, `re_mail_${id}`, "failed")).error).toBeNull();
+    expect(await orderOf(id)).toMatchObject({ status: "awaiting_supplier", refunded_minor: 0 });
+  });
   it("reopens the order where it was", async () => {
     const id = await newOrder();
     const svc = serviceClient();
     await svc.from("orders").update({ status: "awaiting_supplier", paid_at: new Date().toISOString() }).eq("id", id);
     await svc.rpc("admin_set_order_status", { p_order: id, p_expected: "awaiting_supplier", p_to: "supplier_purchased", p_actor: null as never, p_data: {} as never });
+    await emails(id);
     await refund(id, `re_late_${id}`, "succeeded");
     expect(await orderOf(id)).toMatchObject({ status: "refunded", refunded_minor: 24990 });
     await refund(id, `re_late_${id}`, "failed");

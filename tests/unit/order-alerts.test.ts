@@ -6,7 +6,7 @@ const ev = (p: Partial<AlertEvent> & { data: AlertEvent["data"] }): AlertEvent =
 
 describe("orderAlertsFrom", () => {
   it("puts money still owed first", () => {
-    const a = orderAlertsFrom([{ orderId: "o2", number: 20, paymentMethod: "card", outstandingMinor: 500 }], [ev({ data: { template: "ownerDispute" } })], money);
+    const a = orderAlertsFrom([{ orderId: "o2", number: 20, paymentMethod: "card", outstandingMinor: 500, disputed: false, attempts: 0 }], [ev({ data: { template: "ownerDispute" } })], money);
     expect(a.map((x) => x.number)).toEqual([20, 10]);
     expect(a[0].message).toContain("R$ 500");
   });

@@ -6,7 +6,7 @@ type CancelRow = { order_id: string; previous_status: string; payment_method: st
 export type CancelDeps = {
   cancelInDb(orderNumber: number): Promise<CancelRow>;
   /** false when Stripe refused or failed (the failure is already in the order history). */
-  refund(paymentIntentId: string, amountMinor: number, idempotencyKey: string): Promise<boolean>;
+  refund(paymentIntentId: string, amountMinor: number): Promise<boolean>;
   cancelPaymentIntent(paymentIntentId: string): Promise<void>;
   recordManualPending(orderId: string, amountMinor: number): Promise<void>;
   notify(kind: EmailKind, orderId: string, extra?: { refundMinor?: number; alert?: string }): Promise<void>;
@@ -41,7 +41,7 @@ export async function cancelOrderWith(d: CancelDeps, orderNumber: number): Promi
     await d.recordManualPending(row.order_id, remaining);
     refund = "manual";
   } else if (row.payment_intent) {
-    refund = (await d.refund(row.payment_intent, remaining, `refund-cancel-${row.order_id}`)) ? "stripe" : "failed";
+    refund = (await d.refund(row.payment_intent, remaining)) ? "stripe" : "failed";
   }
   await d.notify("orderCancelled", row.order_id, refund === "stripe" ? { refundMinor: remaining } : undefined);
   if (refund === "manual") await d.notify("ownerManualRefund", row.order_id, { refundMinor: remaining });

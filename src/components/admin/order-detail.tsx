@@ -37,6 +37,8 @@ const EVENT: Record<string, string> = {
   email_sent: "E-mail enviado",
   email_skipped: "E-mail não enviado",
   owner_alert: "Alerta para a loja",
+  refund_owed: "Valor a devolver listado para a loja",
+  refund_blocked: "Reembolso automático bloqueado por contestação",
   payment_stuck: "Pagamento no Stripe sem confirmação no pedido",
   paid_after_cancel: "Pagamento recebido depois do cancelamento",
   amount_mismatch: "Valor pago diferente do total do pedido",

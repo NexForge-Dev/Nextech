@@ -3,7 +3,7 @@ import { createServiceSupabase } from "@/lib/supabase/service";
 import { getStripe } from "@/lib/stripe/server";
 import { verifyStripeEvent } from "@/lib/stripe/verify";
 import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
-import { confirmPayment, lateRefundDeps, settleLateRefund, stripeRefundApi } from "@/lib/orders/late-refund";
+import { confirmPayment, lateRefundDeps, recordStripeRefund, settleLateRefund, stripeRefundApi } from "@/lib/orders/late-refund";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
 import { analytics } from "@/lib/analytics";
@@ -89,7 +89,8 @@ function deps(stripeEventId: string): WebhookDeps {
     },
     markPaid: (piId, orderId, fee, summary) => confirmPayment(svc, piId, orderId, fee, summary),
     async paidAfterCancel(piId, orderId) {
-      await settleLateRefund(lateRefundDeps(svc, stripeRefundApi(getStripe()), notifyOrder), orderId, piId);
+      const outcome = await settleLateRefund(lateRefundDeps(svc, stripeRefundApi(getStripe()), notifyOrder), orderId, piId);
+      if (outcome === "busy") throw new Error("refund in flight: retry later");
     },
     async listRefunds(chargeId) {
       const list = await getStripe().refunds.list({ charge: chargeId, limit: 100 });
@@ -101,16 +102,10 @@ function deps(stripeEventId: string): WebhookDeps {
       return data?.[0] ? { orderId: data[0].order_id } : null;
     },
     async recordRefund(r) {
-      const { data: before } = await svc.from("order_refunds").select("status").eq("stripe_refund_id", r.stripeRefundId).maybeSingle();
-      const { data, error } = await svc.rpc("order_record_refund", {
-        p_order: null as never, p_pi: r.paymentIntentId, p_amount: r.amountMinor, p_method: "stripe", p_stripe_refund: r.stripeRefundId, p_status: r.status, p_note: null as never, p_actor: null as never,
-      });
-      if (error) throw new Error(error.message);
-      const x = data?.[0];
+      const x = await recordStripeRefund(svc, { paymentIntentId: r.paymentIntentId }, { id: r.stripeRefundId, amountMinor: r.amountMinor, status: r.status });
       // Every Stripe refund passes here, including ones started in the admin or by the customer.
-      if (x && r.status === "succeeded") await trackRefund(svc, x.order_id, r.stripeRefundId, r.amountMinor);
-      const failedNow = (r.status === "failed" || r.status === "canceled") && before?.status !== r.status;
-      return x ? { orderId: x.order_id, fullyRefunded: x.fully_refunded, changed: x.changed, failedNow } : null;
+      if (x && r.status === "succeeded") await trackRefund(svc, x.orderId, r.stripeRefundId, r.amountMinor);
+      return x;
     },
     async addEvent(piId, kind, data) {
       const { data: rows, error } = await svc.rpc("order_add_event_by_pi", { p_pi: piId, p_kind: kind, p_data: data as never });

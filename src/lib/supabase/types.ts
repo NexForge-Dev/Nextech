@@ -1172,6 +1172,15 @@ isOneToOne: false
 "admin_save_product_stock_safe":
 { Args: { "p": Json }; Returns: string
                            },
+"expired_hold_units":
+{ Args: { "p_ids": string[] }; Returns: { product_id: string; units: number }[]
+                           },
+"order_refund_claim":
+{ Args: { "p_order": string; "p_source": string; "p_ttl_seconds"?: number }; Returns: string | null
+                           },
+"order_refund_release":
+{ Args: { "p_order": string; "p_token": string }; Returns: undefined
+                           },
 "admin_set_order_status":
 { Args: { "p_actor": string,"p_data": Json,"p_expected": string,"p_order": string,"p_to": string }; Returns: undefined
                            },
