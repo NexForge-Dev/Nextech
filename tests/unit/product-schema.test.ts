@@ -65,7 +65,7 @@ describe("productInputSchema — own store", () => {
   it("accepts an own product without offers and parses money to centavos", () => {
     const r = productInputSchema.safeParse(own);
     expect(r.success).toBe(true);
-    expect(r.success && r.data.sale).toEqual({ priceMinor: 24990, compareAtMinor: 29990, pixDiscountPct: 5, available: true, deliveryMinDays: 3, deliveryMaxDays: 7, fulfillment: "dropship", stockQuantity: null });
+    expect(r.success && r.data.sale).toEqual({ priceMinor: 24990, compareAtMinor: 29990, pixDiscountPct: 5, available: true, deliveryMinDays: 3, deliveryMaxDays: 7, fulfillment: "dropship", stockQuantity: null, promoPriceMinor: null, promoStartsAt: null, promoEndsAt: null });
     expect(r.success && r.data.suppliers[0]).toMatchObject({ supplierId: SUP1, costMinor: 16500, isPrimary: true });
   });
   it("needs a quantity for products from own stock", () => {

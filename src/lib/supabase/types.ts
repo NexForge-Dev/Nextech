@@ -811,14 +811,14 @@ isOneToOne: false
                   ]
                 },"product_sale": {
                   Row: {
-                    "available": boolean,"compare_at_minor": number | null,"created_at": string,"delivery_max_days": number,"delivery_min_days": number,"fulfillment": string,"pix_discount_pct": number,"price_minor": number,"product_id": string,"stock_quantity": number | null,"updated_at": string
+                    "available": boolean,"compare_at_minor": number | null,"promo_ends_at": string | null,"promo_price_minor": number | null,"promo_starts_at": string | null,"created_at": string,"delivery_max_days": number,"delivery_min_days": number,"fulfillment": string,"pix_discount_pct": number,"price_minor": number,"product_id": string,"stock_quantity": number | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"fulfillment"?: string,"pix_discount_pct"?: number,"price_minor": number,"product_id": string,"stock_quantity"?: number | null,"updated_at"?: string
+                    "available"?: boolean,"compare_at_minor"?: number | null,"promo_ends_at"?: string | null,"promo_price_minor"?: number | null,"promo_starts_at"?: string | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"fulfillment"?: string,"pix_discount_pct"?: number,"price_minor": number,"product_id": string,"stock_quantity"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "available"?: boolean,"compare_at_minor"?: number | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"fulfillment"?: string,"pix_discount_pct"?: number,"price_minor"?: number,"product_id"?: string,"stock_quantity"?: number | null,"updated_at"?: string
+                    "available"?: boolean,"compare_at_minor"?: number | null,"promo_ends_at"?: string | null,"promo_price_minor"?: number | null,"promo_starts_at"?: string | null,"created_at"?: string,"delivery_max_days"?: number,"delivery_min_days"?: number,"fulfillment"?: string,"pix_discount_pct"?: number,"price_minor"?: number,"product_id"?: string,"stock_quantity"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1165,6 +1165,12 @@ isOneToOne: false
           Functions: {
             "admin_save_product":
 { Args: { "p": Json }; Returns: string
+                           },
+"admin_save_product_promo":
+{ Args: { "p": Json }; Returns: string
+                           },
+"promo_running":
+{ Args: { "p_price": number; "p_promo": number; "p_starts": string; "p_ends": string }; Returns: boolean
                            },
 "admin_save_product_full":
 { Args: { "p": Json }; Returns: string

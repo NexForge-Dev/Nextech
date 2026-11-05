@@ -7,6 +7,7 @@ import type { ProductCardData } from "@/lib/data/catalog";
 import { storagePublicUrl } from "@/lib/supabase/env";
 import { PriceView } from "./price";
 import { FavoriteButton } from "./favorite-button";
+import { PromoCountdown } from "./promo-countdown";
 
 export async function ProductCard({ product, locale, signedIn, favorite = false, priority = false, note, cta }: { product: ProductCardData; locale: Locale; signedIn: boolean; favorite?: boolean; priority?: boolean; note?: string | null; cta?: { href: string; label: string } }) {
   const [t, ts] = await Promise.all([getTranslations("product"), getTranslations("store")]);
@@ -51,6 +52,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
           {note && <p className="text-xs font-medium text-black">{note}</p>}
           <div className="mt-auto pt-2">
             <PriceView price={product.price} locale={locale} hideDiscount />
+            {product.promoEndsAt && <PromoCountdown endsAt={product.promoEndsAt} label={t("promoEndsIn")} compact className="mt-1.5" />}
             {product.saleMode === "own" && product.available && (
               <p className="mt-1.5 flex items-center gap-1 text-xs text-mute">
                 <Truck className="size-3.5" strokeWidth={1.75} aria-hidden />

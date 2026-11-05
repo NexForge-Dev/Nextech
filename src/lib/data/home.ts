@@ -34,8 +34,8 @@ export async function listAutoDeals(): Promise<ProductRow[]> {
   const [{ data, error }, models] = await Promise.all([
     createAnonSupabase()
       .from("product_sale")
-      .select(`price_minor, compare_at_minor, available, fulfillment, stock_quantity, products(${PRODUCT_FIELDS})`)
-      .not("compare_at_minor", "is", null)
+      .select(`price_minor, compare_at_minor, promo_price_minor, promo_starts_at, promo_ends_at, available, fulfillment, stock_quantity, products(${PRODUCT_FIELDS})`)
+      .or("compare_at_minor.not.is.null,promo_price_minor.not.is.null")
       .limit(AUTO_DEALS_SCANNED),
     getBusinessModels(),
   ]);
