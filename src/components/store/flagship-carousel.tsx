@@ -43,7 +43,7 @@ export function FlagshipCarousel({ slides, labels }: { slides: ReactNode[]; labe
         move(end < start ? 1 : -1);
       }}
     >
-      <div className="grid">
+      <div className="grid grid-cols-1">
         {slides.map((slide, i) => (
           <div
             key={i}
@@ -51,7 +51,7 @@ export function FlagshipCarousel({ slides, labels }: { slides: ReactNode[]; labe
             data-active={i === active}
             aria-hidden={i !== active}
             inert={i !== active}
-            className={`[grid-area:1/1] transition-opacity duration-300 ${i === active ? "opacity-100" : "invisible opacity-0"}`}
+            className={`min-w-0 [grid-area:1/1] transition-opacity duration-300 ${i === active ? "opacity-100" : "invisible opacity-0"}`}
           >
             {slide}
           </div>

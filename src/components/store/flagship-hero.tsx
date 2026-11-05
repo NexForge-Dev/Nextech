@@ -38,8 +38,8 @@ async function FlagshipSlide({ flagship, locale, storeName, first }: { flagship:
   const buyable = product.saleMode === "own" && price.kind === "price";
   const Heading = first ? "h1" : "h2";
   return (
-    <div className="shell grid items-center gap-6 pb-10 pt-6 md:grid-cols-12 md:gap-10 md:pb-16 md:pt-12">
-      <div className="md:order-2 md:col-span-6">
+    <div className="shell grid grid-cols-1 items-center gap-6 pb-10 pt-6 md:grid-cols-12 md:gap-10 md:pb-16 md:pt-12">
+      <div className="min-w-0 md:order-2 md:col-span-6">
         <Link href={href} className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-white md:aspect-square lg:aspect-[5/4]">
           {src ? (
             <Image src={src} alt={product.mainImage?.alt || product.name} fill priority={first} sizes="(min-width: 1280px) 600px, (min-width: 768px) 50vw, 100vw" className="object-contain p-6 mix-blend-multiply md:p-10" unoptimized={src.endsWith(".svg")} />
@@ -48,7 +48,7 @@ async function FlagshipSlide({ flagship, locale, storeName, first }: { flagship:
           )}
         </Link>
       </div>
-      <div className="md:order-1 md:col-span-6">
+      <div className="min-w-0 md:order-1 md:col-span-6">
         <p className="t-eyebrow">{t("flagshipEyebrow", { store: storeName })}</p>
         {product.brand && <p className="mt-4 text-sm font-medium text-black">{product.brand}</p>}
         <Heading className="t-display mt-1 break-words max-md:line-clamp-3">{product.name}</Heading>

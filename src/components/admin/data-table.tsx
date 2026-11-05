@@ -76,7 +76,7 @@ export function DataTable<T extends { id: string }>({
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-line transition-colors duration-150 last:border-0 hover:bg-soft/60">
                   {columns.map((c) => (
-                    <td key={c.key} data-label={c.header} className={`px-4 py-3 align-middle ${c.className ?? ""}`}>
+                    <td key={c.key} data-label={c.header} className={`px-4 py-3 align-middle max-md:[overflow-wrap:anywhere] ${c.className ?? ""}`}>
                       {c.cell(r)}
                     </td>
                   ))}
