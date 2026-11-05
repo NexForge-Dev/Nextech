@@ -1,8 +1,9 @@
 import "server-only";
-import type { createServiceSupabase } from "@/lib/supabase/service";
+import { createServiceSupabase } from "@/lib/supabase/service";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
 import { notifyOrder } from "@/lib/orders/notify";
 import { cancelStaleOrdersWith } from "@/lib/orders/stale";
+import { log } from "@/lib/log";
 
 /** Cancel unpaid orders past their payment window, asking Stripe first. Returns their stock. */
 export function expireStaleOrders(svc: ReturnType<typeof createServiceSupabase>) {
@@ -32,4 +33,13 @@ export function expireStaleOrders(svc: ReturnType<typeof createServiceSupabase>)
       await notifyOrder("ownerAlert", o.orderId, { alert: `O Stripe recebeu o pagamento ${o.paymentIntent}, mas o pedido segue sem confirmação: o webhook não chegou. Confira o webhook no Stripe e reenvie o evento.` });
     },
   });
+}
+
+/** The cron runs once a day, a stock hold lasts minutes: sold-out screens ask for this on the way. Never throws. */
+export async function releaseExpiredHolds() {
+  try {
+    await expireStaleOrders(createServiceSupabase());
+  } catch (e) {
+    log.error("orders.release_expired_failed", e);
+  }
 }

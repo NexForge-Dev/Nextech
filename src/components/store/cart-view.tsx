@@ -53,7 +53,7 @@ export function CartView({ signedIn = false }: { signedIn?: boolean }) {
     );
   }
   const money = (m: number) => formatMoney(m, "BRL", "pt-BR");
-  const qtyBtn = "grid size-10 cursor-pointer place-items-center text-black transition-colors duration-150 hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40 md:size-8";
+  const qtyBtn = "grid size-11 cursor-pointer place-items-center text-black transition-colors duration-150 hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40 md:size-8";
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0">
@@ -77,8 +77,13 @@ export function CartView({ signedIn = false }: { signedIn?: boolean }) {
                   {l.problem && (
                     <p role="alert" className="field-error">
                       <CircleAlert aria-hidden />
-                      {l.problem === "unavailable" ? t("unavailable") : t("hidden")}
+                      {l.problem === "short" ? t("short", { count: l.maxQuantity ?? 0 }) : l.problem === "unavailable" ? t("unavailable") : t("hidden")}
                     </p>
+                  )}
+                  {l.problem === "short" && (
+                    <button type="button" className="mt-2 w-fit cursor-pointer text-sm font-medium underline underline-offset-2" onClick={() => setLocalCartQuantity(l.productId, l.maxQuantity ?? 1)}>
+                      {t("useAvailable", { count: l.maxQuantity ?? 0 })}
+                    </button>
                   )}
                   {!l.problem && <p className="tabular mt-1 font-semibold sm:hidden">{money(l.lineTotalMinor)}</p>}
                   <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
@@ -88,7 +93,7 @@ export function CartView({ signedIn = false }: { signedIn?: boolean }) {
                         <Minus className="size-3.5" aria-hidden />
                       </button>
                       <span className="tabular w-8 text-center text-sm font-medium" data-testid="cart-qty">{l.quantity}</span>
-                      <button type="button" className={qtyBtn} aria-label={t("increase")} disabled={l.quantity >= MAX_QTY || !!l.problem} onClick={() => setLocalCartQuantity(l.productId, l.quantity + 1)}>
+                      <button type="button" className={qtyBtn} aria-label={t("increase")} disabled={l.quantity >= Math.min(MAX_QTY, l.maxQuantity ?? MAX_QTY) || !!l.problem} onClick={() => setLocalCartQuantity(l.productId, l.quantity + 1)}>
                         <Plus className="size-3.5" aria-hidden />
                       </button>
                     </div>

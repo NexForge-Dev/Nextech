@@ -12,7 +12,7 @@ export type CartProductRow = {
   sale: OwnSale | null;
 };
 
-export type CartLineProblem = null | "unavailable" | "hidden";
+export type CartLineProblem = null | "unavailable" | "hidden" | "short";
 
 export type CartLine = {
   productId: string;
@@ -25,16 +25,26 @@ export type CartLine = {
   lineTotalMinor: number;
   deliveryMaxDays: number | null;
   problem: CartLineProblem;
+  /** Units that can still be bought, for products sold from own stock; null when there is no limit. */
+  maxQuantity: number | null;
 };
 
-/** Cart lines priced from database rows. A line with a problem cannot be checked out. */
-export function buildCartLines(items: CartItem[], rows: CartProductRow[], bm: { ownStore: boolean }): CartLine[] {
+/**
+ * Cart lines priced from database rows. A line with a problem cannot be checked out. `held`: units
+ * this customer already holds in an open order, which stay theirs when they come back to pay.
+ */
+export function buildCartLines(items: CartItem[], rows: CartProductRow[], bm: { ownStore: boolean }, held: Map<string, number> = new Map()): CartLine[] {
   const byId = new Map(rows.map((r) => [r.id, r]));
   return items.map((it) => {
     const r = byId.get(it.productId);
     const sellable = !!r && isModeVisible("own", bm, r.sale?.fulfillment) && r.published && r.saleMode === "own" && !!r.sale;
     const sale = sellable ? r!.sale! : null;
-    const problem: CartLineProblem = !sellable ? "hidden" : sale!.available ? null : "unavailable";
+    const fromStock = sale?.fulfillment === "stock";
+    const mine = fromStock ? (held.get(it.productId) ?? 0) : 0;
+    const maxQuantity = fromStock ? (sale!.stockQuantity ?? 0) + mine : null;
+    const available = !!sale && (sale.available || (mine > 0 && maxQuantity! > 0));
+    const short = maxQuantity != null && it.quantity > maxQuantity;
+    const problem: CartLineProblem = !sellable ? "hidden" : !available ? "unavailable" : short ? "short" : null;
     const priceMinor = sale?.priceMinor ?? 0;
     return {
       productId: it.productId,
@@ -47,6 +57,7 @@ export function buildCartLines(items: CartItem[], rows: CartProductRow[], bm: { 
       lineTotalMinor: priceMinor * it.quantity,
       deliveryMaxDays: sale?.deliveryMaxDays ?? null,
       problem,
+      maxQuantity,
     };
   });
 }

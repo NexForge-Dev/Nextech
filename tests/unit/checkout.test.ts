@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { checkoutInputSchema, paymentErrorMessage, startCheckoutWith, GENERIC_PAYMENT_ERROR, type CheckoutDeps } from "@/lib/orders/checkout";
+import { checkoutInputSchema, paymentErrorMessage, startCheckoutWith, GENERIC_PAYMENT_ERROR, type CheckoutDeps, type OpenOrder } from "@/lib/orders/checkout";
 
 const P = "11111111-1111-4111-8111-111111111111";
 const ORDER = "99999999-9999-4999-8999-999999999999";
@@ -18,6 +18,12 @@ function deps(over: Partial<CheckoutDeps> = {}) {
     attachPaymentIntent: async (...a) => void calls.attach.push(a),
     abandonOrder: async (...a) => void calls.abandon.push(a),
     customerEmail: "ana@example.com",
+    openOrders: async () => [],
+    retrievePaymentIntent: async () => {
+      throw new Error("no payment to resume");
+    },
+    releaseOrder: async () => true,
+    releaseExpired: async () => {},
     stripe: {
       createPaymentIntent: async (params, opts) => {
         calls.create.push([params, opts]);
@@ -60,6 +66,73 @@ describe("checkout input", () => {
   it("rejects an invalid CPF", () => {
     const r = checkoutInputSchema.safeParse({ ...input, address: { ...input.address, cpf: "111.111.111-11" } });
     expect(!r.success && r.error.issues[0].message).toBe("CPF inválido.");
+  });
+});
+
+describe("resuming an open order", () => {
+  const parsed = () => checkoutInputSchema.parse(input);
+  const address = () => parsed().address as unknown as Record<string, string>;
+  const open = (over: Partial<OpenOrder> = {}): OpenOrder => ({ orderId: ORDER, orderNumber: 1001, totalMinor: 49980, method: "card", paymentIntentId: "pi_open", address: address(), items: [{ productId: P, quantity: 2, stockTaken: 2 }], ...over });
+  const pi = (status: string) => ({ id: "pi_open", client_secret: "pi_open_secret", status, amount: 49980, next_action: null });
+
+  it("the same cart after a reload resumes the same order and payment, creating nothing", async () => {
+    const created: unknown[] = [];
+    const { d, calls } = deps({ openOrders: async () => [open()], retrievePaymentIntent: async () => pi("requires_payment_method"), createOrder: async (i) => (created.push(i), { orderId: "x", orderNumber: 1, totalMinor: 1 }) });
+    expect(await startCheckoutWith(d, parsed())).toEqual({ ok: true, kind: "card", orderNumber: 1001, totalMinor: 49980, clientSecret: "pi_open_secret" });
+    expect(created).toEqual([]);
+    expect(calls.create).toEqual([]);
+  });
+  it("another address cancels the open order first, so its stock is free for the new one", async () => {
+    const log: string[] = [];
+    const { d } = deps({
+      openOrders: async () => [open({ address: { ...address(), number: "2000" } })],
+      releaseOrder: async (o) => (log.push(`release ${o.orderId}`), true),
+      createOrder: async () => (log.push("create"), { orderId: "new", orderNumber: 1002, totalMinor: 49980 }),
+    });
+    expect(await startCheckoutWith(d, parsed())).toMatchObject({ ok: true, orderNumber: 1002 });
+    expect(log).toEqual([`release ${ORDER}`, "create"]);
+  });
+  it("switching to boleto releases the card order", async () => {
+    const released: string[] = [];
+    const { d, calls } = deps({ openOrders: async () => [open()], releaseOrder: async (o) => (released.push(o.orderId), true) });
+    calls.create = [];
+    d.stripe.createPaymentIntent = async () => ({ id: "pi_b", client_secret: null, status: "requires_action", next_action: { boleto_display_details: { hosted_voucher_url: "https://x", number: "1" } } });
+    await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, method: "boleto" }));
+    expect(released).toEqual([ORDER]);
+  });
+  it("a payment already moving is not paid twice", async () => {
+    const { d, calls } = deps({ openOrders: async () => [open()], retrievePaymentIntent: async () => pi("processing") });
+    const r = await startCheckoutWith(d, parsed());
+    expect(r.ok).toBe(false);
+    expect(calls.create).toEqual([]);
+  });
+  it("a changed price does not resume the old payment", async () => {
+    const released: string[] = [];
+    const { d } = deps({ openOrders: async () => [open()], retrievePaymentIntent: async () => pi("requires_payment_method"), releaseOrder: async (o) => (released.push(o.orderId), true) });
+    await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, expectedTotalMinor: 39980 }));
+    expect(released).toEqual([ORDER]);
+  });
+  it("an open dropship order of something else stays untouched", async () => {
+    const released: string[] = [];
+    const other = "22222222-2222-4222-8222-222222222222";
+    const { d } = deps({ openOrders: async () => [open({ items: [{ productId: other, quantity: 1, stockTaken: 0 }] })], releaseOrder: async (o) => (released.push(o.orderId), true) });
+    await startCheckoutWith(d, parsed());
+    expect(released).toEqual([]);
+  });
+  it("frees expired holds and retries once when the last unit looks taken", async () => {
+    let tries = 0;
+    const log: string[] = [];
+    const { d } = deps({
+      releaseExpired: async () => void log.push("expire"),
+      createOrder: async () => {
+        tries += 1;
+        if (tries === 1) throw new Error("item_unavailable:fone-x");
+        return { orderId: ORDER, orderNumber: 1001, totalMinor: 49980 };
+      },
+    });
+    expect(await startCheckoutWith(d, parsed())).toMatchObject({ ok: true });
+    expect(log).toEqual(["expire"]);
+    expect(tries).toBe(2);
   });
 });
 

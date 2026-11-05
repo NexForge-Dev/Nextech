@@ -26,4 +26,19 @@ describe("buildCartLines", () => {
   it("hides everything while the own store is off", () => {
     expect(buildCartLines([{ productId: A, quantity: 1 }], [row(A)], { ownStore: false })[0].problem).toBe("hidden");
   });
+  const stock = (quantity: number, available = quantity > 0) => row(A, { sale: { ...row(A).sale!, available, fulfillment: "stock", stockQuantity: quantity } });
+  it("flags a quantity above the stock and says how many are left", () => {
+    expect(buildCartLines([{ productId: A, quantity: 8 }], [stock(3)], { ownStore: true })[0]).toMatchObject({ problem: "short", maxQuantity: 3 });
+  });
+  it("a customer's own open order does not make their units look sold out", () => {
+    const held = new Map([[A, 1]]);
+    expect(buildCartLines([{ productId: A, quantity: 1 }], [stock(0)], { ownStore: true }, held)[0]).toMatchObject({ problem: null, maxQuantity: 1 });
+    expect(buildCartLines([{ productId: A, quantity: 2 }], [stock(0)], { ownStore: true }, held)[0]).toMatchObject({ problem: "short", maxQuantity: 1 });
+  });
+  it("sold out stays sold out for everyone else", () => {
+    expect(buildCartLines([{ productId: A, quantity: 1 }], [stock(0)], { ownStore: true })[0].problem).toBe("unavailable");
+  });
+  it("dropshipping has no quantity limit", () => {
+    expect(buildCartLines([{ productId: A, quantity: 8 }], [row(A)], { ownStore: true })[0]).toMatchObject({ problem: null, maxQuantity: null });
+  });
 });

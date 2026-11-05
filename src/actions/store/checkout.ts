@@ -8,6 +8,7 @@ import { checkoutInputSchema, startCheckoutWith, type CheckoutResult } from "@/l
 import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/order-status";
 import { log } from "@/lib/log";
 import { notifyOrder } from "@/lib/orders/notify";
+import { releaseExpiredHolds } from "@/lib/orders/expire";
 import { analytics } from "@/lib/analytics";
 import { getPublicSettings } from "@/lib/data/settings";
 import { isSellerIdentified } from "@/lib/domain/seller";
@@ -34,6 +35,42 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
     const result = await startCheckoutWith(
       {
         customerEmail: user.email,
+        async openOrders() {
+          const { data, error } = await svc
+            .from("orders")
+            .select("id, number, total_minor, payment_method, stripe_payment_intent_id, shipping, customer, order_items(product_id, quantity, stock_taken)")
+            .eq("user_id", user.id)
+            .eq("status", "awaiting_payment")
+            .in("payment_method", ["card", "pix"])
+            .order("created_at", { ascending: false })
+            .limit(20);
+          if (error) throw new Error(error.message);
+          return (data ?? []).map((o) => ({
+            orderId: o.id,
+            orderNumber: Number(o.number),
+            totalMinor: Number(o.total_minor),
+            method: o.payment_method,
+            paymentIntentId: o.stripe_payment_intent_id,
+            address: { ...(o.shipping as Record<string, string>), ...(o.customer as Record<string, string>) },
+            items: o.order_items.flatMap((i) => (i.product_id ? [{ productId: i.product_id, quantity: i.quantity, stockTaken: i.stock_taken }] : [])),
+          }));
+        },
+        async retrievePaymentIntent(id) {
+          return (await stripe.paymentIntents.retrieve(id)) as never;
+        },
+        async releaseOrder(o) {
+          if (o.paymentIntentId) {
+            const moved = await stripe.paymentIntents.cancel(o.paymentIntentId).then(
+              () => false,
+              (e: { code?: string; payment_intent?: { status?: string } }) => e?.payment_intent?.status !== "canceled",
+            );
+            if (moved) return false;
+          }
+          const { data, error } = await svc.rpc("order_cancel_unpaid", { p_order: o.orderId });
+          if (error) throw new Error(error.message);
+          return data === true;
+        },
+        releaseExpired: releaseExpiredHolds,
         async createOrder(i) {
           const { data, error } = await sb.rpc("create_order_from_cart", { p_items: i.items as never, p_address: i.address as never, p_method: i.method, p_save_address: i.saveAddress, ...(i.expectedTotalMinor ? { p_expected_total: i.expectedTotalMinor } : {}) });
           if (error) throw new Error(error.message);
