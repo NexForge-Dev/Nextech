@@ -27,6 +27,7 @@ function rpcPayload(p: ProductParsed, extra: { priceSource?: "manual" | "import"
     featured: p.featured,
     sku: p.sku,
     externalId: p.externalId,
+    warranty: p.warranty,
     rating: p.rating,
     ratingCount: p.ratingCount,
     ratingSource: p.ratingSource,

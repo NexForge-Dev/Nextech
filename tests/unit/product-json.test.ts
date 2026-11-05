@@ -25,6 +25,14 @@ describe("products JSON import", () => {
     expect(p.sale).toMatchObject({ priceMinor: 24990, fulfillment: "dropship", available: true, deliveryMinDays: 3, deliveryMaxDays: 7 });
   });
 
+  it("keeps the warranty the product was registered with", () => {
+    expect(parse([{ ...minimal, garantia: " 12 meses " }]).items[0].payload.warranty).toBe("12 meses");
+  });
+
+  it("rejects a warranty longer than the form allows", () => {
+    expect(parse([{ ...minimal, garantia: "x".repeat(121) }]).errors).toHaveLength(1);
+  });
+
   it("maps every form field", () => {
     const r = parse([
       {

@@ -42,6 +42,7 @@ export type ProductFormValue = {
   featured: boolean;
   sku: string;
   externalId: string;
+  warranty: string;
   rating: string;
   ratingCount: string;
   ratingSource: string;
@@ -376,6 +377,9 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
           </Field>
           <Field label="Fonte da avaliação" htmlFor="p-rsource" error={err("ratingSource")}>
             <input id="p-rsource" className={inputCls} value={v.ratingSource} onChange={(e) => setV({ ...v, ratingSource: e.target.value })} placeholder="Mercado Livre" />
+          </Field>
+          <Field label="Garantia" htmlFor="p-warranty" error={err("warranty")} hint="Aparece na página do produto. Vazio mostra apenas &quot;Garantia legal&quot;.">
+            <input id="p-warranty" maxLength={120} className={inputCls} value={v.warranty} onChange={(e) => setV({ ...v, warranty: e.target.value })} placeholder="Ex.: 12 meses" />
           </Field>
           <Field label="SKU" htmlFor="p-sku" error={err("sku")}>
             <input id="p-sku" className={`${inputCls} font-mono`} value={v.sku} onChange={(e) => setV({ ...v, sku: e.target.value })} />

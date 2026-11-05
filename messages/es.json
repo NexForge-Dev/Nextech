@@ -457,7 +457,7 @@
     "withdrawal": "7 días para desistir",
     "withdrawalNote": "Tras recibir el producto",
     "warranty": "Garantía legal",
-    "warrantyNote": "30 o 90 días, según el producto",
+    "warrantyValue": "Garantía: {value}",
     "paymentMethods": "Formas de pago",
     "methodCard": "Tarjeta",
     "methodBoleto": "Boleto",
@@ -480,5 +480,22 @@
     "step4Title": "Recíbelo en casa",
     "step4Text": "Si algo no está bien, tienes 7 días para desistir, además de la garantía legal.",
     "howMore": "Ver cómo funciona"
+  },
+  "feedback": {
+    "open": "Enviar sugerencia o problema",
+    "close": "Cerrar",
+    "title": "Habla con nosotros",
+    "kindLegend": "¿Sobre qué es tu mensaje?",
+    "suggestion": "Ayúdanos a mejorar",
+    "problem": "Reportar un problema",
+    "messageLabel": "Tu mensaje",
+    "privacyHint": "No incluyas datos personales.",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "sent": "Mensaje enviado. ¡Gracias!",
+    "errorInvalid": "Elige una opción y escribe tu mensaje.",
+    "errorRate": "Has enviado demasiados mensajes. Inténtalo de nuevo más tarde.",
+    "errorSession": "Tu sesión ha caducado. Inicia sesión de nuevo para enviar.",
+    "errorServer": "No se pudo enviar. Inténtalo de nuevo."
   }
 }

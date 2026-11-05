@@ -37,6 +37,7 @@ export const PRODUCT_JSON_TEMPLATE = {
       avaliacao: "",
       quantidade_avaliacoes: "",
       fonte_avaliacao: "",
+      garantia: "",
       sku: "",
       identificador_externo: "",
       caracteristicas_gerais: [emptySpec],
@@ -64,6 +65,7 @@ Regras:
 - "tags": letras minúsculas, números e hífens, como "sem-fio".
 - "modo_venda": "dropship" (o fornecedor envia) ou "estoque" (sai do meu estoque). Em "estoque", preencha "estoque" com a quantidade.
 - "preco_de": só se eu informar. Precisa ser maior que "preco".
+- "garantia": só se eu informar, como "12 meses". Se não, deixe vazio.
 - "avaliacao": de 0 a 5, só com "fonte_avaliacao" preenchida.
 - "fornecedores": só se eu informar. Remova as linhas sem fornecedor.
 - "status": "rascunho", "publicado" ou "arquivado". Use "rascunho", a menos que eu peça outro.
@@ -114,6 +116,7 @@ const productSchema = z.strictObject({
   avaliacao: text,
   quantidade_avaliacoes: text,
   fonte_avaliacao: text,
+  garantia: text,
   sku: text,
   identificador_externo: text,
   caracteristicas_gerais: specs,
@@ -177,6 +180,7 @@ function toInput(p: JsonProduct, catalog: ProductJsonCatalog): { input: ProductI
       status: STATUS[p.status ?? "rascunho"],
       featured: p.destaque ?? false,
       sku: p.sku,
+      warranty: p.garantia,
       externalId: p.identificador_externo,
       rating: p.avaliacao,
       ratingCount: p.quantidade_avaliacoes,

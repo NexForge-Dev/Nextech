@@ -92,6 +92,8 @@ export const productInputSchema = z
     featured: z.boolean().default(false),
     sku: optionalText(80),
     externalId: optionalText(120),
+    /** Left out by the CSV import, which must not clear what the product already has. */
+    warranty: z.string().trim().max(120, "Garantia: use no máximo 120 caracteres.").optional(),
     rating: z.string().trim().optional().default(""),
     ratingCount: z.string().trim().optional().default(""),
     ratingSource: optionalText(80),

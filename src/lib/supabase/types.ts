@@ -755,6 +755,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"product_feedback": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"message": string,"page": string,"status": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"message": string,"page"?: string,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"message"?: string,"page"?: string,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"product_images": {
                   Row: {
                     "alt": string | null,"created_at": string,"id": string,"is_main": boolean,"path": string,"product_id": string,"sort_order": number,"updated_at": string
@@ -889,14 +903,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "brand_id": string | null,"category_id": string,"created_at": string,"external_id": string | null,"featured": boolean,"id": string,"published_at": string | null,"rating": number | null,"rating_count": number | null,"rating_source": string | null,"rating_source_kind": Database["public"]['Enums']["source_kind"] | null,"sale_mode": string,"search_tsv": unknown,"sku": string | null,"slug": string,"specs": NonNullable<Json>,"status": string,"updated_at": string
+                    "brand_id": string | null,"category_id": string,"created_at": string,"external_id": string | null,"featured": boolean,"id": string,"published_at": string | null,"rating": number | null,"rating_count": number | null,"rating_source": string | null,"rating_source_kind": Database["public"]['Enums']["source_kind"] | null,"sale_mode": string,"search_tsv": unknown,"sku": string | null,"slug": string,"specs": NonNullable<Json>,"status": string,"updated_at": string,"warranty": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "brand_id"?: string | null,"category_id": string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug": string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
+                    "brand_id"?: string | null,"category_id": string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug": string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string,"warranty"?: string | null
                   }
                   Update: {
-                    "brand_id"?: string | null,"category_id"?: string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug"?: string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string
+                    "brand_id"?: string | null,"category_id"?: string,"created_at"?: string,"external_id"?: string | null,"featured"?: boolean,"id"?: string,"published_at"?: string | null,"rating"?: number | null,"rating_count"?: number | null,"rating_source"?: string | null,"rating_source_kind"?: Database["public"]['Enums']["source_kind"] | null,"sale_mode"?: string,"search_tsv"?: unknown,"sku"?: string | null,"slug"?: string,"specs"?: NonNullable<Json>,"status"?: string,"updated_at"?: string,"warranty"?: string | null
                   }
                   Relationships: [
                     {

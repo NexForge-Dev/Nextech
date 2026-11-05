@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, CreditCard, PackageCheck, RotateCcw, Search, ShieldCheck, Lock, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, PackageCheck, RotateCcw, Search, Lock, Truck } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
 /** Store promises, each linked to the page that states it in full. Own store only: affiliates sell elsewhere. */
@@ -9,11 +9,10 @@ export async function TrustBar() {
     { icon: Truck, title: t("freeShipping"), note: t("freeShippingNote"), href: "/entrega" },
     { icon: Lock, title: t("securePayment"), note: t("securePaymentNote"), href: "/como-funciona" },
     { icon: RotateCcw, title: t("withdrawal"), note: t("withdrawalNote"), href: "/trocas-e-devolucoes" },
-    { icon: ShieldCheck, title: t("warranty"), note: t("warrantyNote"), href: "/trocas-e-devolucoes" },
   ] as const;
   return (
     <section aria-label={t("securePayment")} className="border-b border-line bg-white">
-      <ul className="shell grid grid-cols-2 gap-x-4 gap-y-5 py-6 lg:grid-cols-4">
+      <ul className="shell grid gap-x-4 gap-y-5 py-6 sm:grid-cols-3">
         {items.map(({ icon: Icon, title, note, href }) => (
           <li key={title}>
             <Link href={href} className="group flex items-center gap-3">
