@@ -1,4 +1,5 @@
 import type { EmailKind } from "@/lib/email/templates";
+import { normalizeRefundStatus } from "@/lib/orders/late-refund";
 
 /** Minimal shape of the Stripe events we handle (kept structural so tests need no Stripe SDK). */
 export type StripeEventLike = { id: string; type: string; data: { object: Record<string, unknown> } };
@@ -19,7 +20,8 @@ export type WebhookDeps = {
   /** Refunds of a charge, for charge.refunded payloads that no longer embed them. */
   listRefunds(chargeId: string): Promise<Record<string, unknown>[]>;
   cancelByPaymentIntent(paymentIntentId: string): Promise<{ orderId: string } | null>;
-  recordRefund(r: { paymentIntentId: string; stripeRefundId: string; amountMinor: number; status: string }): Promise<{ orderId: string; fullyRefunded: boolean; changed: boolean } | null>;
+  /** `failedNow`: this refund just became failed/canceled, so the money did not reach the customer. */
+  recordRefund(r: { paymentIntentId: string; stripeRefundId: string; amountMinor: number; status: string }): Promise<{ orderId: string; fullyRefunded: boolean; changed: boolean; failedNow?: boolean } | null>;
   /** Append to the order history; null when no order uses this payment intent. */
   addEvent(paymentIntentId: string, kind: string, data: Record<string, unknown>): Promise<{ orderId: string } | null>;
   notify(kind: EmailKind, orderId: string, extra?: { refundMinor?: number; alert?: string }): Promise<void>;
@@ -29,6 +31,7 @@ export type WebhookOutcome = "processed" | "duplicate" | "ignored";
 
 const str = (v: unknown) => (typeof v === "string" ? v : null);
 const piIdOf = (o: Record<string, unknown>) => (o.object === "payment_intent" ? str(o.id) : str(o.payment_intent));
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Apply a verified Stripe event to the order it belongs to. Safe to receive the same event many
@@ -54,7 +57,8 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
   switch (event.type) {
     case "payment_intent.succeeded": {
       const orderId = str((o.metadata as Record<string, unknown> | undefined)?.order_id);
-      if (!orderId) return "ignored";
+      // the Stripe account is shared with other apps: their metadata is not ours to choke on
+      if (!orderId || !UUID.test(orderId)) return "ignored";
       // never trust the payment blindly: it must cover exactly this order's total, in its currency
       const expected = await d.orderAmount(orderId);
       if (!expected) return "ignored";
@@ -113,7 +117,12 @@ async function apply(event: StripeEventLike, d: WebhookDeps): Promise<WebhookOut
         if (!id) continue;
         const amountMinor = Number(rf.amount ?? 0);
         try {
-          last = (await d.recordRefund({ paymentIntentId: piId, stripeRefundId: id, amountMinor, status: str(rf.status) ?? "pending" })) ?? last;
+          const recorded = await d.recordRefund({ paymentIntentId: piId, stripeRefundId: id, amountMinor, status: normalizeRefundStatus(str(rf.status)) });
+          last = recorded ?? last;
+          if (recorded?.failedNow) {
+            await d.addEvent(piId, "refund_failed", { stripeRefundId: id, amount: amountMinor, status: rf.status });
+            await d.notify("ownerAlert", recorded.orderId, { alert: `O Stripe informou que o reembolso ${id} não foi concluído: o valor não voltou para o cliente. Confira o pedido e reembolse de novo se preciso.` });
+          }
         } catch (e) {
           // the books disagree (e.g. a manual refund plus a Stripe one): retrying would fail forever
           if (!(e instanceof Error && e.message === "refund_exceeds_total")) throw e;

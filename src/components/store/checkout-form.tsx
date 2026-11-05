@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Banknote, CircleAlert, CreditCard, Lock, QrCode, RefreshCw, ShoppingBag, type LucideIcon } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
@@ -39,6 +39,19 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
   const [cepState, setCepState] = useState<"idle" | "loading" | "notfound">("idle");
   const [card, setCard] = useState<{ clientSecret: string; orderNumber: number } | null>(null);
   const [cartFailed, setCartFailed] = useState(false);
+  const cardPanel = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // the next step must be on screen: the form above it is locked and its button is gone
+  useEffect(() => {
+    if (!card) return;
+    cardPanel.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    cardPanel.current?.focus({ preventScroll: true });
+  }, [card]);
+
+  useEffect(() => {
+    if (Object.keys(errors).length) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [errors]);
 
   const reloadCart = () => {
     loadCart(getLocalCart()).then(
@@ -89,7 +102,7 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
         setAddr(address);
         setAddressId("new");
       }
-      if (r.priceChanged) loadCart(getLocalCart()).then(setCart, () => undefined);
+      if (r.priceChanged || r.unavailableSlug) loadCart(getLocalCart()).then(setCart, () => undefined);
       return;
     }
     setChargedTotal(r.totalMinor);
@@ -124,7 +137,7 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
   }
   if (!cart.lines.length || !cart.checkoutable) {
     return (
-      <EmptyState icon={ShoppingBag} title={cart.lines.length ? tc("hidden") : tc("emptyTitle")}>
+      <EmptyState icon={ShoppingBag} title={cart.lines.some((l) => l.problem === "short") ? tc("reviewLines") : cart.lines.length ? tc("hidden") : tc("emptyTitle")}>
         <Link href={cart.lines.length ? "/carrinho" : "/produtos"} className="btn btn-primary">
           {cart.lines.length ? t("reviewCart") : tc("explore")}
         </Link>
@@ -170,7 +183,8 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <form onSubmit={submit} className="min-w-0 space-y-4" noValidate>
+      <div className="min-w-0 space-y-4">
+      <form ref={formRef} onSubmit={submit} className="space-y-4" noValidate>
         <section className="panel space-y-4 p-5 md:p-6">
           <h2 className="text-lg font-semibold tracking-tight">{t("addressTitle")}</h2>
           <p className="rounded-md bg-soft p-3 text-sm leading-relaxed text-ink" data-testid="checkout-privacy">
@@ -252,6 +266,19 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
           </button>
         )}
       </form>
+      {card && (
+        <div ref={cardPanel} tabIndex={-1} className="scroll-mt-32 space-y-3 outline-none md:scroll-mt-44" data-testid="card-step">
+          {stripePromise ? (
+            <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>
+              <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(chargedTotal ?? totals.totalMinor) })} />
+            </Elements>
+          ) : (
+            <Notice tone="error">{t("notConfigured")}</Notice>
+          )}
+          <button type="button" className="btn btn-ghost w-full" onClick={() => setCard(null)}>{t("editAddress")}</button>
+        </div>
+      )}
+      </div>
 
       <aside className="min-w-0 space-y-4 lg:sticky lg:top-44">
         <div className="panel space-y-3 p-5">
@@ -272,12 +299,6 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
           {maxDeliveryDays != null && <p className="text-xs text-mute">{t("deliveryEstimate", { days: maxDeliveryDays })}</p>}
           {seller && <p className="border-t border-line pt-3 text-xs text-mute" data-testid="checkout-seller">{t("soldBy", { seller })}</p>}
         </div>
-        {card && !stripePromise && <Notice tone="error">{t("notConfigured")}</Notice>}
-        {card && stripePromise && (
-          <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>
-            <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(chargedTotal ?? totals.totalMinor) })} />
-          </Elements>
-        )}
         <p className="flex items-center justify-center gap-1.5 text-center text-xs text-mute"><Lock className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />{t("secure")}</p>
       </aside>
     </div>

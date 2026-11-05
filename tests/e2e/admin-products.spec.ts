@@ -52,7 +52,7 @@ test("admin creates an own-store product with a private supplier and sees the ma
     await acceptCookies(page);
     await adminLogin(page);
     await page.goto("/admin/produtos/novo");
-    await expect(page.getByLabel("Modo de venda")).toHaveValue("own");
+    await expect(page.getByLabel("Modo de venda")).toHaveValue("dropship");
     await page.getByLabel("Nome do produto").fill(`Fone Próprio ${stamp}`);
     await page.getByLabel("Slug").fill(slug);
     await page.getByLabel("Categoria").selectOption({ label: "Eletrônicos" });

@@ -59,7 +59,12 @@ const saveProductImpl = adminAction({ permission: "products.write", schema: prod
   const errors = validateOfferUrls(p.offers, await storeDomains([...new Set(p.offers.map((o) => o.storeId))]));
   if (Object.keys(errors).length) throw new ActionFailure("invalid", "Há links de oferta com domínio não autorizado.", errors);
   const sb = await createServerSupabase();
-  const { data: id, error } = await sb.rpc("admin_save_product_promo", { p: rpcPayload(p) as never });
+  const payload = { p: rpcPayload(p) as never };
+  // 0033 wraps the stock-safe save, so this call applies both the promo and the stock check.
+  let { data: id, error } = await sb.rpc("admin_save_product_promo", payload);
+  // PGRST202: migration 0030/0033 not applied yet. Saves as before, without the promo or the stock check.
+  if (error?.code === "PGRST202") ({ data: id, error } = await sb.rpc("admin_save_product_full", payload));
+  if (error?.message === "stock_changed") throw new ActionFailure("invalid", "O estoque mudou enquanto você editava (houve venda). Recarregue a página e ajuste a quantidade de novo.", { "sale.stock": ["O estoque mudou. Recarregue a página."] });
   if (error) throw error;
   if (!p.featured) await releaseFlagship(id as string);
   updateTag("catalog");

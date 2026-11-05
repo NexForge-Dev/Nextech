@@ -8,7 +8,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContai
  * chart has a table view so nothing depends on colour.
  */
 const INK = "#000000";
-const MUTE = "#777777";
+const MUTE = "#6b6b6b";
 const LINE = "#e5e5e5";
 const tick = { fill: MUTE, fontSize: 11 };
 

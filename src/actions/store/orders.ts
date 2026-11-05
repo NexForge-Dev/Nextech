@@ -10,6 +10,9 @@ import { cancelOrderWith, type CancelResult } from "@/lib/orders/cancel";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
 import { analytics } from "@/lib/analytics";
+import { hasImageSignature } from "@/lib/security/image-signature";
+import { isDeclinedPayment } from "@/lib/orders/declined";
+import { issueStripeRefund, lateRefundDeps, stripeRefundApi } from "@/lib/orders/late-refund";
 
 export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> {
   const user = await getSessionUser();
@@ -27,25 +30,16 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
         const { data: o } = await svc.from("orders").select("refunded_minor").eq("id", row.order_id).maybeSingle();
         return { ...row, total_minor: Number(row.total_minor), refunded_minor: Number(o?.refunded_minor ?? 0) };
       },
-      async refund(pi, amount, key) {
+      async refund(pi, amount) {
+        const { data: o } = await svc.from("orders").select("id").eq("stripe_payment_intent_id", pi).maybeSingle();
+        if (!o) return false;
         try {
-          const refund = await getStripe().refunds.create({ payment_intent: pi, amount, reason: "requested_by_customer", metadata: { source: "customer_cancel" } }, { idempotencyKey: key });
-          await svc.rpc("order_record_refund", {
-            p_order: null as never,
-            p_pi: pi,
-            p_amount: amount,
-            p_method: "stripe",
-            p_stripe_refund: refund.id,
-            p_status: refund.status === "succeeded" ? "succeeded" : "pending",
-            p_note: "Cancelado pelo cliente" as never,
-            p_actor: null as never,
-          });
-          return true;
+          const r = await issueStripeRefund(lateRefundDeps(svc, stripeRefundApi(getStripe()), notifyOrder), { orderId: o.id, paymentIntent: pi, source: "customer", amountMinor: amount, note: "Cancelado pelo cliente" });
+          return r.outcome === "created" || r.outcome === "nothing_owed";
         } catch (e) {
-          // the order is cancelled; the failed refund shows in the history and the owner refunds from the admin
+          // the order is cancelled; the failed refund shows in the history and the panel lists what is owed
           log.error("orders.cancel_refund_failed", e, { pi });
-          const { data: o } = await svc.from("orders").select("id").eq("stripe_payment_intent_id", pi).maybeSingle();
-          if (o) await svc.from("order_events").insert({ order_id: o.id, actor: "system", kind: "refund_failed", data: { amount } });
+          await svc.from("order_events").insert({ order_id: o.id, actor: "system", kind: "refund_failed", data: { amount } });
           return false;
         }
       },
@@ -64,6 +58,18 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
   if (r.ok) analytics.feature(user.id, "pedido_cancelado");
   revalidatePath("/[locale]/minha-conta/pedidos", "layout");
   return r;
+}
+
+/**
+ * For the "payment failed" return page. Its address can be typed or shared by anyone, so the query
+ * string decides nothing: the order is cancelled only if Stripe confirms the attempt really failed.
+ */
+export async function closeDeclinedOrder(orderNumber: number): Promise<void> {
+  const user = await getSessionUser();
+  if (!user || !Number.isInteger(orderNumber)) return;
+  const { data: o } = await createServiceSupabase().from("orders").select("status, payment_method, stripe_payment_intent_id").eq("number", orderNumber).eq("user_id", user.id).maybeSingle();
+  if (!o?.stripe_payment_intent_id || o.status !== "awaiting_payment" || o.payment_method !== "card") return;
+  if (isDeclinedPayment(await getStripe().paymentIntents.retrieve(o.stripe_payment_intent_id))) await cancelMyOrder(orderNumber);
 }
 
 const returnSchema = z.object({
@@ -86,8 +92,14 @@ export async function requestReturn(_: ReturnState, form: FormData): Promise<Ret
   for (const f of files) {
     if (!PHOTO_TYPES[f.type]) return { ok: false, fieldErrors: { photos: ["Use fotos JPG, PNG ou WebP."] } };
     if (f.size > 5 * 1024 * 1024) return { ok: false, fieldErrors: { photos: ["Cada foto pode ter até 5 MB."] } };
+    // the declared type comes from the browser: check the file itself
+    if (!hasImageSignature(new Uint8Array(await f.slice(0, 12).arrayBuffer()), f.type)) return { ok: false, fieldErrors: { photos: ["Use fotos JPG, PNG ou WebP."] } };
   }
   const sb = await createServerSupabase();
+  // nothing goes to storage for an order this customer cannot return
+  const { data: target } = await sb.from("my_orders").select("status").eq("number", parsed.data.number).maybeSingle();
+  if (!target) return { ok: false, error: "Não foi possível enviar a solicitação." };
+  if (["awaiting_payment", "cancelled", "refunded"].includes(target.status ?? "")) return { ok: false, error: "Este pedido ainda não pode ter devolução." };
   const paths: string[] = [];
   for (const f of files) {
     const path = `${user.id}/${parsed.data.number}-${crypto.randomUUID()}.${PHOTO_TYPES[f.type]}`;

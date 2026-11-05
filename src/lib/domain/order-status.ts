@@ -59,7 +59,8 @@ export function canCustomerCancel(status: OrderStatus, anyItemPurchased: boolean
   return !anyItemPurchased && (status === "awaiting_payment" || status === "paid" || status === "awaiting_supplier");
 }
 
-/** Only the Stripe webhook moves an order to paid; the admin may set every other status. */
-export function adminCanSetStatus(to: OrderStatus): boolean {
+/** Only the Stripe webhook moves an order to paid, so an unpaid order can only be cancelled. */
+export function adminCanSetStatus(to: OrderStatus, from?: OrderStatus): boolean {
+  if (from === "awaiting_payment" && to !== "cancelled") return false;
   return to !== "paid" && to !== "awaiting_payment";
 }

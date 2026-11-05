@@ -16,7 +16,7 @@ export default async function PromotionsPage() {
   const fmt = (d: string) => new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
   return (
     <>
-      <PageHeader title="Ofertas" description="Produtos exibidos na seção “Ofertas”. Somente descontos comprovados são mostrados; sem comprovação, aparece o motivo." actions={<ButtonLink href="/admin/ofertas/novo"><Plus className="size-4" /> Nova oferta</ButtonLink>} />
+      <PageHeader title="Ofertas" description="Produtos exibidos na seção “Ofertas”. Produto próprio mostra o desconto do preço “de” informado no cadastro; afiliado, só o comprovado. Sem desconto, aparece o motivo." actions={<ButtonLink href="/admin/ofertas/novo"><Plus className="size-4" /> Nova oferta</ButtonLink>} />
       <DataTable
         rows={rows}
         total={rows.length}

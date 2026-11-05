@@ -29,12 +29,19 @@ const EVENT: Record<string, string> = {
   refunded: "Reembolso total",
   refund_failed: "Falha ao reembolsar — reembolse manualmente",
   manual_refund_pending: "Reembolso por fora pendente (boleto)",
+  refund_reverted: "Reembolso não concluído: pedido reaberto",
   refund_mismatch: "Reembolso do Stripe maior que o saldo do pedido — confira",
   return_requested: "Cliente abriu devolução/suporte",
   return_resolved: "Devolução/suporte resolvido",
   invoice_attached: "Nota fiscal anexada",
   email_sent: "E-mail enviado",
-  email_skipped: "E-mail não enviado (provedor não configurado)",
+  email_skipped: "E-mail não enviado",
+  owner_alert: "Alerta para a loja",
+  refund_owed: "Valor a devolver listado para a loja",
+  refund_blocked: "Reembolso automático bloqueado por contestação",
+  payment_stuck: "Pagamento no Stripe sem confirmação no pedido",
+  paid_after_cancel: "Pagamento recebido depois do cancelamento",
+  amount_mismatch: "Valor pago diferente do total do pedido",
   dispute_created: "Contestação aberta",
   dispute_closed: "Contestação encerrada",
 };
@@ -92,12 +99,12 @@ export function AdminOrderView({ order, canWrite, canRefund }: { order: Order; c
       </FormSection>
 
       {canWrite && (
-        <FormSection title="Status do pedido" description="“Produto comprado no fornecedor” é marcado sozinho ao registrar a primeira compra. O pagamento só é confirmado pelo Stripe.">
+        <FormSection title="Status do pedido" description="“Produto comprado no fornecedor” é marcado sozinho ao registrar a primeira compra. O pagamento só é confirmado pelo Stripe: pedido não pago só pode ser cancelado.">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Status" htmlFor="o-status">
               <select id="o-status" className={inputCls} value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
                 {ORDER_STATUSES.map((st) => (
-                  <option key={st} value={st} disabled={!adminCanSetStatus(st) && st !== order.status}>{ADMIN_STATUS_LABEL[st]}</option>
+                  <option key={st} value={st} disabled={!adminCanSetStatus(st, order.status) && st !== order.status}>{ADMIN_STATUS_LABEL[st]}</option>
                 ))}
               </select>
             </Field>

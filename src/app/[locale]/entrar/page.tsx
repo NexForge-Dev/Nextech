@@ -20,7 +20,7 @@ export default async function SignInPage({ params, searchParams }: { params: Pro
       aside={
         <>
           {t("noAccount")}{" "}
-          <Link href="/cadastro" className="font-medium text-black underline underline-offset-2">{t("signUp")}</Link>
+          <Link href="/cadastro" className="inline-flex min-h-11 items-center font-medium text-black underline underline-offset-2 md:min-h-0">{t("signUp")}</Link>
           <p className="mt-2">{t("guestNote")}</p>
         </>
       }

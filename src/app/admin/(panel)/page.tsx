@@ -10,6 +10,7 @@ import { orderKpis } from "@/lib/data/admin/orders";
 import { formatMoney } from "@/lib/domain/money";
 import { getBusinessModels, getPublicSettings } from "@/lib/data/settings";
 import { ownStoreReadiness } from "@/lib/admin/launch-readiness";
+import { getOrderAlerts } from "@/lib/data/admin/order-alerts";
 
 /** Launch blockers for the own store (seller identity required by law, payment and email config). */
 async function LaunchReadiness() {
@@ -32,6 +33,31 @@ async function LaunchReadiness() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+const MAX_ALERTS_SHOWN = 50;
+
+/** Money and orders that need action now. Comes from the database, so it works without any e-mail provider. */
+async function OrderAlerts() {
+  const { alerts, emailsNotSent } = await getOrderAlerts();
+  if (!alerts.length && !emailsNotSent) return null;
+  return (
+    <section role="alert" className="mb-6 rounded-lg border border-black bg-white p-5" data-testid="order-alerts">
+      <h2 className="text-sm font-semibold">Pedidos que precisam de atenção</h2>
+      {alerts.length > 0 && (
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
+          {alerts.slice(0, MAX_ALERTS_SHOWN).map((a) => (
+            <li key={a.key}>
+              <Link href={`/admin/pedidos/${a.number}`} className="font-medium underline underline-offset-2">Pedido #{a.number}</Link>: {a.message}
+              {a.emailed === false && <span className="text-mute"> (e-mail não enviado)</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {alerts.length > MAX_ALERTS_SHOWN && <p className="mt-3 text-sm font-medium">E mais {alerts.length - MAX_ALERTS_SHOWN} alerta(s). Os mais antigos aparecem primeiro; resolva-os para ver os seguintes.</p>}
+      {emailsNotSent > 0 && <p className="mt-3 text-sm text-mute">{emailsNotSent} e-mail(s) de pedido não saíram nos últimos 30 dias. Confira a configuração do Resend.</p>}
     </section>
   );
 }
@@ -63,6 +89,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const ownStore = canOrders || ctx.permissions.has("settings.write") ? (
     <>
       <LaunchReadiness />
+      {canOrders && <OrderAlerts />}
       {canOrders && <OwnStoreKpis />}
     </>
   ) : null;

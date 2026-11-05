@@ -18,6 +18,7 @@ function deps(rows: Row[], stripe: Record<string, string | Error>, cancelFails: 
     },
     cancelInDb: async (id) => (log.push(`db-cancel ${id}`), true),
     notify: async (kind, id) => void log.push(`notify ${kind} ${id}`),
+    paymentStuck: async (o) => void log.push(`stuck ${o.orderId}`),
   };
   return { d, log };
 }
@@ -36,7 +37,7 @@ describe("cancelStaleOrdersWith", () => {
   it("keeps an order whose payment already succeeded (the webhook marks it paid)", async () => {
     const { d, log } = deps([{ orderId: "o3", paymentIntent: "pi_3", paymentMethod: "card" }], { pi_3: "succeeded" });
     expect(await cancelStaleOrdersWith(d)).toEqual({ cancelled: 0, skipped: 1 });
-    expect(log).toEqual([]);
+    expect(log).toEqual(["stuck o3"]);
   });
   it("keeps the order when Stripe refuses the cancellation", async () => {
     const { d, log } = deps([{ orderId: "o4", paymentIntent: "pi_4", paymentMethod: "boleto" }], { pi_4: "requires_action" }, ["pi_4"]);

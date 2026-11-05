@@ -13,9 +13,8 @@ test("empty store shows the hero and a coming-soon block, no product sections", 
   });
 });
 
-test("store with demo data shows the selection with honest prices", async ({ page }) => {
+test("store with demo data shows its products with honest prices", async ({ page }) => {
   await page.goto("/pt-br");
-  await expect(page.getByRole("heading", { name: "Seleção NEXTECH" })).toBeVisible();
   const demoCards = page.getByTestId("product-card").filter({ hasText: "Produto de demonstração" });
   await expect(demoCards.first()).toBeVisible();
   const text = await page.locator("main").innerText();
@@ -25,5 +24,6 @@ test("store with demo data shows the selection with honest prices", async ({ pag
 
 test("English home is translated", async ({ page }) => {
   await page.goto("/en");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Find what you");
+  // the h1 is the flagship product when there is one, so check a fixed heading
+  await expect(page.getByRole("heading", { name: "Main categories" })).toBeVisible();
 });

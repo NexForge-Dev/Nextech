@@ -103,7 +103,7 @@ export function renderEmail(kind: EmailKind, o: EmailOrder): { subject: string; 
 ${rows || tracking ? `<table role="presentation" width="100%" style="margin-top:20px;font-size:14px">${rows}${tracking}</table>` : ""}
 ${button}
 ${rights ? `<p style="margin:28px 0 0;font-size:13px;line-height:1.5;color:#222222">Você pode desistir da compra em até 7 dias corridos após receber o produto, com reembolso integral (art. 49 do CDC). <a href="${esc(termsUrl)}" style="color:#000">Termos de venda</a> · <a href="${esc(returnsUrl)}" style="color:#000">Trocas e devoluções</a></p>` : ""}
-<p style="margin:32px 0 0;font-size:12px;color:#777777">Você recebeu este e-mail por causa de um pedido na NEXTECH.${seller ? `<br>${esc(seller)}` : ""}</p>
+<p style="margin:32px 0 0;font-size:12px;color:#6b6b6b">Você recebeu este e-mail por causa de um pedido na NEXTECH.${seller ? `<br>${esc(seller)}` : ""}</p>
 </td></tr></table></td></tr></table></body></html>`;
   const lines = [
     c.lead,

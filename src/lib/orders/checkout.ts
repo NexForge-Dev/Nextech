@@ -42,7 +42,18 @@ type NextAction = {
   boleto_display_details?: { hosted_voucher_url?: string | null; number?: string | null; expires_at?: number | null } | null;
   pix_display_qr_code?: { image_url_png?: string | null; data?: string | null; expires_at?: number | null } | null;
 };
-type PI = { id: string; client_secret: string | null; status: string; next_action: NextAction | null };
+type PI = { id: string; client_secret: string | null; status: string; amount?: number; next_action: NextAction | null };
+
+/** A card or Pix order of this customer still waiting for payment. */
+export type OpenOrder = {
+  orderId: string;
+  orderNumber: number;
+  totalMinor: number;
+  method: string;
+  paymentIntentId: string | null;
+  address: Record<string, string>;
+  items: { productId: string; quantity: number; stockTaken: number }[];
+};
 
 export type CheckoutDeps = {
   createOrder(input: CheckoutInput): Promise<{ orderId: string; orderNumber: number; totalMinor: number }>;
@@ -55,6 +66,13 @@ export type CheckoutDeps = {
   abandonOrder(orderId: string, failure: { code: string | null; message: string; paymentIntentId: string | null }): Promise<void>;
   customerEmail: string;
   stripe: { createPaymentIntent(params: Record<string, unknown>, opts: { idempotencyKey: string }): Promise<PI> };
+  /** The customer's unpaid orders: a reload must not lose the stock they hold, nor create a second order. */
+  openOrders(): Promise<OpenOrder[]>;
+  retrievePaymentIntent(id: string): Promise<PI>;
+  /** Cancel the payment at Stripe, then the order, giving its stock back. False when the payment already moved on. */
+  releaseOrder(order: OpenOrder): Promise<boolean>;
+  /** Give back stock held by anyone's expired orders. */
+  releaseExpired(): Promise<void>;
 };
 
 export type CheckoutResult =
@@ -72,6 +90,7 @@ const ERRORS: Record<string, string> = {
   invalid_quantity: "Quantidade inválida no carrinho.",
   duplicate_item: "Revise o carrinho e tente novamente.",
   cart_too_large: "O carrinho tem itens demais.",
+  invalid_address: "Revise o endereço de entrega.",
   too_many_orders: "Você criou muitos pedidos sem pagamento na última hora. Pague um deles em Meus pedidos ou tente mais tarde.",
 };
 
@@ -99,6 +118,40 @@ export function paymentErrorMessage(e: unknown, method: PaymentMethod): string {
   return GENERIC_PAYMENT_ERROR;
 }
 
+const norm = (v: unknown) => String(v ?? "").trim();
+const ADDRESS_FIELDS = ["recipientName", "cpf", "phone", "cep", "street", "number", "complement", "district", "city", "state"] as const;
+
+/** Same products, quantities and delivery address: paying this order is paying what is on screen. */
+function sameOrder(o: OpenOrder, input: CheckoutInput): boolean {
+  const key = (items: { productId: string; quantity: number }[]) => items.map((i) => `${i.productId}:${i.quantity}`).sort().join();
+  return key(o.items) === key(input.items) && ADDRESS_FIELDS.every((f) => norm(o.address[f]) === norm(input.address[f]));
+}
+
+const RESUMABLE = new Set(["requires_payment_method", "requires_confirmation", "requires_action"]);
+const MONEY_MOVING = new Set(["processing", "requires_capture", "succeeded"]);
+
+/**
+ * A reload or a changed mind on the card step. The same cart resumes the same order and payment;
+ * anything else cancels the open order first, so the customer never competes with their own hold.
+ */
+async function resumeOrRelease(d: CheckoutDeps, input: CheckoutInput): Promise<CheckoutResult | null> {
+  const open = await d.openOrders();
+  const same = input.method === "card" ? open.find((o) => o.method === "card" && o.paymentIntentId && sameOrder(o, input)) : undefined;
+  if (same) {
+    const pi = await d.retrievePaymentIntent(same.paymentIntentId!);
+    if (MONEY_MOVING.has(pi.status)) return { ok: false, error: "Seu pagamento deste pedido já está em processamento. Acompanhe em Meus pedidos." };
+    const unchanged = pi.amount === same.totalMinor && (input.expectedTotalMinor === undefined || input.expectedTotalMinor === same.totalMinor);
+    if (RESUMABLE.has(pi.status) && pi.client_secret && unchanged) {
+      return { ok: true, kind: "card", orderNumber: same.orderNumber, totalMinor: same.totalMinor, clientSecret: pi.client_secret };
+    }
+  }
+  const wanted = new Set(input.items.map((i) => i.productId));
+  for (const o of open) {
+    if (o === same || o.items.some((i) => i.stockTaken > 0 && wanted.has(i.productId))) await d.releaseOrder(o);
+  }
+  return null;
+}
+
 const isoFromUnix = (s: unknown) => (typeof s === "number" ? new Date(s * 1000).toISOString() : null);
 
 /**
@@ -108,9 +161,16 @@ const isoFromUnix = (s: unknown) => (typeof s === "number" ? new Date(s * 1000).
  * return the voucher / QR code. Payment is only considered done by the Stripe webhook.
  */
 export async function startCheckoutWith(d: CheckoutDeps, input: CheckoutInput): Promise<CheckoutResult> {
+  const resumed = await resumeOrRelease(d, input);
+  if (resumed) return resumed;
   let order: { orderId: string; orderNumber: number; totalMinor: number };
   try {
-    order = await d.createOrder(input);
+    order = await d.createOrder(input).catch(async (e: unknown) => {
+      // the last units may be sitting in someone's expired order: free those and try once more
+      if (!(e instanceof Error && e.message.startsWith("item_unavailable:"))) throw e;
+      await d.releaseExpired();
+      return d.createOrder(input);
+    });
   } catch (e) {
     const code = e instanceof Error ? e.message : "";
     if (code === "price_changed") return { ok: false, error: "O preço de um produto mudou. Confira o novo total antes de pagar.", priceChanged: true };

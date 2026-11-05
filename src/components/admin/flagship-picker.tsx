@@ -9,7 +9,7 @@ export function FlagshipPicker({ products, value, shownNames }: { products: { id
   const { pending, run } = useAdminAction();
   return (
     <section className="panel mb-4 p-5 md:flex md:items-center md:justify-between md:gap-8">
-      <div>
+      <div className="min-w-0 [overflow-wrap:anywhere]">
         <p className="text-sm font-semibold">Produto destaque da página inicial</p>
         <p className="mt-1 text-sm text-mute">{shownNames.length ? `${shownNames.length > 1 ? "Em carrossel no topo da loja" : "No topo da loja agora"}: ${shownNames.join(", ")}` : "Publique um produto para ele aparecer no topo da loja."}</p>
         <p className="mt-1 text-sm text-mute">Com 2 ou mais produtos destacados, o topo vira um carrossel. Aqui você escolhe qual aparece primeiro.</p>

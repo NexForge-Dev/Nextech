@@ -5,7 +5,7 @@ import { minorDigits } from "@/lib/domain/money";
 import type { ProductFormValue } from "@/components/admin/product-form";
 import { getMarketOptions } from "./options";
 
-export const EMPTY_SALE = { price: "", compareAt: "", pixDiscountPct: "0", available: true, deliveryMinDays: 3, deliveryMaxDays: 7, fulfillment: "dropship" as "stock" | "dropship", stock: "", promoPrice: "", promoStartsAt: "", promoEndsAt: "" };
+export const EMPTY_SALE = { price: "", compareAt: "", pixDiscountPct: "0", available: true, deliveryMinDays: 3, deliveryMaxDays: 7, fulfillment: "dropship" as "stock" | "dropship", stock: "", promoPrice: "", promoStartsAt: "", promoEndsAt: "", stockRead: "" };
 
 export async function getProductFormOptions() {
   const sb = await createServerSupabase();
@@ -112,6 +112,7 @@ export async function getProductForEdit(id: string): Promise<ProductFormValue | 
           promoPrice: money(p.product_sale.promo_price_minor, "BRL"),
           promoStartsAt: toBrasiliaInput(p.product_sale.promo_starts_at),
           promoEndsAt: toBrasiliaInput(p.product_sale.promo_ends_at),
+          stockRead: p.product_sale.stock_quantity == null ? "" : String(p.product_sale.stock_quantity),
         }
       : EMPTY_SALE,
     suppliers: [...p.product_suppliers]

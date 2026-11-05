@@ -46,7 +46,7 @@ export function JsonImport({ prompt }: { prompt: string }) {
             setText(e.target.value);
             setPreview(null);
           }}
-          className="mt-2 w-full rounded-md border border-line p-3 font-mono text-xs outline-none focus:border-black"
+          className="mt-2 w-full rounded-md border border-line p-3 font-mono text-base md:text-xs outline-none focus:border-black"
           placeholder='{ "produtos": [ … ] }'
         />
         <div className="mt-3 flex gap-2">

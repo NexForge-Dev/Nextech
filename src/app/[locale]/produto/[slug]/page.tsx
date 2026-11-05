@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { ChevronRight, CircleCheck, CircleSlash, ExternalLink, Lock, RotateCcw, ShieldCheck, Star, Truck } from "lucide-react";
 import { pageLocale } from "@/i18n/page-locale";
@@ -9,6 +10,7 @@ import { getStoreContext } from "@/lib/data/context";
 import { getProduct, getRelated } from "@/lib/data/product";
 import { getFavoriteIds } from "@/lib/data/favorites";
 import { getSessionUser } from "@/lib/auth/session";
+import { releaseExpiredHolds } from "@/lib/orders/expire";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { storagePublicUrl } from "@/lib/supabase/env";
 import { bestOffer, displayPrice, priceSummary } from "@/lib/domain/pricing";
@@ -57,7 +59,10 @@ export default async function ProductPage({ params }: Props) {
     getPublicSettings(),
     getTranslations("store"),
   ]);
+  const crumb = "inline-flex min-h-11 items-center hover:text-black md:min-h-0";
   const own = product.saleMode === "own" ? product.sale : null;
+  // sold out may only mean units held by an unpaid order that already expired
+  if (own?.fulfillment === "stock" && !own.available) after(() => releaseExpiredHolds());
   const ownDiscount = own ? ownDiscountPct(own) : null;
   const pixOn = ctx.businessModels.payments.pix && !!own && own.pixDiscountPct > 0;
   const now = new Date();
@@ -103,11 +108,11 @@ export default async function ProductPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
       <div className="shell pt-4 md:pt-6">
         <nav aria-label={ts("breadcrumb")} className="flex flex-wrap items-center gap-1.5 text-xs text-mute">
-          <Link href="/" className="hover:text-black">{ts("home")}</Link>
+          <Link href="/" className={crumb}>{ts("home")}</Link>
           <ChevronRight className="size-3" aria-hidden />
-          <Link href="/produtos" className="hover:text-black">{tcat("title")}</Link>
+          <Link href="/produtos" className={crumb}>{tcat("title")}</Link>
           <ChevronRight className="size-3" aria-hidden />
-          <Link href={{ pathname: "/categoria/[slug]", params: { slug: product.category.slug } }} className="hover:text-black">{product.category.name}</Link>
+          <Link href={{ pathname: "/categoria/[slug]", params: { slug: product.category.slug } }} className={crumb}>{product.category.name}</Link>
         </nav>
       </div>
       <section className="shell grid items-start gap-6 pb-10 pt-4 md:pt-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
@@ -118,7 +123,7 @@ export default async function ProductPage({ params }: Props) {
               {product.brand.name}
             </Link>
           )}
-          <h1 className="t-page mt-1.5">{product.name}</h1>
+          <h1 className="t-page mt-1.5 break-words">{product.name}</h1>
           {product.rating && (
             <p className="mt-3 flex items-center gap-2 text-sm text-mute">
               <Star className="size-4 fill-black text-black" aria-hidden />
@@ -154,7 +159,7 @@ export default async function ProductPage({ params }: Props) {
                 <li className="flex items-center gap-2"><Truck className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />{t("freeShipping", { min: own.deliveryMinDays, max: own.deliveryMaxDays })}</li>
                 <li className="flex items-center gap-2 font-medium">
                   {own.available ? <CircleCheck className="size-4 shrink-0" strokeWidth={1.75} aria-hidden /> : <CircleSlash className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />}
-                  {own.available ? t("inStock") : t("soldOut")}
+                  {!own.available ? t("soldOut") : own.fulfillment === "stock" ? t("inStock") : t("availableNow")}
                 </li>
               </ul>
               {market === "BR" ? (

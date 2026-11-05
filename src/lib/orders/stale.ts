@@ -11,6 +11,8 @@ export type StaleDeps = {
   /** Cancels only if the order is still awaiting payment. */
   cancelInDb(orderId: string): Promise<boolean>;
   notify(kind: EmailKind, orderId: string): Promise<void>;
+  /** Stripe has the money but the order never heard of it: the webhook is not reaching us. */
+  paymentStuck(order: StaleOrder): Promise<void>;
 };
 
 /** Payments that may still turn into money: never cancel their order. */
@@ -33,6 +35,7 @@ export async function cancelStaleOrdersWith(d: StaleDeps): Promise<{ cancelled: 
         continue;
       }
       if (status && IN_FLIGHT.has(status)) {
+        if (status === "succeeded") await d.paymentStuck(o);
         skipped += 1;
         continue;
       }

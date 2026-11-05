@@ -69,7 +69,7 @@ export async function ProductCard({ product, locale, signedIn, favorite = false,
           </a>
         </div>
       )}
-      <FavoriteButton productId={product.id} signedIn={signedIn} initial={favorite} className="absolute right-1.5 top-1.5 size-10 rounded-full text-black hover:bg-soft" />
+      <FavoriteButton productId={product.id} signedIn={signedIn} initial={favorite} className="absolute right-1 top-1 size-11 md:right-1.5 md:top-1.5 md:size-10 rounded-full text-black hover:bg-soft" />
     </article>
   );
 }

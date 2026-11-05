@@ -9,7 +9,9 @@ import { getStripe } from "@/lib/stripe/server";
 import { invoiceSchema, orderItemSchema, refundSchema, resolveReturnSchema, statusSchema } from "@/lib/admin/schemas/order";
 import { refundableMinor } from "@/lib/orders/admin-rules";
 import { notifyOrder } from "@/lib/orders/notify";
+import { issueStripeRefund, lateRefundDeps, refundClaims, stripeRefundApi } from "@/lib/orders/late-refund";
 import { formatMoney } from "@/lib/domain/money";
+import { adminCanSetStatus, isOrderStatus } from "@/lib/domain/order-status";
 
 // The order tables have no RLS policies for browser roles: every admin read/write here uses the
 // service role, and adminAction has already checked the orders.* permission before fn runs.
@@ -31,6 +33,7 @@ const STATUS_ERRORS: Record<string, string> = {
   status_changed: "O pedido mudou enquanto você editava (ex.: o cliente cancelou). Recarregue a página.",
   missing_tracking: "Informe o código de rastreio de todos os itens antes de marcar como enviado.",
   invalid_status: "O pagamento só é confirmado pelo Stripe.",
+  order_unpaid: "Pedido ainda não pago: o pagamento só é confirmado pelo Stripe. Antes disso ele só pode ser cancelado.",
   already_shipped: "Este item já foi enviado; não dá para desmarcar a compra.",
 };
 const dbFailure = (message: string) => new ActionFailure("invalid", STATUS_ERRORS[message] ?? message);
@@ -38,6 +41,7 @@ const dbFailure = (message: string) => new ActionFailure("invalid", STATUS_ERROR
 const statusImpl = adminAction({ permission: "orders.write", schema: statusSchema, audit: { action: "status", entity: "orders" } }, async ({ orderId, status, expected, note }, ctx) => {
   const o = await loadOrder(orderId);
   if (o.status === status) return { id: orderId, audit: { status } };
+  if (isOrderStatus(o.status) && o.status === "awaiting_payment" && !adminCanSetStatus(status, o.status)) throw dbFailure("order_unpaid");
   if (status === "refunded" && Number(o.refunded_minor) < Number(o.total_minor)) {
     throw new ActionFailure("invalid", "Use “Reembolsar” para devolver o valor; o status muda sozinho quando o reembolso total é registrado.");
   }
@@ -107,28 +111,39 @@ export async function updateOrderItem(input: unknown) {
   return itemImpl(input);
 }
 
+const REFUND_BUSY = "Já há um reembolso em andamento neste pedido. Aguarde um instante e confira o saldo.";
+
 async function refundCore(orderId: string, amountMinor: number, note: string, manual: boolean, actorId: string) {
   const o = await loadOrder(orderId);
   const max = refundableMinor({ totalMinor: Number(o.total_minor), refundedMinor: Number(o.refunded_minor), paid: !!o.paid_at });
   if (max <= 0) throw new ActionFailure("invalid", "Não há valor pago para reembolsar.");
   if (amountMinor > max) throw new ActionFailure("invalid", `O máximo reembolsável é ${formatMoney(max, "BRL", "pt-BR")}.`);
   const svc = createServiceSupabase();
+  let confirmed = true;
   if (o.payment_method === "boleto" || manual) {
     if (!manual) throw new ActionFailure("invalid", "Pedidos pagos com boleto são reembolsados por fora (Pix ou transferência). Marque “Reembolsado por fora”.");
-    const { error } = await svc.rpc("order_record_refund", { p_order: orderId, p_pi: null as never, p_amount: amountMinor, p_method: "manual", p_stripe_refund: null as never, p_status: "succeeded", p_note: (note || "Reembolsado por fora") as never, p_actor: actorId });
-    if (error) throw new ActionFailure("invalid", error.message === "refund_exceeds_total" ? "Valor maior que o pago." : error.message);
+    const claims = refundClaims(svc);
+    const token = await claims.claim(orderId, "admin");
+    if (!token) throw new ActionFailure("invalid", REFUND_BUSY);
+    try {
+      const { error } = await svc.rpc("order_record_refund", { p_order: orderId, p_pi: null as never, p_amount: amountMinor, p_method: "manual", p_stripe_refund: null as never, p_status: "succeeded", p_note: (note || "Reembolsado por fora") as never, p_actor: actorId });
+      if (error) throw new ActionFailure("invalid", error.message === "refund_exceeds_total" ? "Valor maior que o pago." : error.message);
+    } finally {
+      await claims.release(orderId, token);
+    }
     // Stripe refunds reach the panel through the webhook. The amount already refunded tells this one apart.
     analytics.refund(o.user_id, orderId, `manual:${orderId}:${o.refunded_minor}`, { amountMinor, full: amountMinor >= Number(o.total_minor), method: "manual" });
   } else {
     if (!o.stripe_payment_intent_id) throw new ActionFailure("invalid", "Pedido sem pagamento no Stripe.");
-    const refund = await getStripe().refunds.create(
-      { payment_intent: o.stripe_payment_intent_id, amount: amountMinor, metadata: { order_id: orderId, source: "admin" } },
-      { idempotencyKey: `refund-${orderId}-${o.refunded_minor}-${amountMinor}` },
-    );
-    const { error } = await svc.rpc("order_record_refund", { p_order: orderId, p_pi: null as never, p_amount: amountMinor, p_method: "stripe", p_stripe_refund: refund.id, p_status: refund.status === "succeeded" ? "succeeded" : "pending", p_note: (note || null) as never, p_actor: actorId });
-    if (error) throw error;
+    const r = await issueStripeRefund(lateRefundDeps(svc, stripeRefundApi(getStripe()), notifyOrder), { orderId, paymentIntent: o.stripe_payment_intent_id, source: "admin", amountMinor, note: note || undefined, actorId });
+    if (r.outcome === "busy") throw new ActionFailure("invalid", REFUND_BUSY);
+    if (r.outcome === "nothing_owed") throw new ActionFailure("invalid", "Não há valor pago para reembolsar.");
+    if (r.outcome === "exceeds") throw new ActionFailure("invalid", `O máximo reembolsável agora é ${formatMoney(r.availableMinor, "BRL", "pt-BR")}: há reembolso em processamento.`);
+    if (r.outcome !== "created") throw new ActionFailure("invalid", REFUND_BUSY);
+    confirmed = r.confirmed;
   }
-  await notifyOrder("orderRefunded", orderId, { refundMinor: amountMinor });
+  // a refund still processing is announced by the webhook, when Stripe confirms it
+  if (confirmed) await notifyOrder("orderRefunded", orderId, { refundMinor: amountMinor });
   touch(Number(o.number));
   return o;
 }

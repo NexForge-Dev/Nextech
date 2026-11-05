@@ -16,7 +16,7 @@ export default async function ImportProductsPage() {
       <PageHeader title="Importar por JSON" description="Copie o modelo, peça ao ChatGPT para preencher e cole a resposta aqui. Produtos novos entram sem imagens." />
       <JsonImport prompt={prompt} />
       <div className="mt-10">
-        <PageHeader title="Importar por CSV" description="Cria ou atualiza produtos e ofertas em lote. Preços importados ficam marcados com a fonte “importação”." />
+        <PageHeader title="Importar por CSV" description="Cria ou atualiza produtos e ofertas de afiliados em lote: com afiliados desligados eles não aparecem na loja. Para venda própria, use o JSON acima. Preços importados ficam marcados com a fonte “importação”." />
         <CsvImport columns={PRODUCT_CSV_COLUMNS} />
       </div>
     </>

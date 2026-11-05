@@ -21,7 +21,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, paddingRight: 48 }}>
           <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: -2, color: "#000000" }}>NEXTECH</div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {product?.brand && <div style={{ fontSize: 26, color: "#777777", textTransform: "uppercase", letterSpacing: 2 }}>{product.brand.name}</div>}
+            {product?.brand && <div style={{ fontSize: 26, color: "#6b6b6b", textTransform: "uppercase", letterSpacing: 2 }}>{product.brand.name}</div>}
             <div style={{ fontSize: 64, fontWeight: 700, color: "#000000", lineHeight: 1.05, marginTop: 12 }}>{name.slice(0, 80)}</div>
           </div>
           <div style={{ width: 120, height: 6, background: "#000000" }} />

@@ -49,7 +49,7 @@ export async function CatalogView({ locale, market, filters, title, description,
     return base.pathname === "/produtos" ? { pathname: base.pathname, query } : { pathname: base.pathname, params: base.params, query };
   };
   const clearHref = base.pathname === "/produtos" ? { pathname: base.pathname } : { pathname: base.pathname, params: base.params };
-  const crumb = "transition-colors duration-150 hover:text-black";
+  const crumb = "transition-colors duration-150 hover:text-black inline-flex min-h-11 items-center md:min-h-0";
 
   return (
     <main>
@@ -98,13 +98,13 @@ export async function CatalogView({ locale, market, filters, title, description,
               {filters.page > 1 ? (
                 <Link href={pageHref(filters.page - 1)} className="btn btn-secondary"><ChevronLeft aria-hidden />{tc("previous")}</Link>
               ) : (
-                <span className="btn btn-secondary pointer-events-none opacity-50"><ChevronLeft aria-hidden />{tc("previous")}</span>
+                <span aria-disabled="true" className="btn btn-secondary pointer-events-none opacity-50"><ChevronLeft aria-hidden />{tc("previous")}</span>
               )}
               <span className="tabular px-2 text-mute">{tc("page", { page: filters.page, total: pages })}</span>
               {filters.page < pages ? (
                 <Link href={pageHref(filters.page + 1)} className="btn btn-secondary">{tc("next")}<ChevronRight aria-hidden /></Link>
               ) : (
-                <span className="btn btn-secondary pointer-events-none opacity-50">{tc("next")}<ChevronRight aria-hidden /></span>
+                <span aria-disabled="true" className="btn btn-secondary pointer-events-none opacity-50">{tc("next")}<ChevronRight aria-hidden /></span>
               )}
             </nav>
           )}

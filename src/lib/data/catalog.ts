@@ -43,8 +43,16 @@ export async function loadSaleInfo(productIds: string[], now = new Date()): Prom
     .select("id, sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days, fulfillment, stock_quantity, promo_price_minor, promo_starts_at, promo_ends_at)")
     .in("id", productIds.slice(0, 200));
   if (error) throw new Error(`sale info: ${error.message}`);
+  // units in expired holds are for sale: checkout releases them, after asking Stripe, when someone buys
+  const soldOut = (data ?? []).filter((r) => r.product_sale?.fulfillment === "stock" && !r.product_sale.stock_quantity).map((r) => r.id);
+  const expired = new Map<string, number>();
+  if (soldOut.length) {
+    const { data: holds } = await createAnonSupabase().rpc("expired_hold_units", { p_ids: soldOut });
+    for (const h of holds ?? []) expired.set(h.product_id, Number(h.units));
+  }
   for (const r of data ?? []) {
     const s = r.product_sale;
+    const stock = s ? (s.stock_quantity ?? 0) + (expired.get(r.id) ?? 0) : 0;
     map.set(r.id, {
       mode: r.sale_mode === "own" ? "own" : "affiliate",
       sale: s
@@ -52,9 +60,9 @@ export async function loadSaleInfo(productIds: string[], now = new Date()): Prom
             ...ownSaleNow({ priceMinor: Number(s.price_minor), compareAtMinor: s.compare_at_minor == null ? null : Number(s.compare_at_minor), promo: promoFromRow(s) }, now),
             pixDiscountPct: Number(s.pix_discount_pct),
             // own stock sells out by itself when it reaches zero
-            available: s.available && (s.fulfillment !== "stock" || (s.stock_quantity ?? 0) > 0),
+            available: s.available && (s.fulfillment !== "stock" || stock > 0),
             fulfillment: s.fulfillment === "stock" ? "stock" : "dropship",
-            stockQuantity: s.stock_quantity,
+            stockQuantity: s.fulfillment === "stock" ? stock : s.stock_quantity,
             deliveryMinDays: s.delivery_min_days,
             deliveryMaxDays: s.delivery_max_days,
           }

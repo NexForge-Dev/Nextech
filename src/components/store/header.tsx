@@ -23,7 +23,7 @@ export async function Header({ locale, storeName, logoUrl }: { locale: Locale; s
   }
   const cats = categories.map((c) => ({ slug: c.slug, name: c.name, icon: c.icon }));
   const accountHref = user ? "/minha-conta" : "/entrar";
-  const action = "inline-flex h-10 items-center gap-2 rounded-md px-2.5 text-sm font-medium text-black transition-colors duration-150 hover:bg-soft";
+  const action = "inline-flex h-11 items-center md:h-10 gap-2 rounded-md px-2.5 text-sm font-medium text-black transition-colors duration-150 hover:bg-soft";
   const bar = "whitespace-nowrap text-sm text-ink transition-colors duration-150 hover:text-black";
   return (
     <header className="sticky top-0 z-40 bg-white">

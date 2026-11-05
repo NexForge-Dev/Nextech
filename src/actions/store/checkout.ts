@@ -3,11 +3,13 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createServiceSupabase } from "@/lib/supabase/service";
 import { getSessionUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { getStripe, isStripeConfigured } from "@/lib/stripe/server";
+import { canTakePayments, getStripe } from "@/lib/stripe/server";
 import { checkoutInputSchema, startCheckoutWith, type CheckoutResult } from "@/lib/orders/checkout";
 import { customerStage, isOrderStatus, type CustomerStage } from "@/lib/domain/order-status";
 import { log } from "@/lib/log";
 import { notifyOrder } from "@/lib/orders/notify";
+import { releaseExpiredHolds } from "@/lib/orders/expire";
+import { attachPaymentIntentToOrder } from "@/lib/orders/attach";
 import { analytics } from "@/lib/analytics";
 import { getPublicSettings } from "@/lib/data/settings";
 import { isSellerIdentified } from "@/lib/domain/seller";
@@ -22,7 +24,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
     for (const i of parsed.error.issues) (fieldErrors[i.path.join(".")] ??= []).push(i.message);
     return { ok: false, error: "Revise os dados destacados.", fieldErrors };
   }
-  if (!isStripeConfigured()) return { ok: false, error: "Pagamentos ainda não configurados na loja. Tente mais tarde." };
+  if (!canTakePayments()) return { ok: false, error: "Pagamentos ainda não configurados na loja. Tente mais tarde." };
   if (!isSellerIdentified((await getPublicSettings()).legal)) return { ok: false, error: "A loja ainda não está aberta para compras. Tente novamente mais tarde." };
   if (!(await rateLimit("checkout", user.id))) return { ok: false, error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." };
 
@@ -34,6 +36,45 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
     const result = await startCheckoutWith(
       {
         customerEmail: user.email,
+        async openOrders() {
+          const { data, error } = await svc
+            .from("orders")
+            .select("id, number, total_minor, payment_method, stripe_payment_intent_id, shipping, customer, order_items(product_id, quantity, stock_taken)")
+            .eq("user_id", user.id)
+            .eq("status", "awaiting_payment")
+            .in("payment_method", ["card", "pix"])
+            .order("created_at", { ascending: false })
+            .limit(20);
+          if (error) throw new Error(error.message);
+          return (data ?? []).map((o) => ({
+            orderId: o.id,
+            orderNumber: Number(o.number),
+            totalMinor: Number(o.total_minor),
+            method: o.payment_method,
+            paymentIntentId: o.stripe_payment_intent_id,
+            address: { ...(o.shipping as Record<string, string>), ...(o.customer as Record<string, string>) },
+            items: o.order_items.flatMap((i) => (i.product_id ? [{ productId: i.product_id, quantity: i.quantity, stockTaken: i.stock_taken }] : [])),
+          }));
+        },
+        async retrievePaymentIntent(id) {
+          return (await stripe.paymentIntents.retrieve(id)) as never;
+        },
+        async releaseOrder(o) {
+          if (o.paymentIntentId) {
+            const moved = await stripe.paymentIntents.cancel(o.paymentIntentId).then(
+              () => false,
+              (e: { code?: string; payment_intent?: { status?: string } }) => e?.payment_intent?.status !== "canceled",
+            );
+            if (moved) return false;
+          }
+          const { data, error } = await svc.rpc("order_cancel_unpaid", { p_order: o.orderId });
+          if (error) throw new Error(error.message);
+          // another tab may have attached a payment after the list above was read
+          const { data: now } = await svc.from("orders").select("stripe_payment_intent_id").eq("id", o.orderId).maybeSingle();
+          if (data === true && now?.stripe_payment_intent_id && now.stripe_payment_intent_id !== o.paymentIntentId) await stripe.paymentIntents.cancel(now.stripe_payment_intent_id).catch(() => undefined);
+          return data === true;
+        },
+        releaseExpired: () => releaseExpiredHolds({ force: true }),
         async createOrder(i) {
           const { data, error } = await sb.rpc("create_order_from_cart", { p_items: i.items as never, p_address: i.address as never, p_method: i.method, p_save_address: i.saveAddress, ...(i.expectedTotalMinor ? { p_expected_total: i.expectedTotalMinor } : {}) });
           if (error) throw new Error(error.message);
@@ -42,8 +83,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
           return { orderId: row.order_id, orderNumber: Number(row.order_number), totalMinor: Number(row.total_minor) };
         },
         async attachPaymentIntent(orderId, paymentIntentId, boleto) {
-          const { error } = await svc.from("orders").update({ stripe_payment_intent_id: paymentIntentId, boleto: boleto as never }).eq("id", orderId);
-          if (error) throw new Error(error.message);
+          await attachPaymentIntentToOrder(svc, orderId, paymentIntentId, boleto);
           if (boleto) {
             await svc.from("order_events").insert({ order_id: orderId, actor: "stripe", kind: "boleto_issued", data: { expiresAt: boleto.expiresAt } });
             await notifyOrder("boletoIssued", orderId);

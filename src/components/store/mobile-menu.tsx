@@ -16,7 +16,7 @@ export function MobileMenu({ labels, categories, accountHref, storeName }: { lab
   const icon = "size-[18px] shrink-0";
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger aria-label={labels.menu} className="-ml-2 grid size-10 cursor-pointer place-items-center rounded-md hover:bg-soft md:hidden">
+      <SheetTrigger aria-label={labels.menu} className="-ml-2 grid size-11 cursor-pointer place-items-center rounded-md hover:bg-soft md:hidden">
         <Menu className="size-5" strokeWidth={1.75} aria-hidden />
       </SheetTrigger>
       <SheetContent side="left" closeLabel={tc("close")} className="w-[86vw] max-w-sm gap-0 overflow-y-auto border-line p-0 shadow-none">

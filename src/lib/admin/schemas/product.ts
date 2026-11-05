@@ -71,6 +71,8 @@ const saleInputSchema = z.object({
   promoPrice: z.string().trim().optional().default(""),
   promoStartsAt: z.string().trim().optional().default(""),
   promoEndsAt: z.string().trim().optional().default(""),
+  /** Stock when the form was opened: sales made since then are not overwritten by the save. */
+  stockRead: z.string().trim().optional(),
 });
 
 const supplierInputSchema = z.object({
@@ -171,6 +173,7 @@ export const productInputSchema = z
             promoPriceMinor: p.sale.promoPrice ? toMinor(p.sale.promoPrice, "BRL") : null,
             promoStartsAt: fromBrasiliaInput(p.sale.promoStartsAt),
             promoEndsAt: fromBrasiliaInput(p.sale.promoEndsAt),
+            ...(p.sale.stockRead !== undefined ? { stockRead: p.sale.stockRead === "" ? null : Number(p.sale.stockRead) } : {}),
           }
         : null,
     suppliers: p.suppliers.map((x) => ({ supplierId: x.supplierId, url: x.url || null, costMinor: x.cost ? toMinor(x.cost, "BRL") : null, isPrimary: x.isPrimary, notes: x.notes || null })),
