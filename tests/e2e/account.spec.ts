@@ -17,6 +17,8 @@ test("sign up, favourite, export data, delete account", async ({ page }) => {
   await page.goto("/pt-br/produto/produto-de-demonstracao-4");
   await page.getByRole("button", { name: "Adicionar aos favoritos" }).first().click();
   await expect(page.getByRole("button", { name: "Remover dos favoritos" }).first()).toBeVisible();
+  // the label flips at once; the button is enabled again only when the favourite has been saved
+  await expect(page.getByRole("button", { name: "Remover dos favoritos" }).first()).toBeEnabled();
 
   await page.goto("/pt-br/minha-conta/favoritos");
   await expect(page.getByTestId("product-card").filter({ hasText: "Produto de demonstração 4" })).toBeVisible();

@@ -9,7 +9,7 @@ let rowId: string;
 beforeAll(async () => {
   author = await createUser("feedback-author@nextech.local");
   other = await createUser("feedback-other@nextech.local");
-  editor = await createAdmin("feedback-editor@nextech.local", "editor");
+  editor = await createAdmin("feedback-editor@nextech.local", "admin");
   const { data, error } = await serviceClient().from("product_feedback").insert({ user_id: author.id, kind: "problem", message: "Não carrega", page: "/pt-BR" }).select("id").single();
   if (error) throw error;
   rowId = data.id;
