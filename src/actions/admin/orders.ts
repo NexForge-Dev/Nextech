@@ -10,6 +10,7 @@ import { invoiceSchema, orderItemSchema, refundSchema, resolveReturnSchema, stat
 import { refundableMinor } from "@/lib/orders/admin-rules";
 import { notifyOrder } from "@/lib/orders/notify";
 import { formatMoney } from "@/lib/domain/money";
+import { adminCanSetStatus, isOrderStatus } from "@/lib/domain/order-status";
 
 // The order tables have no RLS policies for browser roles: every admin read/write here uses the
 // service role, and adminAction has already checked the orders.* permission before fn runs.
@@ -31,6 +32,7 @@ const STATUS_ERRORS: Record<string, string> = {
   status_changed: "O pedido mudou enquanto você editava (ex.: o cliente cancelou). Recarregue a página.",
   missing_tracking: "Informe o código de rastreio de todos os itens antes de marcar como enviado.",
   invalid_status: "O pagamento só é confirmado pelo Stripe.",
+  order_unpaid: "Pedido ainda não pago: o pagamento só é confirmado pelo Stripe. Antes disso ele só pode ser cancelado.",
   already_shipped: "Este item já foi enviado; não dá para desmarcar a compra.",
 };
 const dbFailure = (message: string) => new ActionFailure("invalid", STATUS_ERRORS[message] ?? message);
@@ -38,6 +40,7 @@ const dbFailure = (message: string) => new ActionFailure("invalid", STATUS_ERROR
 const statusImpl = adminAction({ permission: "orders.write", schema: statusSchema, audit: { action: "status", entity: "orders" } }, async ({ orderId, status, expected, note }, ctx) => {
   const o = await loadOrder(orderId);
   if (o.status === status) return { id: orderId, audit: { status } };
+  if (isOrderStatus(o.status) && o.status === "awaiting_payment" && !adminCanSetStatus(status, o.status)) throw dbFailure("order_unpaid");
   if (status === "refunded" && Number(o.refunded_minor) < Number(o.total_minor)) {
     throw new ActionFailure("invalid", "Use “Reembolsar” para devolver o valor; o status muda sozinho quando o reembolso total é registrado.");
   }

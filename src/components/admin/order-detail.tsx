@@ -29,6 +29,7 @@ const EVENT: Record<string, string> = {
   refunded: "Reembolso total",
   refund_failed: "Falha ao reembolsar — reembolse manualmente",
   manual_refund_pending: "Reembolso por fora pendente (boleto)",
+  refund_reverted: "Reembolso não concluído: pedido reaberto",
   refund_mismatch: "Reembolso do Stripe maior que o saldo do pedido — confira",
   return_requested: "Cliente abriu devolução/suporte",
   return_resolved: "Devolução/suporte resolvido",
@@ -96,12 +97,12 @@ export function AdminOrderView({ order, canWrite, canRefund }: { order: Order; c
       </FormSection>
 
       {canWrite && (
-        <FormSection title="Status do pedido" description="“Produto comprado no fornecedor” é marcado sozinho ao registrar a primeira compra. O pagamento só é confirmado pelo Stripe.">
+        <FormSection title="Status do pedido" description="“Produto comprado no fornecedor” é marcado sozinho ao registrar a primeira compra. O pagamento só é confirmado pelo Stripe: pedido não pago só pode ser cancelado.">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Status" htmlFor="o-status">
               <select id="o-status" className={inputCls} value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
                 {ORDER_STATUSES.map((st) => (
-                  <option key={st} value={st} disabled={!adminCanSetStatus(st) && st !== order.status}>{ADMIN_STATUS_LABEL[st]}</option>
+                  <option key={st} value={st} disabled={!adminCanSetStatus(st, order.status) && st !== order.status}>{ADMIN_STATUS_LABEL[st]}</option>
                 ))}
               </select>
             </Field>
