@@ -61,9 +61,9 @@ export function FlagshipCarousel({ slides, labels }: { slides: ReactNode[]; labe
         <button type="button" aria-label={labels.previous} onClick={() => move(-1)} className="grid size-11 cursor-pointer md:size-9 place-items-center rounded-full border border-line bg-white text-black hover:bg-soft">
           <ChevronLeft className="size-4" aria-hidden />
         </button>
-        <div className="flex items-center">
+        <div className="flex min-w-0 flex-wrap items-center justify-center">
           {slides.map((_, i) => (
-            <button key={i} type="button" aria-label={labels.goTo[i]} aria-current={i === active} onClick={() => setActive(i)} className="grid size-11 cursor-pointer place-items-center md:size-6">
+            <button key={i} type="button" aria-label={labels.goTo[i]} aria-current={i === active} onClick={() => setActive(i)} className="grid h-11 w-5 cursor-pointer place-items-center md:size-6">
               <span className={`size-2 rounded-full ${i === active ? "bg-black" : "bg-line"}`} />
             </button>
           ))}
