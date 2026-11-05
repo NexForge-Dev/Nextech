@@ -54,7 +54,7 @@ export function DataTable<T extends { id: string }>({
       {rows.length === 0 ? (
         empty
       ) : (
-        <div className="panel relative overflow-x-auto">
+        <div className="panel relative overflow-x-auto" tabIndex={0} role="region" aria-label="Tabela">
           <table className="table-stack w-full text-sm md:min-w-[720px]">
             <thead>
               <tr className="border-b border-line bg-soft text-left">

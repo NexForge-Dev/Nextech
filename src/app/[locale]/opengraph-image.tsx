@@ -14,7 +14,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#ffffff", padding: 72, fontFamily: "sans-serif" }}>
         <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, color: "#000000" }}>NEXTECH</div>
         <div style={{ fontSize: 72, fontWeight: 700, color: "#000000", lineHeight: 1.05, maxWidth: 1000 }}>{t("heroTitle")}</div>
-        <div style={{ fontSize: 30, color: "#777777" }}>{t("heroSubtitle")}</div>
+        <div style={{ fontSize: 30, color: "#6b6b6b" }}>{t("heroSubtitle")}</div>
       </div>
     ),
     size,

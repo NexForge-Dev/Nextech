@@ -66,7 +66,7 @@ export function ImageUploader({ bucket, value, onChange, multiple = true, label 
                   <img src={src} alt={img.alt} className="h-full w-full object-contain" />
                   {img.isMain && <span className="absolute left-1.5 top-1.5 rounded-sm bg-black px-1.5 py-0.5 text-[10px] font-semibold text-white">Principal</span>}
                 </div>
-                <input value={img.alt} onChange={(e) => onChange(value.map((x, idx) => (idx === i ? { ...x, alt: e.target.value.slice(0, 200) } : x)))} placeholder="Texto alternativo" aria-label="Texto alternativo" className="mt-2 h-8 w-full rounded border border-line px-2 text-xs outline-none focus:border-black" />
+                <input value={img.alt} onChange={(e) => onChange(value.map((x, idx) => (idx === i ? { ...x, alt: e.target.value.slice(0, 200) } : x)))} placeholder="Texto alternativo" aria-label="Texto alternativo" className="mt-2 h-8 w-full rounded border border-line px-2 text-base md:text-xs outline-none focus:border-black" />
                 <div className="mt-2 flex justify-between">
                   <div className="flex gap-1">
                     {multiple && (

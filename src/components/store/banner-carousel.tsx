@@ -49,10 +49,10 @@ export function BannerCarousel({ banners, labels, frame }: { banners: CarouselBa
       )}
       {n > 1 && (
         <div className="absolute right-4 top-4 flex gap-2">
-          <button type="button" aria-label={labels.previous} onClick={() => setI((x) => (x - 1 + n) % n)} className="grid size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-black hover:bg-white">
+          <button type="button" aria-label={labels.previous} onClick={() => setI((x) => (x - 1 + n) % n)} className="grid size-11 md:size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-black hover:bg-white">
             <ChevronLeft className="size-4" aria-hidden />
           </button>
-          <button type="button" aria-label={labels.next} onClick={() => setI((x) => (x + 1) % n)} className="grid size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-black hover:bg-white">
+          <button type="button" aria-label={labels.next} onClick={() => setI((x) => (x + 1) % n)} className="grid size-11 md:size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-black hover:bg-white">
             <ChevronRight className="size-4" aria-hidden />
           </button>
         </div>

@@ -4,7 +4,7 @@
 
 /*
  * NEXTECH design tokens — strictly monochrome.
- * Palette: #000000 #FFFFFF #222222 #777777 #E5E5E5 #F7F7F7 (+ black/white alpha).
+ * Palette: #000000 #FFFFFF #222222 #6b6b6b #E5E5E5 #F7F7F7 (+ black/white alpha).
  * Tailwind's default colour scales are removed so no other colour can be used.
  *
  * Design system (see @layer components below):
@@ -20,7 +20,7 @@
   --color-black: #000000;
   --color-white: #ffffff;
   --color-ink: #222222;
-  --color-mute: #777777;
+  --color-mute: #6b6b6b;
   --color-line: #e5e5e5;
   --color-soft: #f7f7f7;
   --color-transparent: transparent;
@@ -85,16 +85,16 @@
   --secondary: #ffffff;
   --secondary-foreground: #000000;
   --muted: #f7f7f7;
-  --muted-foreground: #777777;
+  --muted-foreground: #6b6b6b;
   --accent: #f7f7f7;
   --accent-foreground: #000000;
   --destructive: #000000;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #777777;
+  --ring: #6b6b6b;
   --chart-1: #000000;
   --chart-2: #222222;
-  --chart-3: #777777;
+  --chart-3: #6b6b6b;
   --chart-4: #e5e5e5;
   --chart-5: #f7f7f7;
   --radius: 6px;
@@ -105,7 +105,7 @@
   --sidebar-accent: #f7f7f7;
   --sidebar-accent-foreground: #000000;
   --sidebar-border: #e5e5e5;
-  --sidebar-ring: #777777;
+  --sidebar-ring: #6b6b6b;
   color-scheme: light;
 }
 
@@ -164,10 +164,10 @@
 
   /* Buttons */
   .btn {
-    @apply inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 select-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0;
+    @apply inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 select-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0 md:h-10;
   }
   .btn-sm {
-    @apply h-8 gap-1.5 px-3 text-[13px] [&_svg]:size-3.5;
+    @apply h-11 gap-1.5 md:h-8 px-3 text-[13px] [&_svg]:size-3.5;
   }
   .btn-lg {
     @apply h-12 px-6 text-[15px] font-semibold;
@@ -187,7 +187,7 @@
 
   /* Form fields */
   .field {
-    @apply h-11 w-full rounded-md border border-line bg-white px-3 text-[15px] text-black transition-[border-color,box-shadow] duration-150 outline-none placeholder:text-mute hover:border-mute focus:border-black focus:ring-1 focus:ring-black disabled:cursor-not-allowed disabled:bg-soft disabled:text-mute aria-invalid:border-black aria-invalid:ring-1 aria-invalid:ring-black md:text-sm;
+    @apply h-11 w-full rounded-md border border-line bg-white px-3 text-base text-black transition-[border-color,box-shadow] duration-150 outline-none placeholder:text-mute hover:border-mute focus:border-black focus:ring-1 focus:ring-black disabled:cursor-not-allowed disabled:bg-soft disabled:text-mute aria-invalid:border-black aria-invalid:ring-1 aria-invalid:ring-black md:text-sm;
   }
   .field-label {
     @apply mb-1.5 block text-sm font-medium text-black;
@@ -230,7 +230,7 @@
 /* Native selects: same chevron everywhere. Unlayered so it wins over padding utilities. */
 select:not([multiple]) {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23777777' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b6b6b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-position: right 0.625rem center;
   background-repeat: no-repeat;
   padding-right: 2rem;
@@ -269,7 +269,7 @@ select:not([multiple]) {
     content: attr(data-label);
     flex: none;
     font-size: 0.75rem;
-    color: #777777;
+    color: #6b6b6b;
     text-align: left;
   }
   .table-stack td[data-label=""]::before {
@@ -286,7 +286,7 @@ select:not([multiple]) {
 .prose-nx a { text-decoration: underline; text-underline-offset: 2px; }
 .prose-nx table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .prose-nx th, .prose-nx td { border-bottom: 1px solid #e5e5e5; padding: 0.5rem 0; text-align: left; }
-.prose-nx blockquote { border-left: 2px solid #000000; padding-left: 1rem; color: #777777; }
+.prose-nx blockquote { border-left: 2px solid #000000; padding-left: 1rem; color: #6b6b6b; }
 .prose-legal h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.015em; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e5e5; color: #000000; }
 .prose-legal h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 .prose-legal strong { color: #000000; }

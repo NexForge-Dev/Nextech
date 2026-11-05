@@ -31,11 +31,11 @@ export default async function AccountLayout({ children, params }: { children: Re
           <button type="submit" className="btn btn-secondary"><LogOut aria-hidden />{t("signOut")}</button>
         </form>
       </header>
-      {profile && !profile.historyPrompted && !profile.historyEnabled && <HistoryPrompt />}
       <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
         <AccountNav />
         <section className="min-w-0">{children}</section>
       </div>
+      {profile && !profile.historyPrompted && !profile.historyEnabled && <div className="mt-6"><HistoryPrompt /></div>}
     </main>
   );
 }

@@ -233,7 +233,7 @@ export function InviteAdminForm() {
       }}
     >
       <Field label="E-mail" htmlFor="inv-email">
-        <input id="inv-email" type="email" required className={`${inputCls} w-72`} value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input id="inv-email" type="email" required className={`${inputCls} w-full sm:w-72`} value={email} onChange={(e) => setEmail(e.target.value)} />
       </Field>
       <Field label="Perfil" htmlFor="inv-role">
         <select id="inv-role" className={inputCls} value={role} onChange={(e) => setRole(e.target.value)}>

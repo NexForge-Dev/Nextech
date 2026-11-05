@@ -57,18 +57,18 @@ export function FlagshipCarousel({ slides, labels }: { slides: ReactNode[]; labe
           </div>
         ))}
       </div>
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-center gap-4 px-4 pb-10 md:px-6">
-        <button type="button" aria-label={labels.previous} onClick={() => move(-1)} className="grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-white text-black hover:bg-soft">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-center gap-1 px-4 pb-10 md:gap-4 md:px-6">
+        <button type="button" aria-label={labels.previous} onClick={() => move(-1)} className="grid size-11 cursor-pointer md:size-9 place-items-center rounded-full border border-line bg-white text-black hover:bg-soft">
           <ChevronLeft className="size-4" aria-hidden />
         </button>
         <div className="flex items-center">
           {slides.map((_, i) => (
-            <button key={i} type="button" aria-label={labels.goTo[i]} aria-current={i === active} onClick={() => setActive(i)} className="grid size-6 cursor-pointer place-items-center">
+            <button key={i} type="button" aria-label={labels.goTo[i]} aria-current={i === active} onClick={() => setActive(i)} className="grid size-11 cursor-pointer place-items-center md:size-6">
               <span className={`size-2 rounded-full ${i === active ? "bg-black" : "bg-line"}`} />
             </button>
           ))}
         </div>
-        <button type="button" aria-label={labels.next} onClick={() => move(1)} className="grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-white text-black hover:bg-soft">
+        <button type="button" aria-label={labels.next} onClick={() => move(1)} className="grid size-11 cursor-pointer md:size-9 place-items-center rounded-full border border-line bg-white text-black hover:bg-soft">
           <ChevronRight className="size-4" aria-hidden />
         </button>
       </div>

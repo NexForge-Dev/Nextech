@@ -28,7 +28,7 @@ function ProductPicker({ products, value, onChange, id }: { products: Opt[]; val
   return (
     <div className="space-y-2">
       <input aria-label="Filtrar produtos" className={inputCls} placeholder="Filtrar produtos…" value={q} onChange={(e) => setQ(e.target.value)} />
-      <select id={id} className={inputCls} value={value} onChange={(e) => onChange(e.target.value)} size={Math.min(8, Math.max(3, list.length + 1))}>
+      <select id={id} aria-label="Produto" className={inputCls} value={value} onChange={(e) => onChange(e.target.value)} size={Math.min(8, Math.max(3, list.length + 1))}>
         <option value="">Selecione…</option>
         {value && !list.some((p) => p.id === value) && <option value={value}>{products.find((p) => p.id === value)?.name ?? "Selecionado"}</option>}
         {list.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -273,7 +273,7 @@ export function CampaignForm({ initial, products, banners }: { initial: Campaign
           ))}
         </ul>
         <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-64 flex-1"><ProductPicker id="c-pick" products={products.filter((p) => !v.productIds.includes(p.id))} value={pick} onChange={setPick} /></div>
+          <div className="min-w-0 flex-1 basis-64"><ProductPicker id="c-pick" products={products.filter((p) => !v.productIds.includes(p.id))} value={pick} onChange={setPick} /></div>
           <button type="button" disabled={!pick} className={btnSecondary} onClick={() => { setV({ ...v, productIds: [...v.productIds, pick] }); setPick(""); }}>Adicionar produto</button>
         </div>
       </FormSection>

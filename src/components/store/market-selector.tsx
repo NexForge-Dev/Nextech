@@ -19,7 +19,7 @@ export function MarketSelector({ current, options, label }: { current: string; o
             if (r.ok) router.refresh();
           })
         }
-        className="h-9 cursor-pointer rounded-md border border-line bg-white px-2 text-sm text-black outline-none focus:border-black"
+        className="h-11 cursor-pointer rounded-md border border-line bg-white px-2 text-base md:h-9 md:text-sm text-black outline-none focus:border-black"
       >
         {list.map((o) => (
           <option key={o.code} value={o.code}>

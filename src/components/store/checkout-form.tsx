@@ -267,7 +267,7 @@ export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments
         )}
       </form>
       {card && (
-        <div ref={cardPanel} tabIndex={-1} className="scroll-mt-24 space-y-3 outline-none md:scroll-mt-44" data-testid="card-step">
+        <div ref={cardPanel} tabIndex={-1} className="scroll-mt-32 space-y-3 outline-none md:scroll-mt-44" data-testid="card-step">
           {stripePromise ? (
             <Elements stripe={stripePromise} options={{ clientSecret: card.clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#000000", borderRadius: "6px", fontFamily: "system-ui, sans-serif" } } }}>
               <CardPayment orderNumber={card.orderNumber} totalLabel={t("pay", { total: money(chargedTotal ?? totals.totalMinor) })} />

@@ -49,7 +49,7 @@ export async function CatalogView({ locale, market, filters, title, description,
     return base.pathname === "/produtos" ? { pathname: base.pathname, query } : { pathname: base.pathname, params: base.params, query };
   };
   const clearHref = base.pathname === "/produtos" ? { pathname: base.pathname } : { pathname: base.pathname, params: base.params };
-  const crumb = "transition-colors duration-150 hover:text-black";
+  const crumb = "transition-colors duration-150 hover:text-black inline-flex min-h-11 items-center md:min-h-0";
 
   return (
     <main>

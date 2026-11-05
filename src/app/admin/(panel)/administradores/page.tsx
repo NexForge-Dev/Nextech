@@ -53,7 +53,7 @@ export default async function AdminsPage() {
       />
       <section className="mt-10">
         <h2 className="mb-3 font-semibold">Permissões por perfil</h2>
-        <div className="panel overflow-x-auto">
+        <div className="panel overflow-x-auto" tabIndex={0} role="region" aria-label="Administradores">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-line bg-soft text-left text-[11px] uppercase tracking-[0.06em] text-mute">

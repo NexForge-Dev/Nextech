@@ -94,7 +94,7 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
         </div>
       )}
       <Dialog open={dialog} onOpenChange={setDialog}>
-        <DialogContent closeLabel={tc("close")} className="max-w-[calc(100%-2rem)] rounded-lg border border-line p-6 shadow-[var(--shadow-pop)] ring-0 sm:max-w-lg">
+        <DialogContent closeLabel={tc("close")} className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] overflow-y-auto rounded-lg border border-line p-6 shadow-[var(--shadow-pop)] ring-0 sm:max-w-lg">
           <DialogTitle className="text-lg font-semibold">{t("bannerTitle")}</DialogTitle>
           <DialogDescription className="text-sm text-mute">{t("bannerText")}</DialogDescription>
           <div className="mt-2 divide-y divide-line border-y border-line">

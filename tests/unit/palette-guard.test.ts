@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import fg from "fast-glob";
 import { readFileSync } from "node:fs";
 
-const PALETTE = ["000000", "ffffff", "222222", "777777", "e5e5e5", "f7f7f7"];
+const PALETTE = ["000000", "ffffff", "222222", "6b6b6b", "e5e5e5", "f7f7f7"];
 const files = fg.sync(["src/**/*.{ts,tsx,css}"], { dot: false });
 
 function normalize(hex: string): string {

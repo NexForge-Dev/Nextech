@@ -51,7 +51,7 @@ async function FlagshipSlide({ flagship, locale, storeName, first }: { flagship:
       <div className="md:order-1 md:col-span-6">
         <p className="t-eyebrow">{t("flagshipEyebrow", { store: storeName })}</p>
         {product.brand && <p className="mt-4 text-sm font-medium text-black">{product.brand}</p>}
-        <Heading className="t-display mt-1">{product.name}</Heading>
+        <Heading className="t-display mt-1 break-words max-md:line-clamp-3">{product.name}</Heading>
         {shortDescription && <p className="mt-4 max-w-xl text-base text-mute md:text-lg">{shortDescription}</p>}
         <div className="mt-5 md:mt-6">
           <PriceView price={price} locale={locale} size="lg" />
