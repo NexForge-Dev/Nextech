@@ -67,6 +67,8 @@ const saleInputSchema = z.object({
   deliveryMaxDays: z.coerce.number().int().min(0).max(120, "Máximo 120 dias.").default(7),
   fulfillment: z.enum(["stock", "dropship"]).default("dropship"),
   stock: z.string().trim().optional().default(""),
+  /** Stock when the form was opened: sales made since then are not overwritten by the save. */
+  stockRead: z.string().trim().optional(),
 });
 
 const supplierInputSchema = z.object({
@@ -154,6 +156,7 @@ export const productInputSchema = z
             deliveryMaxDays: p.sale.deliveryMaxDays,
             fulfillment: p.sale.fulfillment,
             stockQuantity: p.sale.fulfillment === "stock" ? Number(p.sale.stock) : null,
+            ...(p.sale.stockRead !== undefined ? { stockRead: p.sale.stockRead === "" ? null : Number(p.sale.stockRead) } : {}),
           }
         : null,
     suppliers: p.suppliers.map((x) => ({ supplierId: x.supplierId, url: x.url || null, costMinor: x.cost ? toMinor(x.cost, "BRL") : null, isPrimary: x.isPrimary, notes: x.notes || null })),

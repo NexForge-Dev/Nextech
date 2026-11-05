@@ -53,7 +53,7 @@ export type ProductFormValue = {
   sale: SaleValue;
   suppliers: SupplierValue[];
 };
-export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number; fulfillment: "stock" | "dropship"; stock: string };
+export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number; fulfillment: "stock" | "dropship"; stock: string; stockRead?: string };
 export type SupplierValue = { supplierId: string; url: string; cost: string; isPrimary: boolean; notes: string };
 type Store = { id: string; name: string; networkId: string | null; markets: string[] };
 type Opt = { id: string; name: string };
@@ -183,7 +183,7 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {v.sale.fulfillment === "stock" && (
-              <Field label="Quantidade em estoque" htmlFor="s-stock" error={err("sale.stock")} hint="Baixa a cada venda e volta se o pedido for cancelado. Em zero, o produto aparece esgotado.">
+              <Field label="Quantidade em estoque" htmlFor="s-stock" error={err("sale.stock")} hint="Baixa a cada venda e volta se o pedido for cancelado. Vendas feitas com esta tela aberta não se perdem ao salvar. Em zero, o produto aparece esgotado.">
                 <input id="s-stock" inputMode="numeric" className={inputCls} value={v.sale.stock} onChange={(e) => setSale({ stock: e.target.value })} />
               </Field>
             )}

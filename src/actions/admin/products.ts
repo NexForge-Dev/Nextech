@@ -60,6 +60,7 @@ const saveProductImpl = adminAction({ permission: "products.write", schema: prod
   if (Object.keys(errors).length) throw new ActionFailure("invalid", "Há links de oferta com domínio não autorizado.", errors);
   const sb = await createServerSupabase();
   const { data: id, error } = await sb.rpc("admin_save_product_full", { p: rpcPayload(p) as never });
+  if (error?.message === "stock_changed") throw new ActionFailure("invalid", "O estoque mudou enquanto você editava (houve venda). Recarregue a página e ajuste a quantidade de novo.", { "sale.stock": ["O estoque mudou. Recarregue a página."] });
   if (error) throw error;
   if (!p.featured) await releaseFlagship(id as string);
   updateTag("catalog");
