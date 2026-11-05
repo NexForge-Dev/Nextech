@@ -33,6 +33,8 @@ export type NexforgeEvent =
   | "plan_changed"
   | "plan_canceled"
   | "payment_failed"
+  | "item_sold"
+  | "refund_recorded"
   | "account_deleted"
   | "identity_linked";
 
