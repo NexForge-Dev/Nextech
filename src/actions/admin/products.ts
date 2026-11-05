@@ -61,7 +61,7 @@ const saveProductImpl = adminAction({ permission: "products.write", schema: prod
   const sb = await createServerSupabase();
   const payload = { p: rpcPayload(p) as never };
   let { data: id, error } = await sb.rpc("admin_save_product_stock_safe", payload);
-  // PGRST202: migration 0030 not applied yet. Saves as before, with the old stock overwrite.
+  // PGRST202: migration 0032 not applied yet. Saves as before, with the old stock overwrite.
   if (error?.code === "PGRST202") ({ data: id, error } = await sb.rpc("admin_save_product_full", payload));
   if (error?.message === "stock_changed") throw new ActionFailure("invalid", "O estoque mudou enquanto você editava (houve venda). Recarregue a página e ajuste a quantidade de novo.", { "sale.stock": ["O estoque mudou. Recarregue a página."] });
   if (error) throw error;

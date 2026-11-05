@@ -1,4 +1,4 @@
--- 0029 payment integrity (QA 2026-11-05). Same signatures as before: safe to run twice and with the
+-- 0031 payment integrity (QA 2026-11-05). Same signatures as before: safe to run twice and with the
 -- previous code still running.
 --  1. a confirmed payment is always recorded, whatever state the order is in (NXT-003, NXT-010);
 --  2. a refund that fails after being confirmed reopens the order, and unknown Stripe refund

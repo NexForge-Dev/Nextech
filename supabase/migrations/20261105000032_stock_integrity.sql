@@ -1,4 +1,4 @@
--- 0030 stock integrity (QA 2026-11-05). Same signatures as before: safe to run twice and with the
+-- 0032 stock integrity (QA 2026-11-05). Same signatures as before: safe to run twice and with the
 -- previous code still running (which sends neither of the new fields and never relied on the old holes).
 --  1. a hold on stock lasts 30 minutes for card and 70 for Pix (its QR code lives 60), and one account
 --     can hold at most 10 units of a product (NXT-005);
