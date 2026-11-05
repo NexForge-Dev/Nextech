@@ -58,7 +58,9 @@ export function CookieBanner({ decided, initial, texts }: { decided: boolean; in
       await saveConsent({ analytics: a, marketing: m });
       setVisible(false);
       setDialog(false);
-      router.refresh();
+      // scripts already running (Meta Pixel, gtag) only stop with a full page load
+      if (a && m) router.refresh();
+      else window.location.reload();
     });
   }
 

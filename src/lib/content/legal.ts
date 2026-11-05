@@ -12,7 +12,7 @@ export type LegalVariant = "default" | "store";
 export type LegalPage = (typeof LEGAL_PAGES)[number];
 
 /** Date shown as "last updated" on institutional pages. Bump when the texts change. */
-export const LEGAL_UPDATED_AT = "2026-11-04T12:00:00Z";
+export const LEGAL_UPDATED_AT = "2026-11-05T12:00:00Z";
 
 /**
  * Customers never see placeholder values. Missing seller data is left out of the sentence (and the

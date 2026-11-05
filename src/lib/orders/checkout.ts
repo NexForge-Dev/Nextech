@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidCpf, onlyDigits } from "@/lib/domain/cpf";
+import { isAdult, isValidBirthDate, MIN_BUYER_AGE } from "@/lib/domain/birth-date";
 import type { PaymentMethod } from "@/lib/domain/own-pricing";
 
 const UF = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"] as const;
@@ -25,6 +26,10 @@ export const checkoutInputSchema = z.object({
   method: z.enum(["card", "boleto", "pix"]),
   saveAddress: z.boolean().default(false),
   address: addressSchema,
+  birthDate: z
+    .string()
+    .refine((v) => isValidBirthDate(v), "Informe uma data de nascimento válida.")
+    .refine((v) => !isValidBirthDate(v) || isAdult(v), `As compras são permitidas apenas para maiores de ${MIN_BUYER_AGE} anos.`),
   /** Total the customer saw; the database refuses the order when prices changed meanwhile. */
   expectedTotalMinor: z.number().int().positive().optional(),
 });

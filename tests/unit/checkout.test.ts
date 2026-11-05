@@ -7,6 +7,7 @@ const input = {
   items: [{ productId: P, quantity: 2 }],
   method: "card" as const,
   saveAddress: false,
+  birthDate: "1990-05-20",
   address: { recipientName: "Ana Souza", cpf: "529.982.247-25", phone: "(11) 98765-4321", cep: "01310-100", street: "Av. Paulista", number: "1000", complement: "", district: "Bela Vista", city: "São Paulo", state: "SP" },
 };
 
@@ -27,6 +28,29 @@ function deps(over: Partial<CheckoutDeps> = {}) {
   };
   return { d, calls };
 }
+
+describe("checkout buyer age", () => {
+  const errorFor = (birthDate: string) => {
+    const r = checkoutInputSchema.safeParse({ ...input, birthDate });
+    return r.success ? null : r.error.issues[0].message;
+  };
+  it("accepts an adult", () => expect(errorFor("1990-05-20")).toBeNull());
+  it("requires a real date", () => {
+    expect(errorFor("")).toBe("Informe uma data de nascimento válida.");
+    expect(errorFor("2000-02-31")).toBe("Informe uma data de nascimento válida.");
+    expect(errorFor("1899-12-31")).toBe("Informe uma data de nascimento válida.");
+  });
+  it("refuses a minor, with only the age message", () => {
+    const year = new Date().getFullYear() - 10;
+    const r = checkoutInputSchema.safeParse({ ...input, birthDate: `${year}-01-01` });
+    expect(r.success ? [] : r.error.issues.map((i) => i.message)).toEqual(["As compras são permitidas apenas para maiores de 18 anos."]);
+  });
+  it("never sends the date of birth to Stripe", async () => {
+    const { d, calls } = deps();
+    await startCheckoutWith(d, checkoutInputSchema.parse({ ...input, method: "boleto" }));
+    expect(JSON.stringify(calls.create)).not.toContain("1990-05-20");
+  });
+});
 
 describe("checkout input", () => {
   it("normalises CPF, phone and CEP to digits", () => {

@@ -929,14 +929,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "consent": NonNullable<Json>,"created_at": string,"full_name": string | null,"history_enabled": boolean,"id": string,"preferred_locale": string | null,"preferred_market": string | null,"updated_at": string
+                    "birth_date": string | null,"consent": NonNullable<Json>,"created_at": string,"full_name": string | null,"history_enabled": boolean,"id": string,"preferred_locale": string | null,"preferred_market": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "consent"?: NonNullable<Json>,"created_at"?: string,"full_name"?: string | null,"history_enabled"?: boolean,"id": string,"preferred_locale"?: string | null,"preferred_market"?: string | null,"updated_at"?: string
+                    "birth_date"?: string | null,"consent"?: NonNullable<Json>,"created_at"?: string,"full_name"?: string | null,"history_enabled"?: boolean,"id": string,"preferred_locale"?: string | null,"preferred_market"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "consent"?: NonNullable<Json>,"created_at"?: string,"full_name"?: string | null,"history_enabled"?: boolean,"id"?: string,"preferred_locale"?: string | null,"preferred_market"?: string | null,"updated_at"?: string
+                    "birth_date"?: string | null,"consent"?: NonNullable<Json>,"created_at"?: string,"full_name"?: string | null,"history_enabled"?: boolean,"id"?: string,"preferred_locale"?: string | null,"preferred_market"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     

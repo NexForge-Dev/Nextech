@@ -2,6 +2,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { pageLocale } from "@/i18n/page-locale";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProfile } from "@/lib/data/account";
+import { getMyBirthDate } from "@/actions/store/checkout";
 import { updateProfile } from "@/actions/store/account";
 import { updatePassword } from "@/actions/store/auth";
 import { AuthForm } from "@/components/store/auth-form";
@@ -13,7 +14,7 @@ export default async function AccountInfoPage({ params }: { params: Promise<{ lo
   const user = await getSessionUser();
   // the layout redirects guests; pages render in parallel, so bail out quietly
   if (!user) return null;
-  const [t, ta, format, profile] = await Promise.all([getTranslations("account"), getTranslations("auth"), getFormatter(), getProfile(user.id)]);
+  const [t, ta, format, profile, birthDate] = await Promise.all([getTranslations("account"), getTranslations("auth"), getFormatter(), getProfile(user.id), getMyBirthDate()]);
   return (
     <div className="max-w-2xl space-y-4">
       <div className="panel p-5 md:p-6">
@@ -24,7 +25,7 @@ export default async function AccountInfoPage({ params }: { params: Promise<{ lo
           <dd className="mt-1">{user.email}</dd>
         </dl>
         <div className="mt-6">
-          <AuthForm action={updateProfile} locale={locale} submit={t("saveProfile")} fields={[{ name: "fullName", label: t("name"), autoComplete: "name", defaultValue: profile?.fullName ?? "" }]} />
+          <AuthForm action={updateProfile} locale={locale} submit={t("saveProfile")} fields={[{ name: "fullName", label: t("name"), autoComplete: "name", defaultValue: profile?.fullName ?? "" }, { name: "birthDate", label: t("birthDate"), type: "date", autoComplete: "bday", required: false, defaultValue: birthDate ?? "" }]} />
         </div>
       </div>
       <div className="panel p-5 md:p-6">

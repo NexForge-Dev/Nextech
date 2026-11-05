@@ -13,6 +13,8 @@ import { getSessionUser } from "@/lib/auth/session";
 import { MARKET_COOKIE } from "@/lib/domain/markets";
 import { getAvailableMarkets } from "@/lib/data/taxonomy";
 import { analytics } from "@/lib/analytics";
+import { isValidBirthDate } from "@/lib/domain/birth-date";
+import { saveBirthDate } from "@/lib/data/birth-date";
 import type { AuthState } from "./auth";
 
 function localeOf(form: FormData): Locale {
@@ -28,9 +30,12 @@ export async function updateProfile(_: AuthState, form: FormData): Promise<AuthS
   if (!user) return { error: ta("genericError") };
   const name = z.string().trim().min(1).max(120).safeParse(form.get("fullName"));
   if (!name.success) return { fieldErrors: { fullName: ta("nameRequired") } };
+  // LGPD: the customer can correct the date of birth or clear it (it is asked again at the next purchase)
+  const birthDate = String(form.get("birthDate") ?? "").trim();
+  if (birthDate && !isValidBirthDate(birthDate)) return { fieldErrors: { birthDate: t("birthDateInvalid") } };
   const sb = await createServerSupabase();
   const { error } = await sb.from("profiles").update({ full_name: name.data }).eq("id", user.id);
-  if (error) return { error: ta("genericError") };
+  if (error || !(await saveBirthDate(sb, user.id, birthDate || null))) return { error: ta("genericError") };
   analytics.feature(user.id, "perfil_atualizado");
   revalidatePath("/", "layout");
   return { message: t("saved") };

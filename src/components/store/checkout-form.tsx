@@ -11,6 +11,7 @@ import { getLocalCart } from "@/lib/cart/local-cart";
 import { cartTotals, type PaymentMethod } from "@/lib/domain/own-pricing";
 import { formatMoney } from "@/lib/domain/money";
 import { lookupCep } from "@/lib/cep";
+import { brazilToday } from "@/lib/domain/birth-date";
 import { markCheckoutStarted, trackAdEvent } from "./marketing-tracker";
 import { inputClass } from "./auth-form";
 import { EmptyState, Notice, SummaryRow } from "./ui";
@@ -22,14 +23,15 @@ const EMPTY: Address = { recipientName: "", cpf: "", phone: "", cep: "", street:
 export const BOLETO_SESSION_KEY = (n: number) => `nx_order_${n}_pay`;
 
 /** `seller`: identity line from settings (Decreto 7.962/2013), or null while the admin has not filled it in. */
-export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedAddress[]; payments: { card: boolean; boleto: boolean; pix: boolean }; seller?: string | null }) {
+export function CheckoutForm({ saved, birthDate: savedBirthDate = null, payments, seller = null }: { saved: SavedAddress[]; birthDate?: string | null; payments: { card: boolean; boleto: boolean; pix: boolean }; seller?: string | null }) {
   const t = useTranslations("checkout");
   const tc = useTranslations("cart");
   const router = useRouter();
   const [cart, setCart] = useState<CartView | null>(null);
   const [addressId, setAddressId] = useState<string>(saved[0]?.id ?? "new");
   const [addr, setAddr] = useState<Address>(EMPTY);
-  const [saveAddress, setSaveAddress] = useState(saved.length === 0);
+  const [birthDate, setBirthDate] = useState(savedBirthDate ?? "");
+  const [saveAddress, setSaveAddress] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>(payments.card ? "card" : payments.boleto ? "boleto" : "pix");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
     trackAdEvent("InitiateCheckout", { valueMinor: totals.totalMinor, currency: "BRL", contentIds: cart.lines.map((l) => l.productId) });
     let r: Awaited<ReturnType<typeof startCheckout>>;
     try {
-      r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, expectedTotalMinor: totals.totalMinor });
+      r = await startCheckout({ items: getLocalCart(), method, saveAddress: addressId === "new" && saveAddress, address, birthDate, expectedTotalMinor: totals.totalMinor });
     } catch {
       // network drop / server action failure: never leave the button stuck on "processing"
       r = { ok: false, error: t("networkError") };
@@ -171,6 +173,11 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
       <form onSubmit={submit} className="min-w-0 space-y-4" noValidate>
         <section className="panel space-y-4 p-5 md:p-6">
           <h2 className="text-lg font-semibold tracking-tight">{t("addressTitle")}</h2>
+          <p className="rounded-md bg-soft p-3 text-sm leading-relaxed text-ink" data-testid="checkout-privacy">
+            {t.rich("privacyNotice", {
+              privacy: (c) => <Link href="/privacidade" target="_blank" className="underline underline-offset-2">{c}</Link>,
+            })}
+          </p>
           {saved.length > 0 && (
             <div>
               <label htmlFor="co-saved" className="field-label">{t("savedAddress")}</label>
@@ -201,6 +208,24 @@ export function CheckoutForm({ saved, payments, seller = null }: { saved: SavedA
               </label>
             </div>
           )}
+          <div>
+            <label htmlFor="co-birthDate" className="field-label">{t("birthDate")}</label>
+            <input
+              id="co-birthDate"
+              type="date"
+              className={inputClass}
+              value={birthDate}
+              max={brazilToday()}
+              min="1900-01-01"
+              autoComplete="bday"
+              aria-invalid={!!errors.birthDate}
+              aria-describedby="co-birthDate-help"
+              onChange={(e) => setBirthDate(e.target.value)}
+              disabled={!!card}
+            />
+            <p id="co-birthDate-help" className="mt-1 text-xs text-mute">{t("birthDateHelp")}</p>
+            {errors.birthDate?.[0] && <p role="alert" className="field-error"><CircleAlert aria-hidden />{errors.birthDate[0]}</p>}
+          </div>
         </section>
 
         <section className="panel space-y-3 p-5 md:p-6">

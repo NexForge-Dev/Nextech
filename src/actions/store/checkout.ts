@@ -11,6 +11,7 @@ import { notifyOrder } from "@/lib/orders/notify";
 import { analytics } from "@/lib/analytics";
 import { getPublicSettings } from "@/lib/data/settings";
 import { isSellerIdentified } from "@/lib/domain/seller";
+import { readBirthDate, saveBirthDate } from "@/lib/data/birth-date";
 
 export async function startCheckout(input: unknown): Promise<CheckoutResult & { fieldErrors?: Record<string, string[]> }> {
   const user = await getSessionUser();
@@ -28,6 +29,7 @@ export async function startCheckout(input: unknown): Promise<CheckoutResult & { 
   const sb = await createServerSupabase();
   const svc = createServiceSupabase();
   const stripe = getStripe();
+  if (!(await saveBirthDate(sb, user.id, parsed.data.birthDate))) return { ok: false, error: "Não foi possível salvar seus dados. Tente novamente em instantes." };
   try {
     const result = await startCheckoutWith(
       {
@@ -99,6 +101,12 @@ export async function getMyOrderStatus(orderNumber: number): Promise<MyOrderStat
 }
 
 export type SavedAddress = { id: string; recipientName: string; cpf: string; phone: string; cep: string; street: string; number: string; complement: string; district: string; city: string; state: string };
+
+export async function getMyBirthDate(): Promise<string | null> {
+  const user = await getSessionUser();
+  if (!user) return null;
+  return readBirthDate(await createServerSupabase(), user.id);
+}
 
 export async function getMyAddresses(): Promise<SavedAddress[]> {
   const user = await getSessionUser();

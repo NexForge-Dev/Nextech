@@ -16,12 +16,14 @@ Canal de privacidade e contato do encarregado pelo tratamento de dados (LGPD, ar
 **Compra e entrega**
 
 - Nome do destinatário, CPF, telefone, e-mail e endereço de entrega. O CPF é obrigatório no checkout e é usado na identificação da compra, no boleto e, quando emitida, na nota fiscal.
+- Data de nascimento: pedida no checkout somente para confirmar que você tem 18 anos ou mais. Fica no seu perfil, não é copiada para o pedido, não é enviada a parceiros e não é usada para marketing nem para promoções de aniversário. Você pode corrigir ou apagar em **Minha conta**.
 - Produtos, valores, forma de pagamento, status, histórico e código de rastreio do pedido, além da nota fiscal, quando emitida.
 - Do pagamento, guardamos a confirmação, a forma de pagamento e, no cartão, a bandeira e os 4 últimos dígitos. Os dados do cartão são digitados diretamente no componente da Stripe: **não recebemos nem guardamos o número completo do cartão.**
 
 **Atendimento**
 
 - Solicitações de devolução ou suporte: motivo, mensagem e até 3 fotos enviadas por você.
+- Reembolso de boleto: a chave Pix ou os dados bancários que você nos informar.
 - Sugestões e relatos de problema enviados pelo balão da loja: o tipo, o texto, a página em que você estava (sem os parâmetros do endereço) e a sua conta.
 - Formulário de contato: nome, e-mail, assunto e mensagem.
 
@@ -44,6 +46,7 @@ Não pedimos dados pessoais sensíveis. Evite incluí-los em mensagens ou fotos.
 | Finalidade | Base legal |
 |---|---|
 | Criar e manter a conta, processar pedido, pagamento, entrega, cancelamento, devolução e atendimento | Execução de contrato (art. 7º, V) |
+| Confirmar que o comprador tem 18 anos ou mais, para que a compra seja válida | Execução de contrato (art. 7º, V) |
 | Guardar registros fiscais e de consumo | Cumprimento de obrigação legal (art. 7º, II) |
 | Defender direitos em processos, reclamações e contestações de pagamento | Exercício regular de direitos (art. 7º, VI) |
 | Analisar sugestões e relatos de problema para corrigir falhas e melhorar a loja | Legítimo interesse (art. 7º, IX) |
@@ -53,14 +56,14 @@ Não pedimos dados pessoais sensíveis. Evite incluí-los em mensagens ou fotos.
 ## Com quem compartilhamos
 
 - **Supabase:** banco de dados, autenticação e armazenamento de arquivos, com dados hospedados na região de Frankfurt, Alemanha (eu-central-1). Os e-mails de confirmação de cadastro e de recuperação de senha partem do serviço de autenticação.
-- **Stripe:** processamento de pagamentos. Recebe valor, número do pedido, e-mail e os dados do cartão; no boleto, também nome, CPF e endereço. A Stripe usa o e-mail para o comprovante de pagamento dela.
+- **Stripe:** processamento de pagamentos. Recebe valor, número do pedido, e-mail e os dados do cartão; no boleto e no Pix, também nome e endereço; no boleto, também o CPF. A Stripe usa o e-mail para o comprovante de pagamento dela.
 - **Vercel:** hospedagem e entrega do site.
 - **Fornecedores, marketplaces e distribuidores, no Brasil ou no exterior (produtos enviados por parceiros):** nome, telefone e endereço de entrega e, quando exigido para a compra, a emissão fiscal ou o transporte, o CPF.
 - **Transportadoras:** nome, endereço de entrega, telefone e, quando exigido para a emissão fiscal ou o transporte, o CPF.
 - **ViaCEP:** quando você digita o CEP no checkout, seu navegador consulta esse serviço público, que recebe o CEP e os dados técnicos da conexão, para preencher o endereço.
-- **NexForge:** quando essa integração está ativa, o painel interno de métricas de gestão recebe eventos pseudonimizados (código irreversível sem a chave da loja, nome do evento e, nas compras, o valor). Não enviamos nome, e-mail, CPF, endereço, produtos nem número do pedido. A exceção são as sugestões e os relatos de problema enviados pelo balão da loja: uma cópia do tipo, do texto que você escreveu e da página vai para esse painel, sem nome, e-mail nem identificação da conta. Por isso, não escreva dados pessoais nessas mensagens.
+- **NexForge:** quando essa integração está ativa, o painel interno de métricas de gestão recebe eventos pseudonimizados: código irreversível sem a chave da loja, nome do evento e, nas compras e reembolsos, valor, moeda, quantidade e produto, categoria e marca vendidos. Não enviamos nome, e-mail, CPF, data de nascimento, endereço nem número do pedido. Esses eventos não são apagados com a conta. A exceção são as sugestões e os relatos de problema enviados pelo balão da loja: uma cópia do tipo, do texto que você escreveu e da página vai para esse painel, sem nome, e-mail nem identificação da conta. Por isso, não escreva dados pessoais nessas mensagens.
 - **Resend:** quando o envio de e-mails do pedido está ativo, recebe seu e-mail, seu nome e os dados do pedido para enviar as mensagens.
-- **Google (Ads e Analytics), Meta (Pixel) e Plausible:** somente quando essas ferramentas estão ativadas pela loja e você aceitou a categoria de cookies correspondente. Nas compras, Google Ads e Meta recebem valor, moeda e número do pedido. Usamos o Modo de Consentimento do Google: sem o seu aceite, armazenamento de anúncios e de análise ficam negados.
+- **Google (Ads e Analytics), Meta (Pixel) e Plausible:** somente quando essas ferramentas estão ativadas pela loja e você aceitou a categoria de cookies correspondente. Google e Meta recebem as páginas visitadas (o endereço pode conter o número do pedido) e dados técnicos do navegador. A Meta também recebe adição ao carrinho e início de checkout, com códigos dos produtos e valor. Nas compras, Google Ads e Meta recebem valor, moeda e número do pedido. Usamos o Modo de Consentimento do Google: sem o seu aceite, armazenamento de anúncios e de análise ficam negados.
 - **Autoridades públicas:** quando exigido por lei ou ordem judicial.
 
 Não vendemos seus dados pessoais.
@@ -73,7 +76,7 @@ Nosso banco de dados fica na União Europeia, e alguns dos parceiros acima trata
 
 | Dados | Prazo |
 |---|---|
-| Conta, favoritos e endereços salvos | Até você remover ou excluir a conta |
+| Conta, data de nascimento, favoritos e endereços salvos | Até você remover ou excluir a conta |
 | Histórico de produtos vistos | Até você limpar o histórico ou excluir a conta |
 | Pedidos, pagamentos, notas fiscais, solicitações de devolução e histórico do pedido | No mínimo **5 anos**, por obrigações fiscais e pelo prazo de reclamação do Código de Defesa do Consumidor, **mesmo que você exclua a conta** |
 | Mensagens do formulário de contato | Pelo tempo necessário ao atendimento e à defesa de direitos |
@@ -93,11 +96,11 @@ Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD)
 
 ## Cookies
 
-Usamos cookies essenciais para a sessão de login (`sb-*`), para guardar suas escolhas (`nx_consent`) e as preferências da loja e, somente com o seu consentimento, cookies de análise e de marketing. Na etapa de pagamento, o componente da Stripe pode usar cookies próprios. Detalhes na página **Política de cookies**. Você pode mudar suas escolhas a qualquer momento em “Preferências de cookies”, no rodapé.
+Usamos cookies essenciais para a sessão de login (`sb-*`), para guardar suas escolhas (`nx_consent`) e as preferências da loja e, somente com o seu consentimento, cookies de análise e de marketing. No checkout e na conclusão do pedido, o componente da Stripe pode usar cookies próprios. Detalhes na página **Política de cookies**. Você pode mudar suas escolhas a qualquer momento em “Preferências de cookies”, no rodapé.
 
 ## Menores de idade
 
-A loja não é direcionada a menores de 18 anos e não coleta dados de menores de propósito, mas não verifica a idade de quem se cadastra. Se você é responsável por uma criança ou adolescente que nos enviou dados, fale com a gente: {{contact_email}}.
+A loja não é direcionada a menores de 18 anos e não coleta dados de menores de propósito. No checkout pedimos a data de nascimento e só aceitamos compras de maiores de 18 anos; a data informada é de responsabilidade de quem compra, e o cadastro em si não verifica a idade. Se você é responsável por uma criança ou adolescente que nos enviou dados, fale com a gente: {{contact_email}}.
 
 ## Segurança e incidentes
 

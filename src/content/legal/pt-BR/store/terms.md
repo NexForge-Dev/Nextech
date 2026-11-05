@@ -4,7 +4,7 @@ Estes termos regulam as compras feitas na loja online {{store_name}}, operada po
 
 - **Quem vende:** a {{store_name}}, responsável pelo pedido, pela entrega, pelas trocas e pela garantia, inclusive nos produtos enviados por fornecedores parceiros.
 - **Preço:** em reais, com frete grátis para todo o Brasil já incluído. O total aparece no checkout antes do pagamento.
-- **Pagamento:** cartão (à vista) e boleto, processados pela Stripe.
+- **Pagamento:** cartão (à vista), boleto e, quando disponível, Pix, processados pela Stripe.
 - **Prazo de entrega:** informado na página do produto e no checkout, antes do pagamento.
 - **Arrependimento:** 7 dias corridos a partir do recebimento para desistir, sem justificativa e com devolução integral (art. 49 do CDC).
 - **Garantia legal:** 30 dias para produtos não duráveis e 90 dias para duráveis (art. 26 do CDC), além da garantia do fabricante quando houver.
@@ -21,7 +21,9 @@ Os preços estão em reais (R$) e já incluem o frete, que é grátis para todo 
 
 ## 3. Pedido e pagamento
 
-Para comprar você precisa de uma conta. Antes de pagar, o checkout mostra os produtos, as quantidades, o frete, o prazo estimado e o valor total, e você pode corrigir o pedido. Aceitamos cartão (pagamento à vista) e boleto. Os pagamentos são processados pela Stripe; a {{store_name}} não recebe nem guarda os dados completos do seu cartão.
+As compras são permitidas apenas para maiores de 18 anos. No checkout pedimos nome completo, CPF, telefone, endereço completo e data de nascimento, tratados conforme a Política de Privacidade.
+
+Para comprar você precisa de uma conta. Antes de pagar, o checkout mostra os produtos, as quantidades, o frete, o prazo estimado e o valor total, e você pode corrigir o pedido. Aceitamos cartão (pagamento à vista), boleto e, quando disponível, Pix. Os pagamentos são processados pela Stripe; a {{store_name}} não recebe nem guarda os dados completos do seu cartão.
 
 O pedido só é confirmado depois da aprovação do pagamento, informada pela Stripe: no cartão, normalmente em instantes; no boleto, depois da compensação bancária. A tela de conclusão e **Minha conta → Pedidos** mostram a confirmação e o status do pedido, que é o canal oficial de acompanhamento. Quando o envio de e-mails da loja estiver ativo, você também recebe avisos por e-mail.
 
