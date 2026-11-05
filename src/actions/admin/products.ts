@@ -58,7 +58,7 @@ const saveProductImpl = adminAction({ permission: "products.write", schema: prod
   const errors = validateOfferUrls(p.offers, await storeDomains([...new Set(p.offers.map((o) => o.storeId))]));
   if (Object.keys(errors).length) throw new ActionFailure("invalid", "Há links de oferta com domínio não autorizado.", errors);
   const sb = await createServerSupabase();
-  const { data: id, error } = await sb.rpc("admin_save_product_full", { p: rpcPayload(p) as never });
+  const { data: id, error } = await sb.rpc("admin_save_product_promo", { p: rpcPayload(p) as never });
   if (error) throw error;
   if (!p.featured) await releaseFlagship(id as string);
   updateTag("catalog");

@@ -119,6 +119,7 @@
     "categoryProducts": "Productos en {category}"
   },
   "product": {
+    "promoEndsIn": "La oferta termina en",
     "from": "desde",
     "seeProduct": "Ver producto",
     "viewOnStore": "VER PRODUCTO EN LA TIENDA",

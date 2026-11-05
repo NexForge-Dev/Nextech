@@ -1,3 +1,4 @@
+import { fromBrasiliaInput } from "@/lib/domain/brasilia-time";
 import { z } from "zod";
 import { toMinor } from "@/lib/domain/money";
 import { validateExternalUrl } from "@/lib/domain/url-guard";
@@ -67,6 +68,9 @@ const saleInputSchema = z.object({
   deliveryMaxDays: z.coerce.number().int().min(0).max(120, "Máximo 120 dias.").default(7),
   fulfillment: z.enum(["stock", "dropship"]).default("dropship"),
   stock: z.string().trim().optional().default(""),
+  promoPrice: z.string().trim().optional().default(""),
+  promoStartsAt: z.string().trim().optional().default(""),
+  promoEndsAt: z.string().trim().optional().default(""),
 });
 
 const supplierInputSchema = z.object({
@@ -118,6 +122,16 @@ export const productInputSchema = z
       const pct = Number((s?.pixDiscountPct || "0").replace(",", "."));
       if (!Number.isFinite(pct) || pct < 0 || pct > 50) ctx.addIssue({ code: "custom", path: ["sale", "pixDiscountPct"], message: "Desconto no Pix entre 0 e 50%." });
       if (s?.fulfillment === "stock" && !/^\d{1,6}$/.test(s.stock)) ctx.addIssue({ code: "custom", path: ["sale", "stock"], message: "Informe a quantidade em estoque." });
+      if (s && (s.promoPrice || s.promoStartsAt || s.promoEndsAt)) {
+        const promo = s.promoPrice ? toMinor(s.promoPrice, "BRL") : null;
+        const starts = fromBrasiliaInput(s.promoStartsAt);
+        const ends = fromBrasiliaInput(s.promoEndsAt);
+        if (promo == null || promo <= 0) ctx.addIssue({ code: "custom", path: ["sale", "promoPrice"], message: "Informe o preço promocional." });
+        else if (price != null && promo >= price) ctx.addIssue({ code: "custom", path: ["sale", "promoPrice"], message: "A promoção precisa ser menor que o preço de venda." });
+        if (!starts) ctx.addIssue({ code: "custom", path: ["sale", "promoStartsAt"], message: "Informe o início." });
+        if (!ends) ctx.addIssue({ code: "custom", path: ["sale", "promoEndsAt"], message: "Informe o término." });
+        else if (starts && ends <= starts) ctx.addIssue({ code: "custom", path: ["sale", "promoEndsAt"], message: "O término precisa ser depois do início." });
+      }
       if (s && s.deliveryMaxDays < s.deliveryMinDays) ctx.addIssue({ code: "custom", path: ["sale", "deliveryMaxDays"], message: "O prazo máximo precisa ser maior ou igual ao mínimo." });
     }
     if (p.suppliers.filter((x) => x.isPrimary).length > 1) ctx.addIssue({ code: "custom", path: ["suppliers"], message: "Marque no máximo um fornecedor principal." });
@@ -152,6 +166,9 @@ export const productInputSchema = z
             deliveryMaxDays: p.sale.deliveryMaxDays,
             fulfillment: p.sale.fulfillment,
             stockQuantity: p.sale.fulfillment === "stock" ? Number(p.sale.stock) : null,
+            promoPriceMinor: p.sale.promoPrice ? toMinor(p.sale.promoPrice, "BRL") : null,
+            promoStartsAt: fromBrasiliaInput(p.sale.promoStartsAt),
+            promoEndsAt: fromBrasiliaInput(p.sale.promoEndsAt),
           }
         : null,
     suppliers: p.suppliers.map((x) => ({ supplierId: x.supplierId, url: x.url || null, costMinor: x.cost ? toMinor(x.cost, "BRL") : null, isPrimary: x.isPrimary, notes: x.notes || null })),

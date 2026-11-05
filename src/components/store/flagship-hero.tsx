@@ -8,6 +8,7 @@ import { storagePublicUrl } from "@/lib/supabase/env";
 import { AddToCart } from "./add-to-cart";
 import { FlagshipCarousel } from "./flagship-carousel";
 import { PriceView } from "./price";
+import { PromoCountdown } from "./promo-countdown";
 
 /** Top of the home: one highlighted product, or a carousel from two up. Managed in Admin → Produtos. */
 export async function FlagshipHero({ flagships, locale, storeName }: { flagships: FlagshipData[]; locale: Locale; storeName: string }) {
@@ -55,6 +56,7 @@ async function FlagshipSlide({ flagship, locale, storeName, first }: { flagship:
         {shortDescription && <p className="mt-4 max-w-xl text-base text-mute md:text-lg">{shortDescription}</p>}
         <div className="mt-5 md:mt-6">
           <PriceView price={price} locale={locale} size="lg" />
+          {product.promoEndsAt && <PromoCountdown endsAt={product.promoEndsAt} label={tp("promoEndsIn")} className="mt-3 max-w-sm" />}
         </div>
         {buyable && (
           <div className="mt-5 max-w-sm md:mt-6">

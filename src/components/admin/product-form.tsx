@@ -1,4 +1,5 @@
 "use client";
+import { addHoursToInput } from "@/lib/domain/brasilia-time";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, CircleAlert } from "lucide-react";
@@ -52,7 +53,9 @@ export type ProductFormValue = {
   sale: SaleValue;
   suppliers: SupplierValue[];
 };
-export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number; fulfillment: "stock" | "dropship"; stock: string };
+const PROMO_DURATIONS = [2, 6, 12, 24, 48];
+
+export type SaleValue = { price: string; compareAt: string; pixDiscountPct: string; available: boolean; deliveryMinDays: number; deliveryMaxDays: number; fulfillment: "stock" | "dropship"; stock: string; promoPrice: string; promoStartsAt: string; promoEndsAt: string };
 export type SupplierValue = { supplierId: string; url: string; cost: string; isPrimary: boolean; notes: string };
 type Store = { id: string; name: string; networkId: string | null; markets: string[] };
 type Opt = { id: string; name: string };
@@ -199,6 +202,31 @@ export function ProductForm({ initial, categories, brands, stores, markets, supp
               <input id="s-dmax" type="number" min={0} max={120} className={inputCls} value={v.sale.deliveryMaxDays} onChange={(e) => setSale({ deliveryMaxDays: Number(e.target.value) })} />
             </Field>
           </div>
+
+          <fieldset className="panel space-y-3 p-3" data-testid="promo-fields">
+            <legend className="px-1 text-sm font-medium">Promoção com contagem regressiva (opcional)</legend>
+            <p className="text-sm text-mute">O cliente paga o preço promocional e vê a contagem só durante esse período. Quando acabar, o produto volta sozinho ao preço de venda.</p>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Field label="Preço promocional (R$)" htmlFor="s-promo" error={err("sale.promoPrice")}>
+                <input id="s-promo" inputMode="decimal" className={inputCls} placeholder="149,90" value={v.sale.promoPrice} onChange={(e) => setSale({ promoPrice: e.target.value })} />
+              </Field>
+              <Field label="Início" htmlFor="s-promo-start" error={err("sale.promoStartsAt")} hint="Horário de Brasília.">
+                <input id="s-promo-start" type="datetime-local" className={inputCls} value={v.sale.promoStartsAt} onChange={(e) => setSale({ promoStartsAt: e.target.value })} />
+              </Field>
+              <Field label="Término" htmlFor="s-promo-end" error={err("sale.promoEndsAt")} hint="Horário de Brasília.">
+                <input id="s-promo-end" type="datetime-local" className={inputCls} value={v.sale.promoEndsAt} onChange={(e) => setSale({ promoEndsAt: e.target.value })} />
+              </Field>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-mute">Duração:</span>
+              {PROMO_DURATIONS.map((h) => (
+                <button key={h} type="button" className="btn btn-secondary btn-sm" disabled={!v.sale.promoStartsAt} onClick={() => setSale({ promoEndsAt: addHoursToInput(v.sale.promoStartsAt, h) })}>{h}h</button>
+              ))}
+              {(v.sale.promoPrice || v.sale.promoStartsAt || v.sale.promoEndsAt) && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSale({ promoPrice: "", promoStartsAt: "", promoEndsAt: "" })}>Remover promoção</button>
+              )}
+            </div>
+          </fieldset>
 
           <div className="space-y-3">
             <p className="text-sm font-medium">Fornecedores (só você vê)</p>

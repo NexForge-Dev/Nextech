@@ -23,6 +23,7 @@ import { FavoriteButton } from "@/components/store/favorite-button";
 import { ProductShelf, Section } from "@/components/store/product-grid";
 import { AddToCart } from "@/components/store/add-to-cart";
 import { ownDiscountPct, pixPriceMinor } from "@/lib/domain/own-pricing";
+import { PromoCountdown } from "@/components/store/promo-countdown";
 import { getPublicSettings, getStorefrontLocales } from "@/lib/data/settings";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
@@ -130,6 +131,7 @@ export default async function ProductPage({ params }: Props) {
 
           {own ? (
             <div className="panel mt-5 p-5" data-testid="own-buy-box">
+              {own.promoEndsAt && <PromoCountdown endsAt={own.promoEndsAt} label={t("promoEndsIn")} className="mb-4" />}
               {ownDiscount != null && own.compareAtMinor != null && (
                 <p className="flex items-center gap-2 text-sm">
                   <span className="tabular text-mute line-through">{formatMoney(own.compareAtMinor, "BRL", locale)}</span>
