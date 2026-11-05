@@ -6,6 +6,7 @@ import { handleStripeEvent, type WebhookDeps } from "@/lib/orders/webhook";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
 import { analytics } from "@/lib/analytics";
+import { panelItems } from "@/lib/domain/sales-bi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,10 +17,35 @@ export const dynamic = "force-dynamic";
  */
 async function trackOrder(svc: ReturnType<typeof createServiceSupabase>, kind: "paid" | "failed", orderId: string, stripeEventId: string) {
   try {
-    const { data: o } = await svc.from("orders").select("user_id, total_minor").eq("id", orderId).maybeSingle();
+    const { data: o } = await svc.from("orders").select("user_id, subtotal_minor, total_minor").eq("id", orderId).maybeSingle();
     if (!o?.user_id) return;
-    if (kind === "paid") analytics.orderPaid(o.user_id, orderId, Number(o.total_minor));
-    else analytics.paymentFailed(o.user_id, stripeEventId);
+    if (kind === "paid") {
+      analytics.orderPaid(o.user_id, orderId, Number(o.total_minor));
+      await trackItems(svc, o.user_id, orderId, Number(o.subtotal_minor), Number(o.total_minor));
+    } else analytics.paymentFailed(o.user_id, stripeEventId);
+  } catch (e) {
+    log.info("nexforge.order_lookup_failed", { reason: e instanceof Error ? e.message.slice(0, 80) : "unknown" });
+  }
+}
+
+/** What was sold, for the panel's best-seller rankings. Slugs and amounts only. */
+async function trackItems(svc: ReturnType<typeof createServiceSupabase>, userId: string, orderId: string, subtotalMinor: number, totalMinor: number) {
+  const { data: rows } = await svc.from("order_items").select("id, slug, quantity, line_total_minor, products(brands(slug), categories(slug))").eq("order_id", orderId);
+  const items = (rows ?? []).map((i) => ({
+    id: i.id,
+    slug: i.slug,
+    quantity: i.quantity,
+    lineTotalMinor: Number(i.line_total_minor),
+    category: i.products?.categories?.slug ?? null,
+    brand: i.products?.brands?.slug ?? null,
+  }));
+  analytics.orderItems(userId, orderId, panelItems({ subtotalMinor, totalMinor }, items));
+}
+
+async function trackRefund(svc: ReturnType<typeof createServiceSupabase>, orderId: string, stripeRefundId: string, amountMinor: number) {
+  try {
+    const { data: o } = await svc.from("orders").select("user_id, total_minor").eq("id", orderId).maybeSingle();
+    if (o) analytics.refund(o.user_id, orderId, stripeRefundId, { amountMinor, full: amountMinor >= Number(o.total_minor), method: "stripe" });
   } catch (e) {
     log.info("nexforge.order_lookup_failed", { reason: e instanceof Error ? e.message.slice(0, 80) : "unknown" });
   }
@@ -94,6 +120,8 @@ function deps(stripeEventId: string): WebhookDeps {
       });
       if (error) throw new Error(error.message);
       const x = data?.[0];
+      // Every Stripe refund passes here, including ones started in the admin or by the customer.
+      if (x && r.status === "succeeded") await trackRefund(svc, x.order_id, r.stripeRefundId, r.amountMinor);
       return x ? { orderId: x.order_id, fullyRefunded: x.fully_refunded, changed: x.changed } : null;
     },
     async addEvent(piId, kind, data) {

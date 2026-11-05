@@ -3,9 +3,11 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/domain/money";
 import type { Period } from "@/lib/domain/period";
 import { getMetrics, type MetricFilters } from "@/lib/data/admin/metrics";
+import { getSalesBi } from "@/lib/data/admin/sales-bi";
+import type { Permission } from "@/lib/auth/permissions";
 
 type Row = Record<string, string | number | null>;
-type Report = { title: string; description: string; columns: { key: string; header: string }[]; load: (p: Period, f: MetricFilters) => Promise<Row[]> };
+type Report = { title: string; description: string; permission?: Permission; columns: { key: string; header: string }[]; load: (p: Period, f: MetricFilters) => Promise<Row[]> };
 
 const dt = (s: string | null) => (s ? new Date(s).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "");
 const MAX = 100_000;
@@ -70,6 +72,36 @@ export const REPORTS: Record<string, Report> = {
       if (f.network) q = q.eq("network_id", f.network);
       const { data } = await q;
       return (data ?? []).map((c) => ({ date: dt(c.reported_at), network: c.affiliate_networks?.name ?? "", external: c.external_id, status: c.status, currency: c.currency, amount: formatMoney(c.amount_minor, c.currency, "pt-BR"), source: c.source }));
+    },
+  },
+  "sales-products": {
+    title: "Vendas por produto",
+    description: "Unidades, pedidos, receita, reembolsos e custo de cada produto vendido no período.",
+    permission: "orders.read",
+    columns: [{ key: "product", header: "Produto" }, { key: "units", header: "Unidades" }, { key: "orders", header: "Pedidos" }, { key: "revenue", header: "Receita" }, { key: "refunded", header: "Reembolsado" }, { key: "refundedOrders", header: "Pedidos reembolsados" }, { key: "cost", header: "Custo registrado" }],
+    async load(p) {
+      const bi = await getSalesBi(p);
+      return bi.products.map((r) => ({ product: r.label, units: r.units, orders: r.orders, revenue: formatMoney(r.revenueMinor, "BRL", "pt-BR"), refunded: formatMoney(r.refundedMinor, "BRL", "pt-BR"), refundedOrders: r.refundedOrders, cost: r.costMinor == null ? "" : formatMoney(r.costMinor, "BRL", "pt-BR") }));
+    },
+  },
+  "sales-categories": {
+    title: "Vendas por categoria",
+    description: "Unidades, pedidos, receita e reembolsos por categoria no período.",
+    permission: "orders.read",
+    columns: [{ key: "category", header: "Categoria" }, { key: "units", header: "Unidades" }, { key: "orders", header: "Pedidos" }, { key: "revenue", header: "Receita" }, { key: "refunded", header: "Reembolsado" }],
+    async load(p) {
+      const bi = await getSalesBi(p);
+      return bi.categories.map((r) => ({ category: r.label, units: r.units, orders: r.orders, revenue: formatMoney(r.revenueMinor, "BRL", "pt-BR"), refunded: formatMoney(r.refundedMinor, "BRL", "pt-BR") }));
+    },
+  },
+  refunds: {
+    title: "Reembolsos",
+    description: "Cada reembolso do período, com pedido, forma, situação e valor.",
+    permission: "orders.read",
+    columns: [{ key: "date", header: "Data" }, { key: "order", header: "Pedido" }, { key: "method", header: "Forma" }, { key: "status", header: "Situação" }, { key: "amount", header: "Valor" }],
+    async load(p) {
+      const bi = await getSalesBi(p);
+      return bi.refunds.map((r) => ({ date: dt(r.createdAt), order: r.orderNumber, method: r.method, status: r.status, amount: formatMoney(r.amountMinor, "BRL", "pt-BR") }));
     },
   },
   searches: {

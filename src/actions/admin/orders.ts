@@ -1,4 +1,5 @@
 "use server";
+import { analytics } from "@/lib/analytics";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { adminAction, ActionFailure, writeAudit } from "@/lib/admin/action";
@@ -15,7 +16,7 @@ import { formatMoney } from "@/lib/domain/money";
 
 async function loadOrder(orderId: string) {
   const svc = createServiceSupabase();
-  const { data } = await svc.from("orders").select("id, number, status, payment_method, total_minor, refunded_minor, paid_at, stripe_payment_intent_id, order_items(id, tracking_code, supplier_purchased_at)").eq("id", orderId).maybeSingle();
+  const { data } = await svc.from("orders").select("id, number, user_id, status, payment_method, total_minor, refunded_minor, paid_at, stripe_payment_intent_id, order_items(id, tracking_code, supplier_purchased_at)").eq("id", orderId).maybeSingle();
   if (!data) throw new ActionFailure("invalid", "Pedido não encontrado.");
   return data;
 }
@@ -116,6 +117,8 @@ async function refundCore(orderId: string, amountMinor: number, note: string, ma
     if (!manual) throw new ActionFailure("invalid", "Pedidos pagos com boleto são reembolsados por fora (Pix ou transferência). Marque “Reembolsado por fora”.");
     const { error } = await svc.rpc("order_record_refund", { p_order: orderId, p_pi: null as never, p_amount: amountMinor, p_method: "manual", p_stripe_refund: null as never, p_status: "succeeded", p_note: (note || "Reembolsado por fora") as never, p_actor: actorId });
     if (error) throw new ActionFailure("invalid", error.message === "refund_exceeds_total" ? "Valor maior que o pago." : error.message);
+    // Stripe refunds reach the panel through the webhook. The amount already refunded tells this one apart.
+    analytics.refund(o.user_id, orderId, `manual:${orderId}:${o.refunded_minor}`, { amountMinor, full: amountMinor >= Number(o.total_minor), method: "manual" });
   } else {
     if (!o.stripe_payment_intent_id) throw new ActionFailure("invalid", "Pedido sem pagamento no Stripe.");
     const refund = await getStripe().refunds.create(

@@ -19,6 +19,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/banners", label: "Banners", icon: "GalleryHorizontal", group: "marketing", permission: "marketing.write" },
   { href: "/admin/campanhas", label: "Campanhas", icon: "Megaphone", group: "marketing", permission: "marketing.write" },
   { href: "/admin/clientes", label: "Clientes", icon: "Users", group: "insights", permission: "customers.read" },
+  { href: "/admin/bi", label: "BI de vendas", icon: "ChartPie", group: "insights", permission: "orders.read" },
   { href: "/admin/analytics", label: "Analytics", icon: "ChartLine", group: "insights", permission: "analytics.read" },
   { href: "/admin/relatorios", label: "Relatórios", icon: "FileSpreadsheet", group: "insights", permission: "analytics.read" },
   { href: "/admin/administradores", label: "Administradores", icon: "ShieldCheck", group: "system", permission: "admins.write" },

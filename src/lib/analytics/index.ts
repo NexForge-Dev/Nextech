@@ -8,7 +8,8 @@ import { createNexforge, type NexforgeClient, type NexforgeEvent } from "./nexfo
  *
  * Only the event name, a pseudonymous id (HMAC of the Supabase user id with
  * NEXFORGE_PSEUDONYM_SECRET, which never leaves this server) and fixed codes/amounts are
- * sent — never names, e-mails, CPF, addresses, products or order numbers. Without the three
+ * sent — never names, e-mails, CPF, addresses or order numbers. Sold items carry catalogue slugs
+ * (product, category, brand), which say what was sold and never who bought it. Without the three
  * NEXFORGE_* variables (and always under NODE_ENV=test) every call is a no-op.
  * Sending happens after the response via `after()`, so it never slows a request.
  */
@@ -90,6 +91,16 @@ export const analytics = {
     analytics.step(userId, "primeira_compra");
     track("onboarding_completed", userId, {}, { once: "onboarding" });
   },
+  /** One event per order line, once per line however many times the webhook is delivered. */
+  orderItems: (userId: string, orderId: string, items: { id: string; properties: Props }[]) => {
+    for (const i of items) track("item_sold", userId, i.properties, { once: `order:${orderId}:${i.id}` });
+  },
+  /**
+   * A finished refund. `refundKey` is stable per refund, because the admin action and several Stripe
+   * events all report the same one. Orders of deleted accounts still count, under an id of the order.
+   */
+  refund: (userId: string | null, orderId: string, refundKey: string, r: { amountMinor: number; full: boolean; method: "stripe" | "manual" }) =>
+    track("refund_recorded", userId ?? `order:${orderId}`, { amount_cents: Math.round(r.amountMinor), currency: "BRL", scope: r.full ? "full" : "partial", method: r.method }, { once: `refund:${refundKey}` }),
   /** One per Stripe event: each decline counts, a retried delivery of the same event does not. */
   paymentFailed: (userId: string, stripeEventId: string) => track("payment_failed", userId, { plan: "compra" }, { once: `stripe:${stripeEventId}` }),
   accountDeleted: (userId: string) => track("account_deleted", userId, {}, { once: "deleted" }),
