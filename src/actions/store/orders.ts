@@ -10,6 +10,8 @@ import { cancelOrderWith, type CancelResult } from "@/lib/orders/cancel";
 import { notifyOrder } from "@/lib/orders/notify";
 import { log } from "@/lib/log";
 import { analytics } from "@/lib/analytics";
+import { hasImageSignature } from "@/lib/security/image-signature";
+import { isDeclinedPayment } from "@/lib/orders/declined";
 
 export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> {
   const user = await getSessionUser();
@@ -66,6 +68,18 @@ export async function cancelMyOrder(orderNumber: number): Promise<CancelResult> 
   return r;
 }
 
+/**
+ * For the "payment failed" return page. Its address can be typed or shared by anyone, so the query
+ * string decides nothing: the order is cancelled only if Stripe confirms the attempt really failed.
+ */
+export async function closeDeclinedOrder(orderNumber: number): Promise<void> {
+  const user = await getSessionUser();
+  if (!user || !Number.isInteger(orderNumber)) return;
+  const { data: o } = await createServiceSupabase().from("orders").select("status, payment_method, stripe_payment_intent_id").eq("number", orderNumber).eq("user_id", user.id).maybeSingle();
+  if (!o?.stripe_payment_intent_id || o.status !== "awaiting_payment" || o.payment_method !== "card") return;
+  if (isDeclinedPayment(await getStripe().paymentIntents.retrieve(o.stripe_payment_intent_id))) await cancelMyOrder(orderNumber);
+}
+
 const returnSchema = z.object({
   number: z.coerce.number().int().positive(),
   reason: z.enum(["withdrawal", "defect", "other"], { message: "Escolha o motivo." }),
@@ -86,8 +100,14 @@ export async function requestReturn(_: ReturnState, form: FormData): Promise<Ret
   for (const f of files) {
     if (!PHOTO_TYPES[f.type]) return { ok: false, fieldErrors: { photos: ["Use fotos JPG, PNG ou WebP."] } };
     if (f.size > 5 * 1024 * 1024) return { ok: false, fieldErrors: { photos: ["Cada foto pode ter até 5 MB."] } };
+    // the declared type comes from the browser: check the file itself
+    if (!hasImageSignature(new Uint8Array(await f.slice(0, 12).arrayBuffer()), f.type)) return { ok: false, fieldErrors: { photos: ["Use fotos JPG, PNG ou WebP."] } };
   }
   const sb = await createServerSupabase();
+  // nothing goes to storage for an order this customer cannot return
+  const { data: target } = await sb.from("my_orders").select("status").eq("number", parsed.data.number).maybeSingle();
+  if (!target) return { ok: false, error: "Não foi possível enviar a solicitação." };
+  if (["awaiting_payment", "cancelled", "refunded"].includes(target.status ?? "")) return { ok: false, error: "Este pedido ainda não pode ter devolução." };
   const paths: string[] = [];
   for (const f of files) {
     const path = `${user.id}/${parsed.data.number}-${crypto.randomUUID()}.${PHOTO_TYPES[f.type]}`;

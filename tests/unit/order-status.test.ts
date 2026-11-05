@@ -26,5 +26,8 @@ describe("order status", () => {
     expect(adminCanSetStatus("paid")).toBe(false);
     expect(adminCanSetStatus("awaiting_payment")).toBe(false);
     expect(adminCanSetStatus("shipped")).toBe(true);
+    for (const to of ["awaiting_supplier", "supplier_purchased", "shipped", "delivered"] as const) expect(adminCanSetStatus(to, "awaiting_payment")).toBe(false);
+    expect(adminCanSetStatus("cancelled", "awaiting_payment")).toBe(true);
+    expect(adminCanSetStatus("shipped", "supplier_purchased")).toBe(true);
   });
 });

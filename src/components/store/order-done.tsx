@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { CircleAlert, CircleCheck, Clock, Copy, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getMyOrderStatus, type MyOrderStatus } from "@/actions/store/checkout";
-import { cancelMyOrder } from "@/actions/store/orders";
+import { closeDeclinedOrder } from "@/actions/store/orders";
 import { clearLocalCart } from "@/lib/cart/local-cart";
 import { formatMoney } from "@/lib/domain/money";
 import { trackAdEvent } from "./marketing-tracker";
@@ -36,7 +36,7 @@ export function OrderDone({ initial, redirectFailed = false, emailEnabled = fals
 
   useEffect(() => {
     // the declined card order would only linger until the expiry cron: close it now (best-effort)
-    if (redirectFailed && initial.stage === "awaiting_payment" && initial.paymentMethod === "card") void cancelMyOrder(initial.number).catch(() => undefined);
+    if (redirectFailed && initial.stage === "awaiting_payment" && initial.paymentMethod === "card") void closeDeclinedOrder(initial.number).catch(() => undefined);
   }, [redirectFailed, initial.stage, initial.paymentMethod, initial.number]);
 
   useEffect(() => {
