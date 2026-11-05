@@ -124,7 +124,7 @@ describe("NXT-005: holding stock without paying", () => {
 describe("NXT-006: saving a product with an old stock number", () => {
   const save = async (stock: number, read?: number) => {
     const { data: p } = await serviceClient().from("products").select("slug").eq("id", b).single();
-    return admin.client.rpc("admin_save_product_full", { p: savePayload(b, p!.slug, stock, read) as never });
+    return admin.client.rpc("admin_save_product_stock_safe", { p: savePayload(b, p!.slug, stock, read) as never });
   };
   it("keeps the sales made while the form was open when the admin did not touch the field", async () => {
     await setStock(b, 5);
@@ -162,6 +162,16 @@ describe("NXT-006: saving a product with an old stock number", () => {
     await setStock(b, 5);
     expect((await save(7)).error).toBeNull();
     expect(await stockOf(b)).toBe(7);
+    const { data: p } = await serviceClient().from("products").select("slug").eq("id", b).single();
+    expect((await admin.client.rpc("admin_save_product_full", { p: savePayload(b, p!.slug, 9) as never })).error).toBeNull();
+    expect(await stockOf(b)).toBe(9);
+  });
+  it("the wrapper leaves everything else to the real save, warranty included", async () => {
+    await setStock(b, 5);
+    const { data: p } = await serviceClient().from("products").select("slug").eq("id", b).single();
+    const { error } = await admin.client.rpc("admin_save_product_stock_safe", { p: { ...savePayload(b, p!.slug, 5, 5), warranty: "12 meses" } as never });
+    expect(error).toBeNull();
+    expect((await serviceClient().from("products").select("warranty").eq("id", b).single()).data?.warranty).toBe("12 meses");
   });
 });
 

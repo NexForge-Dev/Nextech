@@ -1169,6 +1169,9 @@ isOneToOne: false
 "admin_save_product_full":
 { Args: { "p": Json }; Returns: string
                            },
+"admin_save_product_stock_safe":
+{ Args: { "p": Json }; Returns: string
+                           },
 "admin_set_order_status":
 { Args: { "p_actor": string,"p_data": Json,"p_expected": string,"p_order": string,"p_to": string }; Returns: undefined
                            },

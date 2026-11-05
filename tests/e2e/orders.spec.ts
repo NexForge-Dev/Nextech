@@ -37,7 +37,8 @@ test("a paid order is listed, can be cancelled before the supplier purchase", as
   await expect(page.getByTestId("my-order-detail")).not.toContainText("Amazon");
   await page.getByRole("button", { name: "Cancelar pedido" }).click();
   await page.getByRole("button", { name: "Sim, cancelar" }).click();
-  await expect(page.getByTestId("order-stage")).toHaveText("Cancelado");
+  // "Reembolsado" when the refund goes through at once; "Cancelado" while it is pending or Stripe is not configured
+  await expect(page.getByTestId("order-stage")).toHaveText(/^(Cancelado|Reembolsado)$/);
   await expect(page.getByRole("button", { name: "Cancelar pedido" })).toHaveCount(0);
 });
 

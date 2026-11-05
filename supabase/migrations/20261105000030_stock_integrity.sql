@@ -6,7 +6,7 @@
 --     after shipping no (NXT-021);
 --  3. create_order_from_cart locks products in a fixed order (NXT-011) and enforces, on its own, the
 --     address and seller rules that only the server action checked (NXT-013);
---  4. saving a product no longer overwrites stock sold while the form was open (NXT-006).
+--  4. a new wrapper saves a product without overwriting stock sold while the form was open (NXT-006).
 
 -- 1. expiry (same signature as 0024) -------------------------------------------------------------
 create or replace function public.stale_unpaid_orders()
@@ -162,60 +162,28 @@ end $$;
 revoke all on function public.create_order_from_cart(jsonb, jsonb, text, boolean, bigint) from public, anon;
 grant execute on function public.create_order_from_cart(jsonb, jsonb, text, boolean, bigint) to authenticated;
 
--- 4. product save (same signature as 0026) -------------------------------------------------------
-create or replace function public.admin_save_product_full(p jsonb) returns uuid
+-- 4. product save: a wrapper, so it never replaces admin_save_product_full, whichever version is live ---
+-- Sent the stock the form read, it keeps orders placed meanwhile. Checkout locks product_sale and then
+-- touches products; the same order here, or the two deadlock. Holding this lock also means a checkout
+-- either finished before this read or waits for this save.
+create or replace function public.admin_save_product_stock_safe(p jsonb) returns uuid
 language plpgsql security invoker set search_path = public as $$
 declare
-  v_id uuid;
-  v_mode text := coalesce(nullif(p ->> 'saleMode', ''), 'affiliate');
   v_sale jsonb := p -> 'sale';
-  v_sup jsonb;
   v_stock int := nullif(v_sale ->> 'stockQuantity', '')::int;
   v_read int := nullif(v_sale ->> 'stockRead', '')::int;
   v_current int;
   v_exists boolean := false;
 begin
-  if v_mode not in ('own', 'affiliate') then raise exception 'invalid sale mode' using errcode = '22023'; end if;
-  -- checkout locks product_sale, then touches products: the same order here, or the two deadlock.
-  -- Holding this lock also means a checkout either finished before this read or waits for this save.
   select stock_quantity, true into v_current, v_exists from product_sale where product_id = nullif(p ->> 'id', '')::uuid for update;
-  v_id := public.admin_save_product(p);
-
-  update products set sale_mode = v_mode where id = v_id;
-
-  if v_mode = 'own' then
-    if v_sale is null or jsonb_typeof(v_sale) <> 'object' then raise exception 'own products need sale data' using errcode = '22023'; end if;
-    if coalesce(v_sale ->> 'fulfillment', 'dropship') not in ('stock', 'dropship') then raise exception 'invalid fulfillment' using errcode = '22023'; end if;
-    -- the form sends the stock it read: orders placed meanwhile must survive the save
-    if v_sale ? 'stockRead' and v_stock is not null and v_exists then
-      if v_stock is not distinct from v_read then
-        v_stock := coalesce(v_current, v_stock);
-      elsif v_current is distinct from v_read and v_current is distinct from v_stock then
-        raise exception 'stock_changed' using errcode = 'P0001';
-      end if;
+  if v_sale ? 'stockRead' and v_stock is not null and v_exists then
+    if v_stock is not distinct from v_read then
+      p := jsonb_set(p, '{sale,stockQuantity}', to_jsonb(coalesce(v_current, v_stock)));
+    elsif v_current is distinct from v_read and v_current is distinct from v_stock then
+      raise exception 'stock_changed' using errcode = 'P0001';
     end if;
-    insert into product_sale (product_id, price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days, fulfillment, stock_quantity)
-    values (
-      v_id, (v_sale ->> 'priceMinor')::bigint, nullif(v_sale ->> 'compareAtMinor', '')::bigint,
-      coalesce(nullif(v_sale ->> 'pixDiscountPct', '')::numeric, 0), coalesce((v_sale ->> 'available')::boolean, true),
-      coalesce(nullif(v_sale ->> 'deliveryMinDays', '')::int, 3), coalesce(nullif(v_sale ->> 'deliveryMaxDays', '')::int, 7),
-      coalesce(v_sale ->> 'fulfillment', 'dropship'), v_stock
-    )
-    on conflict (product_id) do update set
-      price_minor = excluded.price_minor, compare_at_minor = excluded.compare_at_minor, pix_discount_pct = excluded.pix_discount_pct,
-      available = excluded.available, delivery_min_days = excluded.delivery_min_days, delivery_max_days = excluded.delivery_max_days,
-      fulfillment = excluded.fulfillment, stock_quantity = excluded.stock_quantity;
   end if;
-  -- sale data of a product switched back to affiliate is kept (switching back restores it)
-
-  delete from product_suppliers where product_id = v_id;
-  for v_sup in select * from jsonb_array_elements(coalesce(p -> 'suppliers', '[]'::jsonb)) loop
-    insert into product_suppliers (product_id, supplier_id, url, cost_minor, is_primary, notes)
-    values (
-      v_id, (v_sup ->> 'supplierId')::uuid, nullif(v_sup ->> 'url', ''), nullif(v_sup ->> 'costMinor', '')::bigint,
-      coalesce((v_sup ->> 'isPrimary')::boolean, false), nullif(v_sup ->> 'notes', '')
-    );
-  end loop;
-
-  return v_id;
+  return public.admin_save_product_full(p);
 end $$;
+revoke all on function public.admin_save_product_stock_safe(jsonb) from public, anon;
+grant execute on function public.admin_save_product_stock_safe(jsonb) to authenticated;
