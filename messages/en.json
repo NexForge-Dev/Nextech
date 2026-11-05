@@ -456,6 +456,7 @@
     "withdrawal": "7 days to change your mind",
     "withdrawalNote": "After you receive the product",
     "warranty": "Legal warranty",
+    "warrantyValue": "Warranty: {value}",
     "paymentMethods": "Payment methods",
     "methodCard": "Card",
     "methodBoleto": "Boleto",

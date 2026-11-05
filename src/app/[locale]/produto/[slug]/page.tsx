@@ -174,7 +174,7 @@ export default async function ProductPage({ params }: Props) {
               <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-mute">
                 <li className="flex items-center gap-1.5"><Lock className="size-3.5" strokeWidth={1.75} aria-hidden />{ts("securePayment")}</li>
                 <li className="flex items-center gap-1.5"><RotateCcw className="size-3.5" strokeWidth={1.75} aria-hidden />{ts("withdrawal")}</li>
-                <li className="flex items-center gap-1.5"><ShieldCheck className="size-3.5" strokeWidth={1.75} aria-hidden />{ts("warranty")}</li>
+                <li className="flex items-center gap-1.5"><ShieldCheck className="size-3.5" strokeWidth={1.75} aria-hidden />{product.warranty ? ts("warrantyValue", { value: product.warranty }) : ts("warranty")}</li>
               </ul>
             </div>
           ) : (

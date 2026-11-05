@@ -49,7 +49,7 @@ export async function getProductForEdit(id: string): Promise<ProductFormValue | 
   const sb = await createServerSupabase();
   const { data: p } = await sb
     .from("products")
-    .select("id, slug, brand_id, category_id, status, featured, sku, external_id, rating, rating_count, rating_source, specs, product_translations(locale, name, short_description, description_md, specs_i18n), product_images(path, alt, is_main, sort_order), product_tags(tags(slug)), affiliate_links(id, store_id, network_id, market, currency, original_url, affiliate_url, external_id, price_minor, price_updated_at, previous_price_minor, previous_verified, previous_evidence, active, created_at), sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days, fulfillment, stock_quantity), product_suppliers(supplier_id, url, cost_minor, is_primary, notes, created_at)")
+    .select("id, slug, brand_id, category_id, status, featured, sku, external_id, warranty, rating, rating_count, rating_source, specs, product_translations(locale, name, short_description, description_md, specs_i18n), product_images(path, alt, is_main, sort_order), product_tags(tags(slug)), affiliate_links(id, store_id, network_id, market, currency, original_url, affiliate_url, external_id, price_minor, price_updated_at, previous_price_minor, previous_verified, previous_evidence, active, created_at), sale_mode, product_sale(price_minor, compare_at_minor, pix_discount_pct, available, delivery_min_days, delivery_max_days, fulfillment, stock_quantity), product_suppliers(supplier_id, url, cost_minor, is_primary, notes, created_at)")
     .eq("id", id)
     .maybeSingle();
   if (!p) return null;
@@ -72,6 +72,7 @@ export async function getProductForEdit(id: string): Promise<ProductFormValue | 
     featured: p.featured,
     sku: p.sku ?? "",
     externalId: p.external_id ?? "",
+    warranty: p.warranty ?? "",
     rating: p.rating != null ? String(p.rating).replace(".", ",") : "",
     ratingCount: p.rating_count != null ? String(p.rating_count) : "",
     ratingSource: p.rating_source ?? "",

@@ -456,6 +456,7 @@
     "withdrawal": "7 días para desistir",
     "withdrawalNote": "Tras recibir el producto",
     "warranty": "Garantía legal",
+    "warrantyValue": "Garantía: {value}",
     "paymentMethods": "Formas de pago",
     "methodCard": "Tarjeta",
     "methodBoleto": "Boleto",

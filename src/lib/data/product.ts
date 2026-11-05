@@ -21,6 +21,7 @@ export type ProductDetail = {
   brand: { name: string; slug: string } | null;
   category: { id: string; slug: string; name: string };
   sku: string | null;
+  warranty: string | null;
   rating: { value: number; count: number | null; source: string } | null;
   specs: Spec[];
   images: { path: string; alt: string }[];
@@ -44,7 +45,7 @@ export const getProduct = cache(async (slug: string, locale: Locale): Promise<Pr
   const { data: p } = await createAnonSupabase()
     .from("products")
     .select(
-      "id, slug, sku, rating, rating_count, rating_source, specs, updated_at, brands(name, slug), categories(id, slug, category_translations(locale, name)), product_translations(locale, name, short_description, description_md, specs_i18n), product_images(path, alt, is_main, sort_order), product_tags(tag_id)",
+      "id, slug, sku, warranty, rating, rating_count, rating_source, specs, updated_at, brands(name, slug), categories(id, slug, category_translations(locale, name)), product_translations(locale, name, short_description, description_md, specs_i18n), product_images(path, alt, is_main, sort_order), product_tags(tag_id)",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -71,6 +72,7 @@ export const getProduct = cache(async (slug: string, locale: Locale): Promise<Pr
     brand: p.brands ? { name: p.brands.name, slug: p.brands.slug } : null,
     category: { id: p.categories.id, slug: p.categories.slug, name: pickTranslation(p.categories.category_translations, locale)?.name ?? p.categories.slug },
     sku: p.sku,
+    warranty: p.warranty,
     rating: p.rating != null && p.rating_source && !onlyLinkOnly ? { value: Number(p.rating), count: p.rating_count, source: p.rating_source } : null,
     specs: localizedSpecs.length ? localizedSpecs : specList(p.specs),
     images,

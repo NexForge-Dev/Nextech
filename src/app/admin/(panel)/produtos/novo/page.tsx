@@ -23,6 +23,7 @@ export default async function NewProductPage() {
           featured: false,
           sku: "",
           externalId: "",
+          warranty: "",
           rating: "",
           ratingCount: "",
           ratingSource: "",
