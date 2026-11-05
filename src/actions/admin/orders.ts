@@ -139,6 +139,7 @@ async function refundCore(orderId: string, amountMinor: number, note: string, ma
     if (r.outcome === "busy") throw new ActionFailure("invalid", REFUND_BUSY);
     if (r.outcome === "nothing_owed") throw new ActionFailure("invalid", "Não há valor pago para reembolsar.");
     if (r.outcome === "exceeds") throw new ActionFailure("invalid", `O máximo reembolsável agora é ${formatMoney(r.availableMinor, "BRL", "pt-BR")}: há reembolso em processamento.`);
+    if (r.outcome !== "created") throw new ActionFailure("invalid", REFUND_BUSY);
     confirmed = r.confirmed;
   }
   // a refund still processing is announced by the webhook, when Stripe confirms it
