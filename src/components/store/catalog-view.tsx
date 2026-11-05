@@ -98,13 +98,13 @@ export async function CatalogView({ locale, market, filters, title, description,
               {filters.page > 1 ? (
                 <Link href={pageHref(filters.page - 1)} className="btn btn-secondary"><ChevronLeft aria-hidden />{tc("previous")}</Link>
               ) : (
-                <span className="btn btn-secondary pointer-events-none opacity-50"><ChevronLeft aria-hidden />{tc("previous")}</span>
+                <span aria-disabled="true" className="btn btn-secondary pointer-events-none opacity-50"><ChevronLeft aria-hidden />{tc("previous")}</span>
               )}
               <span className="tabular px-2 text-mute">{tc("page", { page: filters.page, total: pages })}</span>
               {filters.page < pages ? (
                 <Link href={pageHref(filters.page + 1)} className="btn btn-secondary">{tc("next")}<ChevronRight aria-hidden /></Link>
               ) : (
-                <span className="btn btn-secondary pointer-events-none opacity-50">{tc("next")}<ChevronRight aria-hidden /></span>
+                <span aria-disabled="true" className="btn btn-secondary pointer-events-none opacity-50">{tc("next")}<ChevronRight aria-hidden /></span>
               )}
             </nav>
           )}
